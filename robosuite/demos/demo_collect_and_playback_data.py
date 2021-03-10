@@ -49,7 +49,7 @@ def playback_trajectory(env, ep_dir):
     with open(xml_path, "r") as f:
         env.reset_from_xml_string(f.read())
 
-    state_paths = os.path.join(ep_dir, "state_*.npz")
+    state_paths = os.path.join(ep_dir, "state_*.npz") # Use glob to get all
 
     # read states back, load them one by one, and render
     t = 0
@@ -69,7 +69,7 @@ def playback_trajectory(env, ep_dir):
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("--environment", type=str, default="Door")
+    parser.add_argument("--environment", type=str, default="PickPlace")
     parser.add_argument("--robots", nargs="+", type=str, default="Panda", help="Which robot(s) to use in the env")
     parser.add_argument("--directory", type=str, default="/tmp/")
     parser.add_argument("--timesteps", type=int, default=1000)
@@ -78,12 +78,12 @@ if __name__ == "__main__":
     # create original environment
     env = suite.make(
         args.environment,
-        robots=args.robots,
-        ignore_done=True,
-        use_camera_obs=False,
-        has_renderer=True,
-        has_offscreen_renderer=False,
-        control_freq=20,
+        robots                  = args.robots,
+        ignore_done             = True,
+        use_camera_obs          = False,
+        has_renderer            = True,
+        has_offscreen_renderer  = False,
+        control_freq            = 20,
     )
     data_directory = args.directory
 

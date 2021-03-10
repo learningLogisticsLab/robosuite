@@ -62,7 +62,7 @@ if __name__ == "__main__":
     low, high = env.action_spec
 
     # do visualization
-    for i in range(10000):
+    for i in range(1000):
         action = np.random.uniform(low, high)
         obs, reward, done, _ = env.step(action)
         env.render()

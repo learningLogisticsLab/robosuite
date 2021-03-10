@@ -33,7 +33,7 @@ if __name__ == "__main__":
         print("Using gripper {}...".format(gripper))
 
         # Run random policy
-        for t in range(100):
+        for t in range(200):
             env.render()
             action = np.random.uniform(low, high)
             observation, reward, done, info = env.step(action)

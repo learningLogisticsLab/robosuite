@@ -152,9 +152,9 @@ if __name__ == "__main__":
                 vec[count - 3] = test_value
                 action[3:6] = vec
             else:
-                action[count] = test_value
+                action[count] = test_value      # controlls the index to be updated
             total_action = np.tile(action, n)
-            env.step(total_action)
+            env.step(total_action)              # Action is added to current pos of robot.
             env.render()
         for i in range(steps_per_rest):
             total_action = np.tile(neutral, n)
