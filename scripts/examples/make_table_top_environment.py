@@ -17,7 +17,7 @@ world.merge(mujoco_robot)               # takes xml/list of xmls
 from robosuite.models.grippers import gripper_factory, gripper_model
 
 #gripper = gripper_factory('PandaGripper')
-#RethinkGripper', 'PandaGripper', 'JacoThreeFingerGripper', 'JacoThreeFingerDexterousGripper', 'WipingGripper', 'Robotiq85Gripper', 'Robotiq140Gripper', 'RobotiqThreeFingerGripper', 'RobotiqThreeFingerDexterousGripper',
+#RethinkGripper',    'PandaGripper', 'JacoThreeFingerGripper', 'JacoThreeFingerDexterousGripper', 'WipingGripper', 'Robotiq85Gripper', 'Robotiq140Gripper', 'RobotiqThreeFingerGripper', 'RobotiqThreeFingerDexterousGripper',
 # gripper = gripper_factory('PandaGripper')
 # gripper.hide_visualization()
 # mujoco_robot.add_gripper(gripper)
@@ -63,7 +63,7 @@ sim = MjSim(model)
 viewer = MjViewer(sim) # creates viewing window
 viewer.vopt.geomgroup[0] = 0 # disable visualization of collision mesh
 
-for i in range(1000):
+for i in range(10000):
     sim.data.ctrl[:] = 0
     sim.step()
     viewer.render()

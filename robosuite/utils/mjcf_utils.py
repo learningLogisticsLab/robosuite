@@ -98,6 +98,7 @@ TEXTURES = {
     "Glass": "glass.png",
     "FeltGray": "gray-felt.png",
     "Lemon": "lemon.png",
+    "MasterChefCan": "master_chef_can.png",
 }
 
 ALL_TEXTURES = TEXTURES.keys()

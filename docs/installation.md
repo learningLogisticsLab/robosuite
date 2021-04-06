@@ -45,3 +45,18 @@ $ cd robosuite
 ```sh
 $ python robosuite/demos/demo_random_action.py
 ```
+
+### Look at Python Documentation via Sphinx
+1. Install sphinx dependencies
+   ````
+   pip install sphinx
+   pip install nbsphinx
+   pip install sphinx_rtd_theme
+   pip install sphinx_markdown_tables
+   ```
+2. Install Pandoc: select the correct deb from https://github.com/jgm/pandoc/releases/tag/2.13
+   
+3. Go to the `docs/` folder and make desired option:
+   ```
+   make html
+   ```

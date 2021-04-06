@@ -24,6 +24,16 @@ class CanObject(MujocoXMLObject):
                          name=name, joints=[dict(type="free", damping="0.0005")],
                          obj_type="all", duplicate_collision_geoms=True)
 
+class MasterChefCanObject(MujocoXMLObject):
+    """
+    MasterChef Coffee can object
+    """
+
+    def __init__(self, name):
+        super().__init__(xml_path_completion("objects/master_chef_can.xml"), 
+                         name=name, 
+                         joints=[dict(type="free", damping="0.0005")], 
+                         obj_type="all", duplicate_collision_geoms=True)
 
 class LemonObject(MujocoXMLObject):
     """
@@ -171,6 +181,20 @@ class CanVisualObject(MujocoXMLObject):
         super().__init__(xml_path_completion("objects/can-visual.xml"),
                          name=name, joints=None, obj_type="visual", duplicate_collision_geoms=True)
 
+
+class MasterChefCanVisualObject(MujocoXMLObject):
+    """
+    Visual fiducial of masterchef can 
+
+    Fiducial objects are not involved in collision physics.
+    They provide a point of reference to indicate a position.
+    """
+
+    def __init__(self, name):
+        super().__init__(xml_path_completion("objects/master_chef_can_visual.xml"), 
+                         name=name, 
+                         joints=None, 
+                         obj_type="visual", duplicate_collision_geoms=True)
 
 class PlateWithHoleObject(MujocoXMLObject):
     """

@@ -4,6 +4,7 @@ from .generated_objects import CompositeBodyObject, CompositeObject, PrimitiveOb
 from .xml_objects import (
     BottleObject,
     CanObject,
+    MasterChefCanObject,
     LemonObject,
     MilkObject,
     BreadObject,
@@ -14,6 +15,7 @@ from .xml_objects import (
     BreadVisualObject,
     CerealVisualObject,
     CanVisualObject,
+    MasterChefCanVisualObject,
     PlateWithHoleObject,
     DoorObject,
 )
