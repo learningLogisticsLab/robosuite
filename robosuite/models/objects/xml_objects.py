@@ -13,7 +13,6 @@ class BottleObject(MujocoXMLObject):
                          name=name, joints=[dict(type="free", damping="0.0005")],
                          obj_type="all", duplicate_collision_geoms=True)
 
-
 class CanObject(MujocoXMLObject):
     """
     Coke can object (used in PickPlace)
@@ -270,3 +269,19 @@ class DoorObject(MujocoXMLObject):
             "handle": self.naming_prefix + "handle"
         })
         return dic
+
+# BinPicking objects and viducials
+# Defs: https://github.com/learningLogisticsLab/binPicking/blob/main/docs/simulation/objects/object_categories_db.xlsx
+class o0001(MujocoXMLObject):
+
+    def __init__(self, name):
+        super().__init__(xml_path_completion("objects/o0001.xml"),
+                         name=name, joints=[dict(type="free", damping="0.0005")],
+                         obj_type="all", duplicate_collision_geoms=True)
+
+class CanVisualObject(MujocoXMLObject):
+
+
+    def __init__(self, name):
+        super().__init__(xml_path_completion("objects/o0001-visual.xml"),
+                         name=name, joints=None, obj_type="visual", duplicate_collision_geoms=True)
