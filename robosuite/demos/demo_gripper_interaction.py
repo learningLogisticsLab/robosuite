@@ -31,23 +31,16 @@ if __name__ == "__main__":
     gripper = RethinkGripper()
     
     # Create another body with a slider joint to which we'll add this gripper
-    gripper_body = ET.Element("body")       # Element Tree: programmatically generate an MJCF XML of an object from scratch using xml.etree.ElementTree, and compose an object of multiple geom primitives
-    gripper_body.set("pos", "0 0 0.3")      # Place gripper frame 30 cm above origin.
-    gripper_body.set("quat", "0 0 1 0")     # flip z (rot about z by 180 followed by rot about x by 180.)
+    gripper_body = ET.Element("body", name="gripper_base")
+    gripper_body.set("pos", "0 0 0.3")
+    gripper_body.set("quat", "0 0 1 0")  # flip z
     gripper_body.append(
         new_joint(name="gripper_z_joint", type="slide", axis="0 0 1", damping="50")
     )
-    
-    # Add robot gripper to sliding body.
-    for body in gripper.worldbody:
-        gripper_body.append(body)
-    
-    # Merge all (xml's) of the gripper tags except its bodies... i'm unclear about this and next statement together.
-    world.merge(gripper, merge_body=None)
-    
-    # Manually add the higher level body we created
+    # Add the dummy body with the joint to the global worldbody
     world.worldbody.append(gripper_body)
-    
+    # Merge the actual gripper as a child of the dummy body
+    world.merge(gripper, merge_body="gripper_base")
     # Create a new actuator to control our slider joint
     world.actuator.append(
         new_actuator(
