@@ -1,4 +1,4 @@
-<mujoco model="can">
+<mujoco model="o0001">
   <asset>
     <mesh file="meshes/can.stl" name="can_mesh"/>
     <texture file="../textures/can.png" name="tex-can"/>

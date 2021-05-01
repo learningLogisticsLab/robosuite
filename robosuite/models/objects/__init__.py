@@ -18,6 +18,11 @@ from .xml_objects import (
     MasterChefCanVisualObject,
     PlateWithHoleObject,
     DoorObject,
+#--------------------------------    
+    o0001,
+    o0001v,
+    o0002,
+    o0002v,
 )
 from .primitive import *
 from .composite import *

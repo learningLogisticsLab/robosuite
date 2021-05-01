@@ -1,4 +1,4 @@
-<mujoco model="can-visual">
+<mujoco model="o0001-visual">
   <asset>
     <mesh file="meshes/can.stl" name="can_mesh"/>
   </asset>
