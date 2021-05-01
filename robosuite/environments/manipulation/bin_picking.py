@@ -6,20 +6,26 @@ import robosuite.utils.transform_utils as T
 from robosuite.environments.manipulation.single_arm_env import SingleArmEnv
 
 from robosuite.models.arenas import BinsArena
-from robosuite.models.objects import (
-    MilkObject,
-    BreadObject,
-    CerealObject,
-    CanObject,
-    MasterChefCanObject,
-)
-from robosuite.models.objects import (
-    MilkVisualObject,
-    BreadVisualObject,
-    CerealVisualObject,
-    CanVisualObject,
-    MasterChefCanVisualObject,
-)
+
+# Import all objects and visual object directly and place in objs and visualObjs
+from robosuite.models.objects import * 
+mods = dir()
+visualObjs  = [ item for item in mods if 'VisualObject' in item ]
+objs        = [ item.replace('Visual','') for item in visualObjs ]
+# (
+#     MilkObject,
+#     BreadObject,
+#     CerealObject,
+#     CanObject,
+#     MasterChefCanObject,
+# )
+# from robosuite.models.objects import (
+#     MilkVisualObject,
+#     BreadVisualObject,
+#     CerealVisualObject,
+#     CanVisualObject,
+#     MasterChefCanVisualObject,
+# )
 from robosuite.models.tasks import ManipulationTask
 from robosuite.utils.placement_samplers import SequentialCompositeSampler, UniformRandomSampler
 from robosuite.utils.observables import Observable, sensor
@@ -745,4 +751,63 @@ class BinPicking(SingleArmEnv):
                 target=self.objects[closest_obj_id].root_body,
                 target_type="body",
             )
+
+
+class BinPickingSingle(BinPicking):
+    """
+    Easier version of task - place one object into its bin.
+    A new object is sampled on every reset.
+    """
+
+    def __init__(self, **kwargs):
+        assert "single_object_mode" not in kwargs, "invalid set of arguments"
+        super().__init__(single_object_mode=1, **kwargs)
+
+
+class BinPickingMilk(BinPicking):
+    """
+    Easier version of task - place one milk into its bin.
+    """
+
+    def __init__(self, **kwargs):
+        assert (
+                "single_object_mode" not in kwargs and "object_type" not in kwargs
+        ), "invalid set of arguments"
+        super().__init__(single_object_mode=2, object_type="milk", **kwargs)
+
+
+class BinPickingBread(BinPicking):
+    """
+    Easier version of task - place one bread into its bin.
+    """
+
+    def __init__(self, **kwargs):
+        assert (
+                "single_object_mode" not in kwargs and "object_type" not in kwargs
+        ), "invalid set of arguments"
+        super().__init__(single_object_mode=2, object_type="bread", **kwargs)
+
+
+class BinPickingCereal(BinPicking):
+    """
+    Easier version of task - place one cereal into its bin.
+    """
+
+    def __init__(self, **kwargs):
+        assert (
+                "single_object_mode" not in kwargs and "object_type" not in kwargs
+        ), "invalid set of arguments"
+        super().__init__(single_object_mode=2, object_type="cereal", **kwargs)
+
+
+class BinPickingCan(BinPicking):
+    """
+    Easier version of task - place one can into its bin.
+    """
+
+    def __init__(self, **kwargs):
+        assert (
+                "single_object_mode" not in kwargs and "object_type" not in kwargs
+        ), "invalid set of arguments"
+        super().__init__(single_object_mode=2, object_type="can", **kwargs)
 
