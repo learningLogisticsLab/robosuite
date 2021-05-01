@@ -270,18 +270,36 @@ class DoorObject(MujocoXMLObject):
         })
         return dic
 
-# BinPicking objects and viducials
+# BinPicking objects and visuals (choosing to append just a 'v' for ease)
 # Defs: https://github.com/learningLogisticsLab/binPicking/blob/main/docs/simulation/objects/object_categories_db.xlsx
 class o0001(MujocoXMLObject):
+    '''
+    Set o0001. this is original can in robosuite
+    '''
 
     def __init__(self, name):
-        super().__init__(xml_path_completion("objects/o0001.xml"),
-                         name=name, joints=[dict(type="free", damping="0.0005")],
+        super().__init__(xml_path_completion("objects/o0001.xml"), # currently this returns a path inside of my anaconda env...
+                         name=name, 
+                         joints=[dict(type="free", damping="0.0005")],
                          obj_type="all", duplicate_collision_geoms=True)
 
-class CanVisualObject(MujocoXMLObject):
+class o0001v(MujocoXMLObject):
 
 
     def __init__(self, name):
         super().__init__(xml_path_completion("objects/o0001-visual.xml"),
+                         name=name, joints=None, obj_type="visual", duplicate_collision_geoms=True)
+
+class o0002(MujocoXMLObject):
+
+    def __init__(self, name):
+        super().__init__(xml_path_completion("objects/o0002.xml"),
+                         name=name, joints=[dict(type="free", damping="0.0005")],
+                         obj_type="all", duplicate_collision_geoms=True)
+
+class o0002v(MujocoXMLObject):
+
+
+    def __init__(self, name):
+        super().__init__(xml_path_completion("objects/o0002-visual.xml"),
                          name=name, joints=None, obj_type="visual", duplicate_collision_geoms=True)
