@@ -278,28 +278,37 @@ class o0001(MujocoXMLObject):
     '''
 
     def __init__(self, name):
-        super().__init__(xml_path_completion("objects/o0001.xml"), # currently this returns a path inside of my anaconda env...
+        super().__init__(xml_path_completion("objects/o0001.xml"), 
                          name=name, 
                          joints=[dict(type="free", damping="0.0005")],
-                         obj_type="all", duplicate_collision_geoms=True)
+                         obj_type="all", 
+                         duplicate_collision_geoms=True)
 
 class o0001v(MujocoXMLObject):
 
 
     def __init__(self, name):
         super().__init__(xml_path_completion("objects/o0001-visual.xml"),
-                         name=name, joints=None, obj_type="visual", duplicate_collision_geoms=True)
+                         name=name, 
+                         joints=None, 
+                         obj_type="visual", 
+                         duplicate_collision_geoms=True)
 
 class o0002(MujocoXMLObject):
 
     def __init__(self, name):
         super().__init__(xml_path_completion("objects/o0002.xml"),
-                         name=name, joints=[dict(type="free", damping="0.0005")],
-                         obj_type="all", duplicate_collision_geoms=True)
+                         name=name, 
+                         joints=[dict(type="free", damping="0.0005")],
+                         obj_type="all", 
+                         duplicate_collision_geoms=True)
 
 class o0002v(MujocoXMLObject):
 
 
     def __init__(self, name):
         super().__init__(xml_path_completion("objects/o0002-visual.xml"),
-                         name=name, joints=None, obj_type="visual", duplicate_collision_geoms=True)
+                         name=name, 
+                         joints=None, 
+                         obj_type="visual", 
+                         duplicate_collision_geoms=True)

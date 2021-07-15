@@ -164,6 +164,7 @@ class Controller(object, metaclass=abc.ABCMeta):
             base_pos (3-tuple): x,y,z position of robot base in mujoco world coordinates
             base_ori (4-tuple): x,y,z,w orientation or robot base in mujoco world coordinates
         """
+        # TODO: can we (1) get target joint pose (2) compute IK (3) set qpos (4) run simulator??
         pass
 
     def update_initial_joints(self, initial_joints):

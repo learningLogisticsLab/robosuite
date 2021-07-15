@@ -184,16 +184,16 @@ class RobotEnv(MujocoEnv):
 
         # Run superclass init
         super().__init__(
-            has_renderer=has_renderer,
-            has_offscreen_renderer=self.has_offscreen_renderer,
-            render_camera=render_camera,
-            render_collision_mesh=render_collision_mesh,
-            render_visual_mesh=render_visual_mesh,
-            render_gpu_device_id=render_gpu_device_id,
-            control_freq=control_freq,
-            horizon=horizon,
-            ignore_done=ignore_done,
-            hard_reset=hard_reset,
+            has_renderer            = has_renderer,
+            has_offscreen_renderer  = self.has_offscreen_renderer,
+            render_camera           = render_camera,
+            render_collision_mesh   = render_collision_mesh,
+            render_visual_mesh      = render_visual_mesh,
+            render_gpu_device_id    = render_gpu_device_id,
+            control_freq            = control_freq,
+            horizon                 = horizon,
+            ignore_done             = ignore_done,
+            hard_reset              = hard_reset,
         )
 
     def visualize(self, vis_settings):

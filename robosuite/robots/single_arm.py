@@ -182,14 +182,14 @@ class SingleArm(Manipulator):
                 ] = self.gripper.init_qpos
 
         # Update base pos / ori references in controller
-        self.controller.update_base_pose(self.base_pos, self.base_ori)
+        self.controller.update_base_pose(self.base_pos, self.base_ori) # TODO: currently empty
 
-        # # Setup buffers to hold recent values
+        # Setup buffers to hold recent values
         self.recent_ee_forcetorques = DeltaBuffer(dim=6)
-        self.recent_ee_pose = DeltaBuffer(dim=7)
-        self.recent_ee_vel = DeltaBuffer(dim=6)
-        self.recent_ee_vel_buffer = RingBuffer(dim=6, length=10)
-        self.recent_ee_acc = DeltaBuffer(dim=6)
+        self.recent_ee_pose         = DeltaBuffer(dim=7)
+        self.recent_ee_vel          = DeltaBuffer(dim=6)
+        self.recent_ee_vel_buffer   = RingBuffer(dim=6, length=10)
+        self.recent_ee_acc          = DeltaBuffer(dim=6)
 
     def setup_references(self):
         """
@@ -216,7 +216,7 @@ class SingleArm(Manipulator):
             ]
 
         # IDs of sites for eef visualization
-        self.eef_site_id = self.sim.model.site_name2id(self.gripper.important_sites["grip_site"])
+        self.eef_site_id     = self.sim.model.site_name2id(self.gripper.important_sites["grip_site"])
         self.eef_cylinder_id = self.sim.model.site_name2id(self.gripper.important_sites["grip_cylinder"])
 
     def control(self, action, policy_step=False):
