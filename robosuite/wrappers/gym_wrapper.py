@@ -53,15 +53,15 @@ class GymWrapper(Wrapper, Env):
         self.metadata = None
 
         # set up observation and action spaces
-        obs = self.env.reset()
-        self.modality_dims = {key: obs[key].shape for key in self.keys}
-        flat_ob = self._flatten_obs(obs)
-        self.obs_dim = flat_ob.size
-        high = np.inf * np.ones(self.obs_dim)
-        low = -high
+        obs                 = self.env.reset()                              # dictionary of observables
+        self.modality_dims  = {key: obs[key].shape for key in self.keys}
+        flat_ob             = self._flatten_obs(obs)    # flatten's images... double check this
+        self.obs_dim        = flat_ob.size              # concatenantes proprio, object, and image info into one long contiguous array
+        high                = np.inf * np.ones(self.obs_dim)
+        low                 = -high
         self.observation_space = spaces.Box(low=low, high=high)
-        low, high = self.env.action_spec
-        self.action_space = spaces.Box(low=low, high=high)
+        low, high           = self.env.action_spec
+        self.action_space   = spaces.Box(low=low, high=high)
 
     def _flatten_obs(self, obs_dict, verbose=False):
         """

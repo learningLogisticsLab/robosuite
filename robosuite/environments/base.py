@@ -38,20 +38,20 @@ def make(env_name, *args, **kwargs):
                 env_name, ", ".join(REGISTERED_ENVS)
             )
         )
-    return REGISTERED_ENVS[env_name](*args, **kwargs)
+    return REGISTERED_ENVS[env_name](*args, **kwargs) # calls registered class constructor
 
 
 class EnvMeta(type):
     """Metaclass for registering environments"""
 
     def __new__(meta, name, bases, class_dict):
-        cls = super().__new__(meta, name, bases, class_dict)
+        cls = super().__new__(meta, name, bases, class_dict)    # Insantiate new class
 
         # List all environments that should not be registered here.
         _unregistered_envs = ["MujocoEnv", "RobotEnv", "ManipulationEnv", "SingleArmEnv", "TwoArmEnv"]
 
         if cls.__name__ not in _unregistered_envs:
-            register_env(cls)
+            register_env(cls)                                   # Register the new class
         return cls
 
 
@@ -96,54 +96,57 @@ class MujocoEnv(metaclass=EnvMeta):
 
     def __init__(
         self,
-        has_renderer=False,
-        has_offscreen_renderer=True,
-        render_camera="frontview",
-        render_collision_mesh=False,
-        render_visual_mesh=True,
-        render_gpu_device_id=-1,
-        control_freq=20,
-        horizon=1000,
-        ignore_done=False,
-        hard_reset=True
+
+        control_freq            = 20,
+
+        horizon                 = 1000,
+        ignore_done             = False,
+        hard_reset              = True,
+
+        has_renderer            = False,
+        has_offscreen_renderer  = True,
+        render_camera           = "frontview",
+        render_collision_mesh   = False,
+        render_visual_mesh      = True,
+        render_gpu_device_id    = -1,        
     ):
         # First, verify that both the on- and off-screen renderers are not being used simultaneously
         if has_renderer is True and has_offscreen_renderer is True:
             raise ValueError("the onscreen and offscreen renderers cannot be used simultaneously.")
 
         # Rendering-specific attributes
-        self.has_renderer = has_renderer
+        self.has_renderer           = has_renderer
         self.has_offscreen_renderer = has_offscreen_renderer
-        self.render_camera = render_camera
-        self.render_collision_mesh = render_collision_mesh
-        self.render_visual_mesh = render_visual_mesh
-        self.render_gpu_device_id = render_gpu_device_id
-        self.viewer = None
+        self.render_camera          = render_camera
+        self.render_collision_mesh  = render_collision_mesh
+        self.render_visual_mesh     = render_visual_mesh
+        self.render_gpu_device_id   = render_gpu_device_id
+        self.viewer                 = None
 
         # Simulation-specific attributes
-        self._observables = {}                      # Maps observable names to observable objects
-        self._obs_cache = {}                        # Maps observable names to pre-/partially-computed observable values
-        self.control_freq = control_freq
-        self.horizon = horizon
-        self.ignore_done = ignore_done
-        self.hard_reset = hard_reset
-        self._model_postprocessor = None            # Function to post-process model after load_model() call
-        self.model = None
-        self.cur_time = None
-        self.model_timestep = None
-        self.control_timestep = None
-        self.deterministic_reset = False            # Whether to add randomized resetting of objects / robot joints
+        self._observables   = {}                        # Maps observable names to observable objects
+        self._obs_cache     = {}                        # Maps observable names to pre-/partially-computed observable values
+        self.control_freq   = control_freq
+        self.horizon        = horizon
+        self.ignore_done    = ignore_done
+        self.hard_reset     = hard_reset
+        self._model_postprocessor   = None              # Function to post-process model after load_model() call
+        self.model                  = None
+        self.cur_time               = None
+        self.model_timestep         = None
+        self.control_timestep       = None
+        self.deterministic_reset    = False             # Whether to add randomized resetting of objects / robot joints
 
-        # Load the model
+        # Load the model. Yields self.model for task.
         self._load_model()
 
         # Post-process model
         self._postprocess_model()
 
-        # Initialize the simulation
+        # Initialize the simulation: yields self.sim from mjsim object built from model
         self._initialize_sim()
 
-        # Run all further internal (re-)initialization required
+        # Run all further internal (re-)initialization/resets required
         self._reset_internal()
 
         # Load observables
@@ -158,11 +161,15 @@ class MujocoEnv(metaclass=EnvMeta):
         """
         self.cur_time = 0
         self.model_timestep = macros.SIMULATION_TIMESTEP
+
         if self.model_timestep <= 0:
             raise ValueError("Invalid simulation timestep defined!")
+
         self.control_freq = control_freq
+
         if control_freq <= 0:
             raise SimulationError("Control frequency {} is invalid".format(control_freq))
+        
         self.control_timestep = 1. / control_freq
 
     def set_model_postprocessor(self, postprocessor):
@@ -225,10 +232,20 @@ class MujocoEnv(metaclass=EnvMeta):
     def reset(self):
         """
         Resets simulation.
+        
+        1) Hard reset reloads everything from the xml model. 
+        2) Also observables (joint_pos/vel; eef_pos/quat, gripper_qpos/qvel | images | obj_pos/quat, ro_robot_eef_pos/quat)
+
+        Otherwise:
+        1) _reset_internal(): resets robosuite-centric vars (base, controller, gripper, robot) + replace objects/vis_objects randomly
+        2) set site visualization
+        3) get observations: self._get_observations
 
         Returns:
             OrderedDict: Environment observation space after reset occurs
         """
+        set_site_visualization = True
+
         # TODO(yukez): investigate black screen of death
         # Use hard reset if requested
         if self.hard_reset and not self.deterministic_reset:
@@ -236,22 +253,29 @@ class MujocoEnv(metaclass=EnvMeta):
             self._load_model()
             self._postprocess_model()
             self._initialize_sim()
+        
         # Else, we only reset the sim internally
         else:
             self.sim.reset()
+        
         # Reset necessary robosuite-centric variables
         self._reset_internal()
         self.sim.forward()
-        # Setup observables, reloading if
+        
+        # Setup observables, reloading if hard reset
         self._obs_cache = {}
+        
         if self.hard_reset:
             # If we're using hard reset, must re-update sensor object references
             _observables = self._setup_observables()
             for obs_name, obs in _observables.items():
                 self.modify_observable(observable_name=obs_name, attribute="sensor", modifier=obs._sensor)
+        
         # Make sure that all sites are toggled OFF by default
-        self.visualize(vis_settings={vis: False for vis in self._visualizations})
-        # Return new observations
+        self.visualize(vis_settings={vis: set_site_visualization for vis in self._visualizations})
+        
+        # Return new observations (proprio (32,), objects: (#obj*14))
+        # Current observables: robot0_jointpos_cos/sin; robot0_joint_vel, robot0_eef_pos/quat; robot0_gripper_qpos/qvel o0001_pos/quat, o0001_to_robot_eef_pos/quat
         return self._get_observations(force_update=True)
 
     def _reset_internal(self):
@@ -283,7 +307,7 @@ class MujocoEnv(metaclass=EnvMeta):
 
         # additional housekeeping
         self.sim_state_initial = self.sim.get_state()
-        self._setup_references()
+        self._setup_references() # creates indeces for robot, gripper, object, also target_bin_placements 
         self.cur_time = 0
         self.timestep = 0
         self.done = False
@@ -318,12 +342,12 @@ class MujocoEnv(metaclass=EnvMeta):
             OrderedDict: OrderedDict containing observations [(name_string, np.array), ...]
 
         """
-        observations = OrderedDict()
+        observations    = OrderedDict()
         obs_by_modality = OrderedDict()
 
         # Force an update if requested
         if force_update:
-            self._update_observables(force=True)
+            self._update_observables(force=True) # iterates through each of the observable objects, updates its readings (passes them through corruption,filtering,delay if assigned)
 
         # Loop through all observables and grab their current observation
         for obs_name, observable in self._observables.items():
@@ -631,7 +655,7 @@ class MujocoEnv(metaclass=EnvMeta):
         """
         # if there is an active viewer window, destroy it
         if self.viewer is not None:
-            self.viewer.close()  # change this to viewer.finish()?
+            self.viewer.close()  # TODO: change this to viewer.finish()?
             self.viewer = None
 
     def close(self):

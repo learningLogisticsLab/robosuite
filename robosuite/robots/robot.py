@@ -153,7 +153,7 @@ class Robot(object):
 
     def setup_references(self):
         """
-        Sets up necessary reference for robots, grippers, and objects.
+        Sets up necessary reference indeces for robots, grippers, and objects.
         """
         # indices for joints in qpos, qvel
         self.robot_joints = self.robot_model.joints

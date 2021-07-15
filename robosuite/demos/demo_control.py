@@ -44,9 +44,9 @@ sequential qualitative behavior during the test is described below for each cont
 
 """
 
-import robosuite as suite
-from robosuite.controllers import load_controller_config
-from robosuite.utils.input_utils import *
+import robosuite as suite                                   # Calls top level __init__: make, manipulation_environments|robots|controllers|grippers
+from robosuite.controllers import load_controller_config    # load controller correctly 
+from robosuite.utils.input_utils import *                   # script to correctly choose environment|robot|controller
 from robosuite.robots import Bimanual
 
 

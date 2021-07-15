@@ -1,11 +1,12 @@
 from robosuite.environments.base import make
 
 # Manipulation environments
+from robosuite.environments.manipulation.picking import *         # New environment Juan Rojas
+                                                                        # TODO do * to import all environments for multiple objects
 from robosuite.environments.manipulation.lift import Lift
 from robosuite.environments.manipulation.stack import Stack
 from robosuite.environments.manipulation.nut_assembly import NutAssembly
 from robosuite.environments.manipulation.pick_place import PickPlace
-from robosuite.environments.manipulation.bin_picking import BinPicking
 from robosuite.environments.manipulation.door import Door
 from robosuite.environments.manipulation.wipe import Wipe
 from robosuite.environments.manipulation.two_arm_lift import TwoArmLift
