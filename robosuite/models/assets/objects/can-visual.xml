@@ -1,8 +1,6 @@
 <mujoco model="can-visual">
   <asset>
     <mesh file="meshes/can.stl" name="can_mesh"/>
-
-
   </asset>
   <worldbody>
     <body>
