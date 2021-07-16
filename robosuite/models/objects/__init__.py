@@ -68,8 +68,6 @@ from .xml_objects import(
     o0043v,
     o0057,
     o0057v,
-    meshe,
-    meshev,
     o0056,
     o0056v,
     o0042,
