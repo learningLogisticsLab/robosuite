@@ -1,0 +1,18 @@
+<mujoco model="strawberry">
+  <asset>
+    <mesh name="strawberry_mesh" file="./meshes/strawberry.msh" scale="1 1 1"/>
+    <texture name="tex-strawberry" file="../textures/strawberry.png" type="2d"/>
+    <material name="strawberry" reflectance="0.7" texrepeat="15 15" texture="tex-strawberry" texuniform="true"/>
+  </asset>
+  <worldbody>
+    <body>
+      <body name="object">
+        <inertial pos="-0.0014938727773305587 0.015432679933728788 0.02111450326881559" mass="0.018" fullinertia="1.1142887364251795e-08 1.0106109240846608e-08 9.086808374326581e-09 -9.251929496783896e-25 -2.0522770518953985e-24 4.2342023492700045e-25"/>
+        <geom name="strawberry" pos="0 0 0" mesh="strawberry_mesh" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" mass="0.018" friction="0.95 0.3 0.1"  material="strawberry" group="0" condim="4"/>
+      </body>
+      <site rgba="1 0 0 1" size="0.005" pos="0 0 0" name="bottom_site"/>
+      <site rgba="0 1 0 1" size="0.005" pos="0 0 0.055" name="top_site"/>
+      <site rgba="0 0 1 1" size="0.005" pos="0.0219 0.0219 0" name="horizontal_radius_site"/>
+    </body>
+  </worldbody>
+</mujoco>

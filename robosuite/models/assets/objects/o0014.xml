@@ -1,0 +1,18 @@
+<mujoco model="lemon">
+  <asset>
+    <mesh name="lemon_mesh" file="./meshes/lemon.msh" scale="1 1 1"/>
+    <texture name="tex-lemon" file="../textures/lemon.png" type="2d"/>
+    <material name="lemon" reflectance="0.7" texrepeat="15 15" texture="tex-lemon" texuniform="true"/>
+  </asset>
+  <worldbody>
+    <body>
+      <body name="object">
+        <inertial pos="-0.010770493044399379 0.02101421821337594 0.026208533597256233" mass="0.029" fullinertia="3.41085798454103e-08 3.393718081001612e-08 2.785774449123034e-08 -1.4026000443507479e-24 -6.657374072955688e-24 4.276566240104417e-24"/>
+        <geom name="lemon" pos="0 0 0" mesh="lemon_mesh" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" mass="0.029" friction="0.95 0.3 0.1"  material="lemon" group="0" condim="4"/>
+      </body>
+      <site rgba="1 0 0 1" size="0.005" pos="0 0 0" name="bottom_site"/>
+      <site rgba="0 1 0 1" size="0.005" pos="0 0 0.068" name="top_site"/>
+      <site rgba="0 0 1 1" size="0.005" pos="0.027 0.027 0" name="horizontal_radius_site"/>
+    </body>
+  </worldbody>
+</mujoco>

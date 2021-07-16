@@ -1,0 +1,18 @@
+<mujoco model="e_cups">
+  <asset>
+    <mesh name="e_cups_mesh" file="./meshes/e_cups.msh" scale="1 1 1"/>
+    <texture name="tex-e_cups" file="../textures/e_cups.png" type="2d"/>
+    <material name="e_cups" reflectance="0.7" texrepeat="15 15" texture="tex-e_cups" texuniform="true"/>
+  </asset>
+  <worldbody>
+    <body>
+      <body name="object">
+        <inertial pos="-0.03752278249207881 0.024731456379195844 0.03143344870002347" mass="0.021" fullinertia="5.081972079713401e-08 4.811740055054632e-08 4.36084257680286e-08 2.724513687388862e-24 1.321676525932148e-24 -5.2749858690947215e-24"/>
+        <geom name="e_cups" pos="0 0 0" mesh="e_cups_mesh" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" mass="0.021" friction="0.95 0.3 0.1"  material="e_cups" group="0" condim="4"/>
+      </body>
+      <site rgba="1 0 0 1" size="0.005" pos="0 0 0" name="bottom_site"/>
+      <site rgba="0 1 0 1" size="0.005" pos="0 0 0.068" name="top_site"/>
+      <site rgba="0 0 1 1" size="0.005" pos="0.0375 0.0375 0" name="horizontal_radius_site"/>
+    </body>
+  </worldbody>
+</mujoco>

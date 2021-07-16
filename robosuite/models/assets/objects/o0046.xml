@@ -1,0 +1,18 @@
+<mujoco model="mini_soccer_ball">
+  <asset>
+    <mesh name="mini_soccer_ball_mesh" file="./meshes/mini_soccer_ball.msh" scale="1 1 1"/>
+    <texture name="tex-mini_soccer_ball" file="../textures/mini_soccer_ball.png" type="2d"/>
+    <material name="mini_soccer_ball" reflectance="0.7" texrepeat="15 15" texture="tex-mini_soccer_ball" texuniform="true"/>
+  </asset>
+  <worldbody>
+    <body>
+      <body name="object">
+        <inertial pos="-0.0059125914007175946 0.011530561800764411 0.06131555334762107" mass="0.123" fullinertia="1.709206540462109e-06 1.6540960125901477e-06 1.6272467028315052e-06 -2.9727771330438613e-22 7.894662980534025e-23 2.0899168628226547e-23"/>
+        <geom name="mini_soccer_ball" pos="0 0 0" mesh="mini_soccer_ball_mesh" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" mass="0.123" friction="0.95 0.3 0.1"  material="mini_soccer_ball" group="0" condim="4"/>
+      </body>
+      <site rgba="1 0 0 1" size="0.005" pos="0 0 0" name="bottom_site"/>
+      <site rgba="0 1 0 1" size="0.005" pos="0 0 0.14" name="top_site"/>
+      <site rgba="0 0 1 1" size="0.005" pos="0.07 0.07 0" name="horizontal_radius_site"/>
+    </body>
+  </worldbody>
+</mujoco>
