@@ -58,7 +58,7 @@ object_reset_strategy_cases = ['organized', 'jumbled', 'wall', 'random']
 
 class Picking(SingleArmEnv):
     """
-    This class corresponds to a pick and place task for a single robot arm that is modeled using RelationalRL. 
+    This class corresponds to a pick and place task for a single PANDA robot arm as defined in robosuite assets and trained via Richard Li's RelationalRL. 
     Currently, the task is modelled as a bin-picking task, but maybe extended to include putwalls. 
 
     The class allows the user to set:
@@ -287,6 +287,7 @@ class Picking(SingleArmEnv):
             self.num_blocks  = self.num_objs_to_load            # We cannot model more objects in the graph that what we have loaded
             self.num_objects = self.num_blocks
         else:     
+            self.num_blocks  = num_blocks
             self.num_objects = num_blocks                       # tot num of objects to represent in graph (we use this more descriptive name here, but keep num_blocks for RelationalRL)
         
         # Strategies
@@ -350,6 +351,25 @@ class Picking(SingleArmEnv):
             initialization_noise    = initialization_noise,            
         )
 
+    def get_goal_object(self):
+        '''
+        Plays the role of selecting a desired object for order fulfillment. 
+        Currently, randomly choose an object from the list of self.object_names which has num_objs_to_load.
+        
+        Could make more sophisticated in the future
+        '''
+
+        assert self.num_objs_to_load >= 0, "There are no objects to load"
+
+        # Select a goal obj
+        goal_obj = np.random.choice(self.object_names)
+        
+        # Prepare a list of other objs not containing goal
+        other_objs_to_consider = self.object_names.copy()
+        other_objs_to_consider.remove(goal_obj)
+
+        return goal_obj, other_objs_to_consider
+    
     def reward(self, action=None):
         """
         Reward function for the task.
@@ -862,6 +882,38 @@ class Picking(SingleArmEnv):
             if self.object_reset_strategy == 'wall':
                 pass
 
+        # Set goal object to pick up and sort closest objects to model
+        self.goal_object, self.other_objs_than_goals = self.get_goal_object()
+
+    def return_sorted_objs_to_model(self,obs):
+        '''
+        The goal of this method is to return a list of num_objects in length that are closest to self.goal_object and that we want to model as nodes
+        1) Access all objects that are not the goal
+        2) Compute their norm with the goal
+        3) Sort them
+        4) Only keep the first num_object entries
+
+        Params:
+            self.goal_object:               class level param indicates the name of the object to pick.
+            self.other_objs_than_goals:     class level list with names of objects to model. Recall we may choose to model as nodes less objects than we have loaded
+
+
+        '''
+        assert len(self.other_objs_than_goals)>0
+        obj_dist = {}
+
+        # 1) Compute norm between goal_object and objects_to_consider
+        for other in self.other_objs_than_goals:
+
+            # Get pos from observables
+            val = np.linalg.norm(obs[self.goal_object+'_pos'] - obs[other+'_pos'])
+            obj_dist[other] = val
+
+
+        # 2) Sort the dictionary by norm value
+        sorted_obj_dist_tuple = sorted(obj_dist.items(), key = lambda item: item[1])
+        self.sorted_objects_to_model = {k: v for k, v in sorted_obj_dist_tuple[self.num_objects]} # notice self.num_objects. This indicates the number of obj we wish to model.                
+
     def _check_success(self):
         """
         Check if all objects have been successfully placed in their corresponding bins.
@@ -883,7 +935,12 @@ class Picking(SingleArmEnv):
             return np.sum(self.objects_in_bins) > 0
 
         # returns True if all objects are in correct bins
-        return np.sum(self.objects_in_bins) == len(self.objects)
+        if np.sum(self.objects_in_bins) == len(self.objects):
+
+            # Update goal object
+            self.goal_object = self.get_goal_object() 
+            print(f"Success. New object is {self.goal_object}")
+        return True
 
     def visualize(self, vis_settings):
         """
@@ -1000,7 +1057,84 @@ class Picking(SingleArmEnv):
 
         return visual_objects, objects   
         
-# Define new permutation of classes based on picking for relationalRL code
+#-------------------------------------------------------------
+# Including Fetch methods assumed by relational-RL
+#-------------------------------------------------------------
+    def _get_obs(self):
+        '''
+        This declaration comes from the Fetch Block Construction environment in rlkit_relational. In our top class: MujocoEnv
+        we have the _get_observations declaration. It returns a dictionary of observables.
+
+        We keep this declaration as is for two reasons:
+        (1) Facilitate the migration of the rlkit_relational code by keeping the same method name
+        (2) Keeping the same contents of the original method: not limited to creating achieved_goals and desired_goal.
+
+        Method executes the following:
+        1. Compute observations as np arrays [grip_xyz, f1x, f2x, grip_vxyz, f1v, f2v, obj1_pos, rel_pos_wrt_gripp_obj, obj1_theta, obj1_vxyz, obj1_dtheta obj2... ]
+        2. Achieved goal: [obj1_pos obj2_pos ... objn_pos grip_xyz]
+        3. Desired goal: goal obtained in ._sample_goal()
+
+        Achieve Goal
+        if it has the object, use robotic gripper. otherwise use the object position.     
+        '''
+
+        # Get robosuite observations as ordered dict
+        obs = self._get_observations(force_update=False)
+
+        # Get prefix for robot to extract observation keys
+        pf = self.robots[0].robot_model.naming_prefix
+        
+        # Gripper: pos and vel 
+        grip_pos = obs[f'{pf}eef_pos'] # do not use hardcoded names. extract them.             
+        dt          = self.sim.nsubsteps * self.sim.model.opt.timestep  # dt is equivalent to the number of substeps in controller times duration of substep  
+        grip_velp   = self.sim.data.get_site_xvelp('gripper0_grip_site_cylinder') * dt  # TODO: add to observables? xvelp is the step vel (??) but needs to be scaled by dt such that we get the instantaneous velocity?
+
+        # Finger: Extract robot joints and velocities to get finger data
+        gripper_state = obs[f'{pf}gripper_qpos']
+        gripper_vel   = obs[f'{pf}gripper_qvel'] * dt
+
+        # Concatenate gripper obs
+        gripper_observations = np.concatenate([
+            grip_pos,
+            gripper_state,
+            grip_velp,
+            gripper_vel,
+        ])
+
+        #-------------------------------------------------------------------------- 
+        # Achieved Goal + other strucs for obs
+        #-------------------------------------------------------------------------- 
+        achieved_goal = [] 
+
+        # Observations for Objects
+        # *Note: there are three quantities of interest: (i) (total) num_objs_to_load, (ii) num_objs (to_model), and (iii) goal object. 
+        # We report data for num_objs that are closes to goal_object and ignore the rest. 
+        # We only consider the relative position between the goal object and end-effector, all the rest are set to 0. 
+        self.sorted_objects_to_model = self.return_sorted_objs_to_model(obs)
+
+        for i in range(self.sorted_objects_to_model): 
+
+            # Get xyz pos ith obj
+            object_i_pos  = obs[self.sorted_objects_to_model+'_pos'] 
+
+            # Get quat (as long as we do not face discontinuities NN should learn it fine)
+            object_i_quat = obs[self.sorted_objects_to_model+'_quat'] 
+
+        #     # velocities
+        #     object_velp
+        #     object_velr
+        #     object_velp
+
+        #     # Relative position wrt to gripper
+                # if i 
+        #     object_rel_pos
+        # else:
+        #     object_pos = object_rot = object_velp = object_velr = object_rel_pos = np.zeros(0)
+
+        return obs
+
+#-------------------------------------------------------------
+# Define new permutation of classes to register based on picking for relationalRL code
 for num_blocks in range(1, 5): # use of num_blocks indicates objects. kept for historical reasons.
     for num_relational_blocks in [3]: # currently only testin with 3 relational blocks (message passing)
         for num_query_heads in [1]: # number of query heads (multi-head attention) currently fixed at 1
@@ -1008,7 +1142,7 @@ for num_blocks in range(1, 5): # use of num_blocks indicates objects. kept for h
                 for obs_type in ['dictstate']: #['dictimage', 'np', 'dictstate']:
 
                     # Generate the class name 
-                    className = F"picking_{num_blocks}Blocks_{num_relational_blocks}NumRelBlocks_{num_query_heads}NQH_{reward_type}Reward_{obs_type}Obs"
+                    className = F"picking_blocks{num_blocks}_numrelblocks{num_relational_blocks}_nqh{num_query_heads}_reward{reward_type}_{obs_type}Obs"
 
                     # Add necessary attributes
 

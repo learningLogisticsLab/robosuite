@@ -278,7 +278,7 @@ class UniformRandomSampler(ObjectPositionSampler):
             bottom_offset       = obj.bottom_offset
             success             = False
 
-            for i in range(5000):  # 5000 retries
+            for i in range(100):  # 5000 retries
                 object_x = self._sample_x(horizontal_radius) + base_offset[0]
                 object_y = self._sample_y(horizontal_radius) + base_offset[1]
                 object_z = self.z_offset + base_offset[2]
@@ -300,6 +300,9 @@ class UniformRandomSampler(ObjectPositionSampler):
                             object_z - z <= other_obj.top_offset[-1] - bottom_offset[-1]    # ??
                         ):
                             location_valid = False
+                            #if location_valid is False:
+                                # print(f'Could find a location to place object {obj.name} without collision in the placement_sampler')
+                                # print(f'position is ({object_x},{object_y},{object_z}), norm is {np.linalg.norm((object_x - x, object_y - y))}, and the sum of horizontal raidii between the two objects is {other_obj.horizontal_radius + horizontal_radius}')
                             break
 
                 if location_valid:
@@ -317,7 +320,14 @@ class UniformRandomSampler(ObjectPositionSampler):
                     break
 
             if not success:
-                raise RandomizationError("Cannot place all objects ):")
+                # We cannot find a good location, so raise it by 10cm the air and drop it.
+                object_z += 0.10
+                quat = self._sample_quat()
+                pos = (object_x, object_y, object_z)
+                placed_objects[obj.name] = (pos, quat, obj)   
+                # TODO: recheck validity of this position. Convert code segment starting with if self.ensure_valid_placement into a function and call here.
+                # if it failes then raise RandomizationError
+                #raise RandomizationError("Cannot place all objects ):")
 
         return placed_objects
 
