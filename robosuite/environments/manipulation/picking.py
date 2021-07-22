@@ -254,6 +254,9 @@ class Picking(SingleArmEnv):
         # Noise
         initialization_noise="default",
         suite_path          = "",
+
+        # Goals/Objects
+        
     ):
         print('Generating Picking class.\n')
         # Task settings
@@ -320,6 +323,9 @@ class Picking(SingleArmEnv):
 
         # whether to use ground-truth object states
         self.use_object_obs = use_object_obs
+
+        # Goal Object and Other objects
+        self.sorted_objects_to_model = {}
 
         # Initialize Parent Classes: SingleArmEnv->ManipEnv->RobotEnv->MujocoEnv
         super().__init__(
@@ -597,7 +603,7 @@ class Picking(SingleArmEnv):
     def _load_model(self):
         """
         Create a manipulation task object. 
-        Requires a (i) mujoco arena, (ii) robot, and (iii) object + visual objects. 
+        Requires a (i) mujoco arena, (ii) robot (+gripper), and (iii) object + visual objects. 
         
         Return an xml model under self.model
         """
@@ -638,6 +644,7 @@ class Picking(SingleArmEnv):
         # Create placement initializers for each existing object (self.placement_initializer): will place according to strategy
         self._get_placement_initializer()
 
+    # Next 3 methods all handle observables
     def _setup_references(self):
         """
         Sets up references to important components. A reference is typically an
@@ -700,14 +707,16 @@ class Picking(SingleArmEnv):
             enableds = [True]
             actives  = [False]
 
+            # Create sensors for objects
             for i, obj in enumerate(self.objects):
                 # Create object sensors
                 using_obj = True #(self.single_object_mode == 0 or self.object_id == i)
                 obj_sensors, obj_sensor_names = self._create_obj_sensors(obj_name=obj.name, modality=modality)
+                num_obj_sensors = len(obj_sensor_names)
                 sensors     += obj_sensors
                 names       += obj_sensor_names
-                enableds    += [using_obj] * 4 #world_pose_in_gripper + pos, quat, obj_to_robot_eef_pos & quat for each object
-                actives     += [using_obj] * 4
+                enableds    += [using_obj] * num_obj_sensors    # Created object sensors: world_pose_in_gripper + pos, quat, vel, obj_to_robot_eef_pos & quat for each object
+                actives     += [using_obj] * num_obj_sensors
                 self.object_id_to_sensors[i] = obj_sensor_names
 
             # Create observables
@@ -726,6 +735,8 @@ class Picking(SingleArmEnv):
         """
         Helper function to create sensors for a given object. This is abstracted in a separate function call so that we
         don't have local function naming collisions during the _setup_observables() call.
+
+        We create: obj_pos
 
         Args:
             obj_name (str): Name of object to create sensors for
@@ -746,6 +757,16 @@ class Picking(SingleArmEnv):
         def obj_quat(obs_cache):
             return T.convert_quat(self.sim.data.body_xquat[self.obj_body_id[obj_name]], to="xyzw")
 
+        # ---- Additional object sensors added to replicate Fetch Tasks: velocity and angular velocity
+        @sensor(modality=modality)
+        def obj_velp(obs_cache):
+            return np.array(self.sim.data.get_site_xvelp("gripper0_grip_site")) # Better to set this via gripper.important_sites["grip_site"]. not sure if i can access it here.                       
+
+        @sensor(modality=modality)
+        def obj_velr(obs_cache):
+            return np.array(self.sim.data.get_site_xvelr("gripper0_grip_site"))
+
+
         @sensor(modality=modality)
         def obj_to_eef_pos(obs_cache):
             # Immediately return default value if cache is empty
@@ -763,8 +784,8 @@ class Picking(SingleArmEnv):
             return obs_cache[f"{obj_name}_to_{pf}eef_quat"] if \
                 f"{obj_name}_to_{pf}eef_quat" in obs_cache else np.zeros(4)
 
-        sensors = [obj_pos, obj_quat, obj_to_eef_pos, obj_to_eef_quat]
-        names = [f"{obj_name}_pos", f"{obj_name}_quat", f"{obj_name}_to_{pf}eef_pos", f"{obj_name}_to_{pf}eef_quat"]
+        sensors = [obj_pos, obj_quat, obj_velp, obj_velr, obj_to_eef_pos, obj_to_eef_quat]
+        names = [f"{obj_name}_pos", f"{obj_name}_quat", f"{obj_name}_velp",  f"{obj_name}_velr", f"{obj_name}_to_{pf}eef_pos", f"{obj_name}_to_{pf}eef_quat"]
 
         return sensors, names
 
@@ -891,7 +912,15 @@ class Picking(SingleArmEnv):
         1) Access all objects that are not the goal
         2) Compute their norm with the goal
         3) Sort them
-        4) Only keep the first num_object entries
+        4) Only keep the first num_object-1 entries (includes the goal)
+        5) Place the goal at the front
+
+        Example:
+        : objs_to_load = [goal_obj, obj2, obj3, obj4, obj5] (assumed already sorted)
+        : num_objects (to model) = 3
+
+        : sorted_obj_dist = [obj2, obj3] # keep num_objects -1
+        : sorted_obj_dist = [goal_obj, obj2, obj3] # place goal in the front
 
         Params:
             self.goal_object:               class level param indicates the name of the object to pick.
@@ -899,8 +928,9 @@ class Picking(SingleArmEnv):
 
 
         '''
-        assert len(self.other_objs_than_goals)>0
-        obj_dist = {}
+        assert len(self.other_objs_than_goals) > 0
+        obj_dist        = {}
+        sorted_obj_dist = {}
 
         # 1) Compute norm between goal_object and objects_to_consider
         for other in self.other_objs_than_goals:
@@ -912,11 +942,20 @@ class Picking(SingleArmEnv):
 
         # 2) Sort the dictionary by norm value
         sorted_obj_dist_tuple = sorted(obj_dist.items(), key = lambda item: item[1])
-        self.sorted_objects_to_model = {k: v for k, v in sorted_obj_dist_tuple[self.num_objects]} # notice self.num_objects. This indicates the number of obj we wish to model.                
+        sorted_obj_dist = {k: v for k, v in sorted_obj_dist_tuple[:self.num_objects-1]} # notice self.num_objects-1. This indicates the number of obj we wish to model excluding the goal. 
+
+        # 3) Place goal object at the front using OrderedDict move_to_end()
+        sorted_obj_dist = OrderedDict(sorted_obj_dist)
+        sorted_obj_dist[self.goal_object] = 0 # the distance value of goal is zero
+        sorted_obj_dist.move_to_end(self.goal_object,last=False) # move to front
+
+        return sorted_obj_dist
 
     def _check_success(self):
         """
         Check if all objects have been successfully placed in their corresponding bins.
+
+        TODO: Aditionally: set goal object to be modified if successful (without repeat)
 
         Returns:
             bool: True if all objects are placed correctly
@@ -940,6 +979,8 @@ class Picking(SingleArmEnv):
             # Update goal object
             self.goal_object = self.get_goal_object() 
             print(f"Success. New object is {self.goal_object}")
+
+        # TODO: Set goal object to be modified if successful (without repeat)
         return True
 
     def visualize(self, vis_settings):
@@ -1060,10 +1101,11 @@ class Picking(SingleArmEnv):
 #-------------------------------------------------------------
 # Including Fetch methods assumed by relational-RL
 #-------------------------------------------------------------
-    def _get_obs(self):
+    def _get_obs(self, force_update=False):
         '''
         This declaration comes from the Fetch Block Construction environment in rlkit_relational. In our top class: MujocoEnv
-        we have the _get_observations declaration. It returns a dictionary of observables.
+        we have the _get_observations declaration. It returns a dictionary of observables. This call will set 1 level above the robosuite call to _get_observations
+        # Integrates them.
 
         We keep this declaration as is for two reasons:
         (1) Facilitate the migration of the rlkit_relational code by keeping the same method name
@@ -1076,34 +1118,46 @@ class Picking(SingleArmEnv):
 
         Achieve Goal
         if it has the object, use robotic gripper. otherwise use the object position.     
+
+        Note:
+        Currently we do not consider the observables modalities in this function. 
+        The GymWrapper uses hem in its constructor... So far I don't think it will be a problem but need to check. 
         '''
 
         # Get robosuite observations as ordered dict
-        obs = self._get_observations(force_update=False)
+        obs = self._get_observations(force_update) # if called by reset() [see base class] this will be set to True.
 
         # Get prefix for robot to extract observation keys
         pf = self.robots[0].robot_model.naming_prefix
+        dt        = self.sim.nsubsteps * self.sim.model.opt.timestep  # dt is equivalent to the amount of time across number of substeps. But xvelp is already the velocity in 1 substep. It seems to make more sense to simply scale xvel by the number of substeps in 1 env step.        
         
-        # Gripper: pos and vel 
-        grip_pos = obs[f'{pf}eef_pos'] # do not use hardcoded names. extract them.             
-        dt          = self.sim.nsubsteps * self.sim.model.opt.timestep  # dt is equivalent to the number of substeps in controller times duration of substep  
-        grip_velp   = self.sim.data.get_site_xvelp('gripper0_grip_site_cylinder') * dt  # TODO: add to observables? xvelp is the step vel (??) but needs to be scaled by dt such that we get the instantaneous velocity?
+        # EEF: pos and vel 
+        grip_pos  = obs[f'{pf}eef_pos']         
+        grip_quat = obs[f'{pf}eef_quat']        
 
-        # Finger: Extract robot joints and velocities to get finger data
-        gripper_state = obs[f'{pf}gripper_qpos']
-        gripper_vel   = obs[f'{pf}gripper_qvel'] * dt
+        grip_velp = obs[f'{pf}eef_velp'] * dt   
+        grip_velr = obs[f'{pf}eef_velr'] * dt   
 
-        # Concatenate gripper obs
-        gripper_observations = np.concatenate([
-            grip_pos,
-            gripper_state,
-            grip_velp,
-            gripper_vel,
+        # Finger: Extract robot pos and vel to get finger data
+        gripper_state = obs[f'{pf}gripper_qpos']        
+        gripper_vel   = obs[f'{pf}gripper_qvel'] * dt   
+
+        # Concatenate and place in env_obs (1)
+        env_obs = np.concatenate([  # 17 dims
+            grip_pos.ravel(),       # 3
+            grip_quat.ravel(),      # 4
+
+            grip_velp.ravel(),      # 3
+            grip_velr.ravel(),      # 3
+
+            gripper_state.ravel(),  # 2
+            gripper_vel.ravel(),    # 2
         ])
 
         #-------------------------------------------------------------------------- 
-        # Achieved Goal + other strucs for obs
+        # Object observations + Achieved Goals: iteratively augment with # of obj
         #-------------------------------------------------------------------------- 
+        
         achieved_goal = [] 
 
         # Observations for Objects
@@ -1111,25 +1165,60 @@ class Picking(SingleArmEnv):
         # We report data for num_objs that are closes to goal_object and ignore the rest. 
         # We only consider the relative position between the goal object and end-effector, all the rest are set to 0. 
         self.sorted_objects_to_model = self.return_sorted_objs_to_model(obs)
+        
+        # Place goal object at the front
+        self.sorted_objects_to_model
 
-        for i in range(self.sorted_objects_to_model): 
+        for i in range( len(self.sorted_objects_to_model )):
 
-            # Get xyz pos ith obj
-            object_i_pos  = obs[self.sorted_objects_to_model+'_pos'] 
+            name_list = list(self.sorted_objects_to_model)
 
-            # Get quat (as long as we do not face discontinuities NN should learn it fine)
-            object_i_quat = obs[self.sorted_objects_to_model+'_quat'] 
+            # Pose: pos and orientation            
+            object_i_pos  = obs[name_list[i] + '_pos'] 
+            object_i_quat = obs[name_list[i] + '_quat'] 
 
-        #     # velocities
-        #     object_velp
-        #     object_velr
-        #     object_velp
+            # Vel: linear and angular
+            object_velp = obs[name_list[i] +'_velp'] * dt
+            object_velp = object_velp - grip_velp # relative velocity between object and gripper
 
-        #     # Relative position wrt to gripper
-                # if i 
-        #     object_rel_pos
-        # else:
-        #     object_pos = object_rot = object_velp = object_velr = object_rel_pos = np.zeros(0)
+            object_velr = obs[name_list[i] +'_velr'] * dt
+
+            # Relative position wrt to gripper: 
+            # *Note: we will only do this for the goal object and set the rest to 0. 
+            # By setting to 0 all calculations in the network will be cancelled. Robot should reach only to the goal object.
+            # Goal object to be modified if successful (without repeat)
+            if i == 0: 
+                 object_rel_pos = object_i_pos - grip_pos
+                 object_rel_rot = T.quat_distance(object_i_quat,grip_quat) # quat_dist returns the difference
+                                 #T.get_orientation_error(target_orn, current_orn) or this one? but returns 3D numpy array
+            else:
+                object_rel_pos = np.zeros(3)
+                object_rel_rot = np.zeros(4)
+            
+            # Augment observations      Dims:
+            env_obs = np.concatenate([  # 17 + (20 * num_objects)
+                env_obs,                
+                object_i_pos.ravel(),   # 3
+                object_i_quat.ravel(),  # 4
+
+                object_velp.ravel(),    # 3
+                object_velr.ravel(),    # 3
+
+                object_rel_pos.ravel(), # 3
+                object_rel_rot.ravel()  # 4
+            ])
+
+            #--------------------------------------------------------------------------
+            # Achieved Goal: the achieved state will be the object(s) pose(s)
+            # TODO: or would it be enough to only keep the state of the goal_object. 
+            # study in context of relationalR:
+            #--------------------------------------------------------------------------
+            achieved_goal = np.concatenate([    # 7 * num objects
+                achieved_goal, 
+                object_i_pos.copy(),    # 3 * num_objects
+                object_i_quat.copy(),   # 4 * num_objects
+            ])
+            
 
         return obs
 

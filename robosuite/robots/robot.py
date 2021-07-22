@@ -208,7 +208,7 @@ class Robot(object):
         sensors = [joint_pos, joint_pos_cos, joint_pos_sin, joint_vel]
         names = ["joint_pos", "joint_pos_cos", "joint_pos_sin", "joint_vel"]
         # We don't want to include the direct joint pos sensor outputs
-        actives = [False, True, True, True]
+        actives = [False, True, True, True] #TODO: consider setting all these to false for picking.py
 
         # Create observables for this robot
         observables = OrderedDict()
