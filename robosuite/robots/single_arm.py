@@ -292,7 +292,9 @@ class SingleArm(Manipulator):
 
     def setup_observables(self):
         """
-        Sets up observables to be used for this robot
+        Sets up observables to be used for this robot.
+        End-Effector: pose (pos, orientation) and twist (linear & angular vel)
+        Fingers:      position and velocity
 
         Returns:
             OrderedDict: Dictionary mapping observable names to its corresponding Observable object
@@ -313,10 +315,20 @@ class SingleArm(Manipulator):
         def eef_quat(obs_cache):
             return T.convert_quat(self.sim.data.get_body_xquat(self.robot_model.eef_name), to="xyzw")
 
-        sensors = [eef_pos, eef_quat]
-        names = [f"{pf}eef_pos", f"{pf}eef_quat"]
+        #---- Additional eef linear velocity and angular velocity used in picking.py
+        @sensor(modality=modality)
+        def eef_velp(obs_cache):
+            return np.array(self.sim.data.site_xvelp[self.eef_site_id])
 
-        # add in gripper sensors if this robot has a gripper
+        @sensor(modality=modality)
+        def eef_velr(obs_cache):
+            return np.array(self.sim.data.site_xvelr[self.eef_site_id])
+
+        sensors = [eef_pos, eef_quat, eef_velp, eef_velr]
+        names = [f"{pf}eef_pos", f"{pf}eef_quat", f"{pf}eef_velp", f"{pf}eef_velr"]
+        #----
+
+        # add gripper sensors if robot has a gripper: finger pos and vel.
         if self.has_gripper:
             @sensor(modality=modality)
             def gripper_qpos(obs_cache):
