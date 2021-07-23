@@ -412,7 +412,7 @@ class Picking(SingleArmEnv):
             float: reward value
         """
         # compute sparse rewards
-        self._check_success()
+        self.is_success()
         reward = np.sum(self.objects_in_bins)
 
         # add in shaped rewards
@@ -969,7 +969,7 @@ class Picking(SingleArmEnv):
 
         return sorted_obj_dist
 
-    def _check_success(self):
+    def is_success(self):
         """
         Check if self.goal_object placed at target location. 
         To decide: check if a single object has been placed successfully, or if all objects have been placed successfully, or both. 
