@@ -246,6 +246,19 @@ class MujocoObject(MujocoModel):
         """
         raise NotImplementedError
 
+    @property
+    def vertical_radius(self):
+        """
+        Returns maximum distance from model root body to the highest vertical point of the model.
+
+        Helps us put models programmatically without them flying away due to a huge initial contact force.
+        Must be defined by subclass.
+
+        Returns:
+            float: radius
+        """
+        raise NotImplementedError
+
     @staticmethod
     def get_site_attrib_template():
         """
@@ -446,6 +459,13 @@ class MujocoXMLObject(MujocoObject, MujocoXML):
         )
         return string_to_array(horizontal_radius_site.get("pos"))[0]
 
+    @property
+    def vertical_radius(self):
+        vertical_radius_site = self.worldbody.find(
+            "./body/site[@name='{}vertical_radius_site']".format(self.naming_prefix)
+        )
+        return string_to_array(vertical_radius_site.get("pos"))[2]
+
 
 class MujocoGeneratedObject(MujocoObject):
     """
@@ -552,4 +572,7 @@ class MujocoGeneratedObject(MujocoObject):
         raise NotImplementedError
 
     def horizontal_radius(self):
+        raise NotImplementedError
+    
+    def vertical_radius(self):
         raise NotImplementedError
