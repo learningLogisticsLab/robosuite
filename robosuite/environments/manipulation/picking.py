@@ -7,7 +7,7 @@ from collections import OrderedDict
 
 # Utilities
 import robosuite.utils.transform_utils as T
-from robosuite.utils.placement_samplers import SequentialCompositeSampler, UniformRandomSampler, robotUniformRandomSampler
+from robosuite.utils.placement_samplers import SequentialCompositeSampler, UniformRandomSampler, UniformWallSampler, robotUniformRandomSampler
 
 # 01 Objects
 # Import desired|all objects (and visual objects)
@@ -295,7 +295,7 @@ class Picking(SingleArmEnv):
         
         # Strategies
         self.object_reset_strategy  = object_reset_strategy     # organized|jumbled|wall|random
-        self.object_randomization   = object_randomization      # randomize with new objects after reset (bool)        
+        self.object_randomization   = object_randomization      # randomize with new objects after reset (bool)
         print(f"A total of {self.num_objs_to_load} objects are being loaded. A total of {self.num_objects} will be modeled as nodes.")
         print(f"The object reset strategy is: {self.object_reset_strategy} and new objects will be randomly picked after reset\n")
         #-----------
@@ -599,7 +599,129 @@ class Picking(SingleArmEnv):
                 rotation_axis   = 'z',                          
                 reference_pos   = self.bin1_pos,
             )
-            
+        elif self.object_reset_strategy == 'wall':
+            self.placement_initializer = SequentialCompositeSampler(name="ObjectSampler") # Samples position for each object sequentially. ALlows chaining multiple placement
+
+            # can sample anywhere in bin
+            bin_x_half = self.model.mujoco_arena.table_full_size[
+                             0] / 2 - 0.05  # half of bin - edges (2*0.025 half of each side of each wall so that we don't hit the wall)
+            bin_y_half = self.model.mujoco_arena.table_full_size[1] / 2 - 0.05
+
+            # pickObjectSampler: (non-visual) objects are sampled within the bounds of the picking bin #1 (with some tolerance) and outside the object radiuses
+            self.placement_initializer.append_sampler(
+                sampler = UniformWallSampler(
+                    name                                = "pickObjectSampler",
+                    mujoco_objects                      = self.objects,
+                    x_range                             = [-bin_x_half, bin_x_half],
+                    y_range                             = [-bin_y_half, bin_y_half],
+                    # This (+ve,-ve) range goes from center to the walls on each side of the bin
+                    rotation                            =None,  # Add uniform random rotation
+                    rotation_axis                       ='z',  # Currently only accepts one axis. TODO: extend to multiple axes.
+                    ensure_object_boundary_in_range     =True,
+                    ensure_valid_placement              =True,
+                    reference_pos                       =self.bin1_pos,
+                    z_offset                            =0.,
+                )
+            )
+
+            # placeObjectSamplers: each visual object receives a sampler that places it in the TARGET bin
+            self.placement_initializer.append_sampler(
+                sampler=UniformWallSampler(
+                    name="placeObjectSampler",  # name for object sampler for each object
+                    mujoco_objects=self.visual_objects,
+                    x_range=[-bin_x_half, bin_x_half],
+                    y_range=[-bin_y_half, bin_y_half],
+                    # This (+ve,-ve) range goes from center to the walls on each side of the bin
+                    rotation=None,  # Add uniform random rotation
+                    rotation_axis='z',  # Currently only accepts one axis. TODO: extend to multiple axes.
+                    ensure_object_boundary_in_range=True,
+                    ensure_valid_placement=True,
+                    reference_pos=self.bin2_pos,
+                    z_offset=0.,
+                )
+            )
+
+            # robot_eefSampler:
+            # TODO: this eefSampler probably best placed in robosuite/environments/robot_env.py.reset() where init_qpos + noise is computed.
+            # Then, it's execution should go inside robosuite/controllers/base_controller.py:Controller.update_base_pose() via IK or interpolation/controller
+
+            # Currently letting the eef take a position anywhere on top of bin1.
+            # Could keep at center by changing xrange to the self.bin1_pos only
+            min_z = 0.25  # set a min lower height for the eef above table (i.e. 25cm)
+            max_z = min_z + 0.30  # set an upper height for the eef
+
+            self.robot_placement_initializer = robotUniformRandomSampler(
+                name="robot_eefSampler",
+                mujoco_robots=self.model.mujoco_robots,
+                x_range=[-bin_x_half, bin_x_half],
+                y_range=[-bin_y_half, bin_y_half],
+                z_range=[min_z, max_z],
+                rotation=None,
+                rotation_axis='z',
+                reference_pos=self.bin1_pos,
+            )
+        else:
+            self.placement_initializer = SequentialCompositeSampler(name="ObjectSampler")
+
+            # can sample anywhere in bin
+            bin_x_half = self.model.mujoco_arena.table_full_size[
+                             0] / 2 - 0.05  # half of bin - edges (2*0.025 half of each side of each wall so that we don't hit the wall)
+            bin_y_half = self.model.mujoco_arena.table_full_size[1] / 2 - 0.05
+
+            # pickObjectSampler: (non-visual) objects are sampled within the bounds of the picking bin #1 (with some tolerance) and outside the object radiuses
+            self.placement_initializer.append_sampler(
+                sampler=UniformRandomSampler(
+                    name="pickObjectSampler",
+                    mujoco_objects=self.objects,
+                    x_range=[-bin_x_half, bin_x_half],
+                    # This (+ve,-ve) range goes from center to the walls on each side of the bin
+                    y_range=[-bin_y_half, bin_y_half],
+                    rotation=None,  # Add uniform random rotation
+                    rotation_axis='z',  # Currently only accepts one axis. TODO: extend to multiple axes.
+                    ensure_object_boundary_in_range=True,
+                    ensure_valid_placement=True,
+                    reference_pos=self.bin1_pos,
+                    z_offset=0.,
+                )
+            )
+
+            # placeObjectSamplers: each visual object receives a sampler that places it in the TARGET bin
+            self.placement_initializer.append_sampler(
+                sampler=UniformRandomSampler(
+                    name="placeObjectSampler",  # name for object sampler for each object
+                    mujoco_objects=self.visual_objects,
+                    x_range=[-bin_x_half, bin_x_half],
+                    # This (+ve,-ve) range goes from center to the walls on each side of the bin
+                    y_range=[-bin_y_half, bin_y_half],
+                    rotation=None,  # Add uniform random rotation
+                    rotation_axis='z',  # Currently only accepts one axis. TODO: extend to multiple axes.
+                    ensure_object_boundary_in_range=True,
+                    ensure_valid_placement=True,
+                    reference_pos=self.bin2_pos,
+                    z_offset=0.,
+                )
+            )
+
+            # robot_eefSampler:
+            # TODO: this eefSampler probably best placed in robosuite/environments/robot_env.py.reset() where init_qpos + noise is computed.
+            # Then, it's execution should go inside robosuite/controllers/base_controller.py:Controller.update_base_pose() via IK or interpolation/controller
+
+            # Currently letting the eef take a position anywhere on top of bin1.
+            # Could keep at center by changing xrange to the self.bin1_pos only
+            min_z = 0.25  # set a min lower height for the eef above table (i.e. 25cm)
+            max_z = min_z + 0.30  # set an upper height for the eef
+
+            self.robot_placement_initializer = robotUniformRandomSampler(
+                name="robot_eefSampler",
+                mujoco_robots=self.model.mujoco_robots,
+                x_range=[-bin_x_half, bin_x_half],
+                y_range=[-bin_y_half, bin_y_half],
+                z_range=[min_z, max_z],
+                rotation=None,
+                rotation_axis='z',
+                reference_pos=self.bin1_pos,
+            )
+
     def _load_model(self):
         """
         Create a manipulation task object. 
@@ -901,7 +1023,46 @@ class Picking(SingleArmEnv):
             #-------------------------
 
             if self.object_reset_strategy == 'wall':
-                pass
+                
+                # A) If we want to randomize objects with new reset: select new objects, and update the placement samplers (as done in _load_model). 
+                if self.object_randomization == True:
+                    # A. Select new objects
+                    # Given the available objects, randomly pick num_objs_to_load and return names, visual names, and name_to_id
+                    self.object_names, self.visual_object_names, self.object_to_id = self.load_objs_to_simulate(
+                        self.num_objs_in_db, self.num_objs_to_load)
+
+                    # B. Extract class names (must match those in ./robosuite/models/objects/xml_objects.py ) and call them with the name of the MujocoXMLObject
+                    self.objects = []
+                    self.visual_objects = []
+
+                    # Given that self.object_names and self.visual_object_names are available from load, return classes
+                    self.visual_objects, self.objects = self.extract_obj_classes()
+
+                    # C. Update the model's mujoco objects
+                    self.model.mujoco_objects = self.visual_objects + self.objects
+
+                    # Create placement initializer objects for each existing object (self.placement_initializer): will place according to strategy
+                    self._get_placement_initializer()
+
+                    # ----------------- Continue to update placement of objects
+
+                # Sample from the placement initializer for all objects (regular and visual objects)
+                object_placements = self.placement_initializer.sample()
+
+                # Loop through all objects and reset their positions
+                for obj_pos, obj_quat, obj in object_placements.values():
+                    # Set the visual object body locations
+                    if "v" in obj.name.lower():  # switched "visual" for "v"
+                        self.sim.model.body_pos[self.obj_body_id[obj.name]] = obj_pos
+                        self.sim.model.body_quat[self.obj_body_id[obj.name]] = obj_quat
+                    else:
+                        # Set the collision object joints (setting pose for obj)
+                        self.sim.data.set_joint_qpos(obj.joints[0],
+                                                     np.concatenate([np.array(obj_pos), np.array(obj_quat)]))
+
+                # Set the bins to the desired position
+                self.sim.model.body_pos[self.sim.model.body_name2id("bin1")] = self.bin1_pos
+                self.sim.model.body_pos[self.sim.model.body_name2id("bin2")] = self.bin2_pos
 
         # Set goal object to pick up and sort closest objects to model
         self.goal_object, self.other_objs_than_goals = self.get_goal_object()
@@ -1174,7 +1335,7 @@ class Picking(SingleArmEnv):
             name_list = list(self.sorted_objects_to_model)
 
             # Pose: pos and orientation            
-            object_i_pos  = obs[name_list[i] + '_pos'] 
+            object_i_pos  = obs[name_list[i] + '_pos']
             object_i_quat = obs[name_list[i] + '_quat'] 
 
             # Vel: linear and angular

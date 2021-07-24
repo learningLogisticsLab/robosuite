@@ -10,9 +10,10 @@
         <inertial pos="-0.01447497482279456 -0.06461685625471408 0.031162156357884614" mass="0.017" fullinertia="2.084885089389596e-08 2.0444340163285026e-08 1.8684373284877546e-08 -1.0900810542007764e-24 7.558736512119434e-25 -6.406563253183688e-24"/>
         <geom name="c_cups" pos="0 0 0" mesh="c_cups_mesh" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" mass="0.017" friction="0.95 0.3 0.1"  material="c_cups" group="0" condim="4"/>
       </body>
-      <site rgba="1 0 0 1" size="0.005" pos="0 0 0" name="bottom_site"/>
-      <site rgba="0 1 0 1" size="0.005" pos="0 0 0.064" name="top_site"/>
+      <site rgba="1 0 0 1" size="0.005" pos="0 0 -0.032" name="bottom_site"/>
+      <site rgba="0 1 0 1" size="0.005" pos="0 0 0.032" name="top_site"/>
       <site rgba="0 0 1 1" size="0.005" pos="0.0325 0.0325 0" name="horizontal_radius_site"/>
+      <site rgba="0 0 0 1" size="0.005" pos="0 0 0.064" name="vertical_radius_site"/>
     </body>
   </worldbody>
 </mujoco>

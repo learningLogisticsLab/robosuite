@@ -5,11 +5,12 @@
   <worldbody>
     <body>
       <body name="object">
-        <geom name="nine_peg_hole_test" pos="0 0 0" mesh="nine_peg_hole_test_mesh" type="mesh" rgba="0.8 0.8 0.8 0.3" conaffinity="0" contype="0" mass="1.435" friction="0.95 0.3 0.1" group="1" condim="4"/>
+        <geom name="nine_peg_hole_test" pos="0 0 0" mesh="nine_peg_hole_test_mesh" type="mesh" rgba="0.8 0.8 0.8 0.3" conaffinity="0" contype="0" mass="0.4088833917694834" friction="0.95 0.3 0.1" group="1" condim="4"/>
       </body>
-      <site rgba="1 0 0 1" size="0.005" pos="0 0 0" name="bottom_site"/>
-      <site rgba="0 1 0 1" size="0.005" pos="0 0 1.2" name="top_site"/>
-      <site rgba="0 0 1 1" size="0.005" pos="0.6 0.6 0" name="horizontal_radius_site"/>
+      <site rgba="1 0 0 1" size="0.005" pos="0 0 -0.02564302387525627" name="bottom_site"/>
+      <site rgba="0 1 0 1" size="0.005" pos="0 0 0.02564302387525627" name="top_site"/>
+      <site rgba="0 0 1 1" size="0.005" pos="0.037351034183901115 0.037351034183901115 0" name="horizontal_radius_site"/>
+      <site rgba="0 0 0 1" size="0.005" pos="0 0 0.05128604775051254" name="vertical_radius_site"/>
     </body>
   </worldbody>
 </mujoco>

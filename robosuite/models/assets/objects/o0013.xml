@@ -10,9 +10,10 @@
         <inertial pos="0.0013105802251075094 -0.003861242636253375 0.03633673271131293" mass="0.068" fullinertia="1.5346617709147597e-07 1.5237248423959713e-07 1.5058285191115322e-07 -1.944574775393758e-23 1.3580856376717886e-24 6.007441597418955e-24"/>
         <geom name="apple" pos="0 0 0" mesh="apple_mesh" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" mass="0.068" friction="0.95 0.3 0.1"  material="apple" group="0" condim="4"/>
       </body>
-      <site rgba="1 0 0 1" size="0.005" pos="0 0 0" name="bottom_site"/>
-      <site rgba="0 1 0 1" size="0.005" pos="0 0 0.075" name="top_site"/>
+      <site rgba="1 0 0 1" size="0.005" pos="0 0 -0.03030672817026669" name="bottom_site"/>
+      <site rgba="0 1 0 1" size="0.005" pos="0 0 0.03030672817026669" name="top_site"/>
       <site rgba="0 0 1 1" size="0.005" pos="0.0375 0.0375 0" name="horizontal_radius_site"/>
+      <site rgba="0 0 0 1" size="0.005" pos="0 0 0.06061345634053338" name="vertical_radius_site"/>
     </body>
   </worldbody>
 </mujoco>

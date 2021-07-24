@@ -10,9 +10,10 @@
         <inertial pos="-0.007742611303817823 0.01949223166858234 0.023720337525360752" mass="0.025" fullinertia="2.7178060074813215e-08 2.6210855583690036e-08 2.506526385421526e-08 9.850266641398487e-25 -8.325319287429276e-26 1.101797017289511e-25"/>
         <geom name="plum" pos="0 0 0" mesh="plum_mesh" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" mass="0.025" friction="0.95 0.3 0.1"  material="plum" group="0" condim="4"/>
       </body>
-      <site rgba="1 0 0 1" size="0.005" pos="0 0 0" name="bottom_site"/>
-      <site rgba="0 1 0 1" size="0.005" pos="0 0 0.052" name="top_site"/>
+      <site rgba="1 0 0 1" size="0.005" pos="0 0 -0.026" name="bottom_site"/>
+      <site rgba="0 1 0 1" size="0.005" pos="0 0 0.026" name="top_site"/>
       <site rgba="0 0 1 1" size="0.005" pos="0.026 0.026 0" name="horizontal_radius_site"/>
+      <site rgba="0 0 0 1" size="0.005" pos="0 0 0.052" name="vertical_radius_site"/>
     </body>
   </worldbody>
 </mujoco>

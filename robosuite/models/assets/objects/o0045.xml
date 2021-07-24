@@ -10,9 +10,10 @@
         <inertial pos="-0.029549933960517274 -0.03660538138997692 0.018078943770709878" mass="0.202" fullinertia="4.6401630147433604e-07 3.0310433535827647e-07 1.7741274845683943e-07 -3.3806645119580536e-24 2.90586627608841e-25 -1.0349855592699035e-23"/>
         <geom name="extra_large_clamp" pos="0 0 0" mesh="extra_large_clamp_mesh" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" mass="0.202" friction="0.95 0.3 0.1"  material="extra_large_clamp" group="0" condim="4"/>
       </body>
-      <site rgba="1 0 0 1" size="0.005" pos="0 0 0" name="bottom_site"/>
-      <site rgba="0 1 0 1" size="0.005" pos="0 0 0.037" name="top_site"/>
-      <site rgba="0 0 1 1" size="0.005" pos="0.1065 0.1065 0" name="horizontal_radius_site"/>
+      <site rgba="1 0 0 1" size="0.005" pos="0 0 -0.0185" name="bottom_site"/>
+      <site rgba="0 1 0 1" size="0.005" pos="0 0 0.0185" name="top_site"/>
+      <site rgba="0 0 1 1" size="0.005" pos="0.03903665760847964 0.03903665760847964 0" name="horizontal_radius_site"/>
+      <site rgba="0 0 0 1" size="0.005" pos="0 0 0.037" name="vertical_radius_site"/>
     </body>
   </worldbody>
 </mujoco>
