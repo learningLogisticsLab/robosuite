@@ -643,7 +643,7 @@ class MujocoEnv(metaclass=EnvMeta):
                              format(attribute, {"sensor", "corrupter", "filter", "delayer",
                                                 "sampling_rate", "enabled", "active"}))
 
-    def _check_success(self):
+    def is_success(self):
         """
         Checks if the task has been completed. Should be implemented by subclasses
 
