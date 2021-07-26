@@ -1,6 +1,6 @@
 <mujoco model="rubiks_cube">
   <asset>
-    <mesh name="rubiks_cube_mesh" file="./meshes/rubiks_cube.msh" scale="1 1 1"/>
+    <mesh name="rubiks_cube_mesh" file="./meshes/rubiks_cube.msh" scale="1.0 1.0 1.0"/>
     <texture name="tex-rubiks_cube" file="../textures/rubiks_cube.png" type="2d"/>
     <material name="rubiks_cube" reflectance="0.7" texrepeat="15 15" texture="tex-rubiks_cube" texuniform="true"/>
   </asset>

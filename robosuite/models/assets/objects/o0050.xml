@@ -1,6 +1,6 @@
 <mujoco model="racquetball">
   <asset>
-    <mesh name="racquetball_mesh" file="./meshes/racquetball.msh" scale="1 1 1"/>
+    <mesh name="racquetball_mesh" file="./meshes/racquetball.msh" scale="1.0 1.0 1.0"/>
     <texture name="tex-racquetball" file="../textures/racquetball.png" type="2d"/>
     <material name="racquetball" reflectance="0.7" texrepeat="15 15" texture="tex-racquetball" texuniform="true"/>
   </asset>

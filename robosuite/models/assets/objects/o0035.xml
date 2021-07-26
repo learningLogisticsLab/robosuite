@@ -1,6 +1,6 @@
 <mujoco model="padlock">
   <asset>
-    <mesh name="padlock_mesh" file="./meshes/padlock.msh" scale="1 1 1"/>
+    <mesh name="padlock_mesh" file="./meshes/padlock.msh" scale="1.0 1.0 1.0"/>
     <texture name="tex-padlock" file="../textures/padlock.png" type="2d"/>
     <material name="padlock" reflectance="0.7" texrepeat="15 15" texture="tex-padlock" texuniform="true"/>
   </asset>

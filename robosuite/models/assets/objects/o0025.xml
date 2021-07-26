@@ -1,6 +1,6 @@
 <mujoco model="sponge">
   <asset>
-    <mesh name="sponge_mesh" file="./meshes/sponge.msh" scale="1 1 1"/>
+    <mesh name="sponge_mesh" file="./meshes/sponge.msh" scale="1.0 1.0 1.0"/>
     <texture name="tex-sponge" file="../textures/sponge.png" type="2d"/>
     <material name="sponge" reflectance="0.7" texrepeat="15 15" texture="tex-sponge" texuniform="true"/>
   </asset>

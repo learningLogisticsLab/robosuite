@@ -1,6 +1,6 @@
 <mujoco model="plum">
   <asset>
-    <mesh name="plum_mesh" file="./meshes/plum.msh" scale="1 1 1"/>
+    <mesh name="plum_mesh" file="./meshes/plum.msh" scale="1.0 1.0 1.0"/>
     <texture name="tex-plum" file="../textures/plum.png" type="2d"/>
     <material name="plum" reflectance="0.7" texrepeat="15 15" texture="tex-plum" texuniform="true"/>
   </asset>

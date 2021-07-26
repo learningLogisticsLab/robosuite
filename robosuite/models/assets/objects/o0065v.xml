@@ -1,6 +1,6 @@
 <mujoco model="a_colored_wood_blocksv">
   <asset>
-    <mesh name="a_colored_wood_blocks_mesh" file="./meshes/untextured_a_colored_wood_blocks.stl" scale="1 1 1"/>
+    <mesh name="a_colored_wood_blocks_mesh" file="./meshes/untextured_a_colored_wood_blocks.stl" scale="1.0 1.0 1.0"/>
   </asset>
   <worldbody>
     <body>

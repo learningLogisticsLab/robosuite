@@ -1,6 +1,6 @@
 <mujoco model="medium_clamp">
   <asset>
-    <mesh name="medium_clamp_mesh" file="./meshes/medium_clamp.msh" scale="1 1 1"/>
+    <mesh name="medium_clamp_mesh" file="./meshes/medium_clamp.msh" scale="1.0 1.0 1.0"/>
     <texture name="tex-medium_clamp" file="../textures/medium_clamp.png" type="2d"/>
     <material name="medium_clamp" reflectance="0.7" texrepeat="15 15" texture="tex-medium_clamp" texuniform="true"/>
   </asset>

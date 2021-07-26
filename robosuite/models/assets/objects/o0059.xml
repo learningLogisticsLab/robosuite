@@ -1,6 +1,6 @@
 <mujoco model="e_cups">
   <asset>
-    <mesh name="e_cups_mesh" file="./meshes/e_cups.msh" scale="1 1 1"/>
+    <mesh name="e_cups_mesh" file="./meshes/e_cups.msh" scale="1.0 1.0 1.0"/>
     <texture name="tex-e_cups" file="../textures/e_cups.png" type="2d"/>
     <material name="e_cups" reflectance="0.7" texrepeat="15 15" texture="tex-e_cups" texuniform="true"/>
   </asset>

@@ -1,6 +1,6 @@
 <mujoco model="chips_can">
   <asset>
-    <mesh name="chips_can_mesh" file="./meshes/chips_can.msh" scale="1 1 1"/>
+    <mesh name="chips_can_mesh" file="./meshes/chips_can.msh" scale="1.0 1.0 1.0"/>
     <texture name="tex-chips_can" file="../textures/chips_can.png" type="2d"/>
     <material name="chips_can" reflectance="0.7" texrepeat="15 15" texture="tex-chips_can" texuniform="true"/>
   </asset>
@@ -10,10 +10,10 @@
         <inertial pos="-0.004935076789853457 0.012018813662666437 0.1233055043572925" mass="0.205" fullinertia="5.5349800451895955e-06 5.508049224129916e-06 7.848117618937134e-07 6.3834715122061815e-22 5.925324700153715e-22 1.0164283364776184e-21"/>
         <geom name="chips_can" pos="0 0 0" mesh="chips_can_mesh" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" mass="0.205" friction="0.95 0.3 0.1"  material="chips_can" group="0" condim="4"/>
       </body>
-      <site rgba="1 0 0 1" size="0.005" pos="0 0 -0.030328712695942263" name="bottom_site"/>
-      <site rgba="0 1 0 1" size="0.005" pos="0 0 0.030328712695942263" name="top_site"/>
+      <site rgba="1 0 0 1" size="0.005" pos="0 0 -0.032976830634438986" name="bottom_site"/>
+      <site rgba="0 1 0 1" size="0.005" pos="0 0 0.032976830634438986" name="top_site"/>
       <site rgba="0 0 1 1" size="0.005" pos="0.0375 0.0375 0" name="horizontal_radius_site"/>
-      <site rgba="0 0 0 1" size="0.005" pos="0 0 0.060657425391884526" name="vertical_radius_site"/>
+      <site rgba="0 0 0 1" size="0.005" pos="0 0 0.06595366126887797" name="vertical_radius_site"/>
     </body>
   </worldbody>
 </mujoco>

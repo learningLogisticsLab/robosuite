@@ -1,6 +1,6 @@
 <mujoco model="rubiks_cubev">
   <asset>
-    <mesh name="rubiks_cube_mesh" file="./meshes/untextured_rubiks_cube.stl" scale="1 1 1"/>
+    <mesh name="rubiks_cube_mesh" file="./meshes/untextured_rubiks_cube.stl" scale="1.0 1.0 1.0"/>
   </asset>
   <worldbody>
     <body>

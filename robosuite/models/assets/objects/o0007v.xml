@@ -1,6 +1,6 @@
 <mujoco model="tuna_fish_canv">
   <asset>
-    <mesh name="tuna_fish_can_mesh" file="./meshes/untextured_tuna_fish_can.stl" scale="1 1 1"/>
+    <mesh name="tuna_fish_can_mesh" file="./meshes/untextured_tuna_fish_can.stl" scale="1.0 1.0 1.0"/>
   </asset>
   <worldbody>
     <body>

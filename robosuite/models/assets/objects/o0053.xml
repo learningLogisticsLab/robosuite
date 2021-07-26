@@ -1,6 +1,6 @@
 <mujoco model="foam_brick">
   <asset>
-    <mesh name="foam_brick_mesh" file="./meshes/foam_brick.msh" scale="1 1 1"/>
+    <mesh name="foam_brick_mesh" file="./meshes/foam_brick.msh" scale="1.0 1.0 1.0"/>
     <texture name="tex-foam_brick" file="../textures/foam_brick.png" type="2d"/>
     <material name="foam_brick" reflectance="0.7" texrepeat="15 15" texture="tex-foam_brick" texuniform="true"/>
   </asset>

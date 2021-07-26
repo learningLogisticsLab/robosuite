@@ -1,6 +1,6 @@
 <mujoco model="small_clamp">
   <asset>
-    <mesh name="small_clamp_mesh" file="./meshes/small_clamp.msh" scale="1 1 1"/>
+    <mesh name="small_clamp_mesh" file="./meshes/small_clamp.msh" scale="1.0 1.0 1.0"/>
     <texture name="tex-small_clamp" file="../textures/small_clamp.png" type="2d"/>
     <material name="small_clamp" reflectance="0.7" texrepeat="15 15" texture="tex-small_clamp" texuniform="true"/>
   </asset>

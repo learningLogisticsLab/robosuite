@@ -1,6 +1,6 @@
 <mujoco model="timer">
   <asset>
-    <mesh name="timer_mesh" file="./meshes/timer.msh" scale="1 1 1"/>
+    <mesh name="timer_mesh" file="./meshes/timer.msh" scale="1.0 1.0 1.0"/>
     <texture name="tex-timer" file="../textures/timer.png" type="2d"/>
     <material name="timer" reflectance="0.7" texrepeat="15 15" texture="tex-timer" texuniform="true"/>
   </asset>

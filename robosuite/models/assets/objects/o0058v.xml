@@ -1,6 +1,6 @@
 <mujoco model="d_cupsv">
   <asset>
-    <mesh name="d_cups_mesh" file="./meshes/untextured_d_cups.stl" scale="1 1 1"/>
+    <mesh name="d_cups_mesh" file="./meshes/untextured_d_cups.stl" scale="1.0 1.0 1.0"/>
   </asset>
   <worldbody>
     <body>

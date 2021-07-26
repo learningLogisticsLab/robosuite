@@ -1,6 +1,6 @@
 <mujoco model="golf_ball">
   <asset>
-    <mesh name="golf_ball_mesh" file="./meshes/golf_ball.msh" scale="1 1 1"/>
+    <mesh name="golf_ball_mesh" file="./meshes/golf_ball.msh" scale="1.0 1.0 1.0"/>
     <texture name="tex-golf_ball" file="../textures/golf_ball.png" type="2d"/>
     <material name="golf_ball" reflectance="0.7" texrepeat="15 15" texture="tex-golf_ball" texuniform="true"/>
   </asset>

@@ -1,6 +1,6 @@
 <mujoco model="tuna_fish_can">
   <asset>
-    <mesh name="tuna_fish_can_mesh" file="./meshes/tuna_fish_can.msh" scale="1 1 1"/>
+    <mesh name="tuna_fish_can_mesh" file="./meshes/tuna_fish_can.msh" scale="1.0 1.0 1.0"/>
     <texture name="tex-tuna_fish_can" file="../textures/tuna_fish_can.png" type="2d"/>
     <material name="tuna_fish_can" reflectance="0.7" texrepeat="15 15" texture="tex-tuna_fish_can" texuniform="true"/>
   </asset>

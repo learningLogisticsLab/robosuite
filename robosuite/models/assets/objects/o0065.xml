@@ -1,6 +1,6 @@
 <mujoco model="a_colored_wood_blocks">
   <asset>
-    <mesh name="a_colored_wood_blocks_mesh" file="./meshes/a_colored_wood_blocks.msh" scale="1 1 1"/>
+    <mesh name="a_colored_wood_blocks_mesh" file="./meshes/a_colored_wood_blocks.msh" scale="1.0 1.0 1.0"/>
     <texture name="tex-a_colored_wood_blocks" file="../textures/a_colored_wood_blocks.png" type="2d"/>
     <material name="a_colored_wood_blocks" reflectance="0.7" texrepeat="15 15" texture="tex-a_colored_wood_blocks" texuniform="true"/>
   </asset>

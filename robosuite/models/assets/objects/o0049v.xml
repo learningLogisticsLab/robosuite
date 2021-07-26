@@ -1,6 +1,6 @@
 <mujoco model="tennis_ballv">
   <asset>
-    <mesh name="tennis_ball_mesh" file="./meshes/untextured_tennis_ball.stl" scale="1 1 1"/>
+    <mesh name="tennis_ball_mesh" file="./meshes/untextured_tennis_ball.stl" scale="1.0 1.0 1.0"/>
   </asset>
   <worldbody>
     <body>

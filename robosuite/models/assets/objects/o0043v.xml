@@ -1,6 +1,6 @@
 <mujoco model="medium_clampv">
   <asset>
-    <mesh name="medium_clamp_mesh" file="./meshes/untextured_medium_clamp.stl" scale="1 1 1"/>
+    <mesh name="medium_clamp_mesh" file="./meshes/untextured_medium_clamp.stl" scale="1.0 1.0 1.0"/>
   </asset>
   <worldbody>
     <body>

@@ -1,6 +1,6 @@
 <mujoco model="dice">
   <asset>
-    <mesh name="dice_mesh" file="./meshes/dice.msh" scale="1 1 1"/>
+    <mesh name="dice_mesh" file="./meshes/dice.msh" scale="1.0 1.0 1.0"/>
     <texture name="tex-dice" file="../textures/dice.png" type="2d"/>
     <material name="dice" reflectance="0.7" texrepeat="15 15" texture="tex-dice" texuniform="true"/>
   </asset>

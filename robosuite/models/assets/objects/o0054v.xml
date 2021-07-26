@@ -1,6 +1,6 @@
 <mujoco model="dicev">
   <asset>
-    <mesh name="dice_mesh" file="./meshes/untextured_dice.stl" scale="1 1 1"/>
+    <mesh name="dice_mesh" file="./meshes/untextured_dice.stl" scale="1.0 1.0 1.0"/>
   </asset>
   <worldbody>
     <body>

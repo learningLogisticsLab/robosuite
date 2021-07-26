@@ -1,6 +1,6 @@
 <mujoco model="tennis_ball">
   <asset>
-    <mesh name="tennis_ball_mesh" file="./meshes/tennis_ball.msh" scale="1 1 1"/>
+    <mesh name="tennis_ball_mesh" file="./meshes/tennis_ball.msh" scale="1.0 1.0 1.0"/>
     <texture name="tex-tennis_ball" file="../textures/tennis_ball.png" type="2d"/>
     <material name="tennis_ball" reflectance="0.7" texrepeat="15 15" texture="tex-tennis_ball" texuniform="true"/>
   </asset>

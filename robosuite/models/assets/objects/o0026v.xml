@@ -1,6 +1,6 @@
 <mujoco model="skillet_lidv">
   <asset>
-    <mesh name="skillet_lid_mesh" file="./meshes/untextured_skillet_lid.stl" scale="1 1 1"/>
+    <mesh name="skillet_lid_mesh" file="./meshes/untextured_skillet_lid.stl" scale="1.0 1.0 1.0"/>
   </asset>
   <worldbody>
     <body>
@@ -9,7 +9,7 @@
       </body>
       <site rgba="1 0 0 1" size="0.005" pos="0 0 -0.011" name="bottom_site"/>
       <site rgba="0 1 0 1" size="0.005" pos="0 0 0.011" name="top_site"/>
-      <site rgba="0 0 1 1" size="0.005" pos="0.03819551109590264 0.03819551109590264 0" name="horizontal_radius_site"/>
+      <site rgba="0 0 1 1" size="0.005" pos="0.031027960681579085 0.031027960681579085 0" name="horizontal_radius_site"/>
       <site rgba="0 0 0 1" size="0.005" pos="0 0 0.022" name="vertical_radius_site"/>
     </body>
   </worldbody>

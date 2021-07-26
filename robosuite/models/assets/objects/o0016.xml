@@ -1,6 +1,6 @@
 <mujoco model="pear">
   <asset>
-    <mesh name="pear_mesh" file="./meshes/pear.msh" scale="1 1 1"/>
+    <mesh name="pear_mesh" file="./meshes/pear.msh" scale="1.0 1.0 1.0"/>
     <texture name="tex-pear" file="../textures/pear.png" type="2d"/>
     <material name="pear" reflectance="0.7" texrepeat="15 15" texture="tex-pear" texuniform="true"/>
   </asset>
@@ -10,10 +10,10 @@
         <inertial pos="-0.032542733786051076 0.011075535445138571 0.030040521498604082" mass="0.049" fullinertia="1.3071135406056031e-07 1.280852023276797e-07 7.720902655923692e-08 5.0643641478648837e-23 2.006411797503363e-24 -2.0107411295203735e-24"/>
         <geom name="pear" pos="0 0 0" mesh="pear_mesh" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" mass="0.049" friction="0.95 0.3 0.1"  material="pear" group="0" condim="4"/>
       </body>
-      <site rgba="1 0 0 1" size="0.005" pos="0 0 -0.02226294414748685" name="bottom_site"/>
-      <site rgba="0 1 0 1" size="0.005" pos="0 0 0.02226294414748685" name="top_site"/>
+      <site rgba="1 0 0 1" size="0.005" pos="0 0 -0.03471166275479351" name="bottom_site"/>
+      <site rgba="0 1 0 1" size="0.005" pos="0 0 0.03471166275479351" name="top_site"/>
       <site rgba="0 0 1 1" size="0.005" pos="0.033100000000000004 0.033100000000000004 0" name="horizontal_radius_site"/>
-      <site rgba="0 0 0 1" size="0.005" pos="0 0 0.0445258882949737" name="vertical_radius_site"/>
+      <site rgba="0 0 0 1" size="0.005" pos="0 0 0.06942332550958702" name="vertical_radius_site"/>
     </body>
   </worldbody>
 </mujoco>

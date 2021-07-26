@@ -1,6 +1,6 @@
 <mujoco model="lemonv">
   <asset>
-    <mesh name="lemon_mesh" file="./meshes/untextured_lemon.stl" scale="1 1 1"/>
+    <mesh name="lemon_mesh" file="./meshes/untextured_lemon.stl" scale="1.0 1.0 1.0"/>
   </asset>
   <worldbody>
     <body>

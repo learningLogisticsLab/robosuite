@@ -1,6 +1,6 @@
 <mujoco model="peach">
   <asset>
-    <mesh name="peach_mesh" file="./meshes/peach.msh" scale="1 1 1"/>
+    <mesh name="peach_mesh" file="./meshes/peach.msh" scale="1.0 1.0 1.0"/>
     <texture name="tex-peach" file="../textures/peach.png" type="2d"/>
     <material name="peach" reflectance="0.7" texrepeat="15 15" texture="tex-peach" texuniform="true"/>
   </asset>
