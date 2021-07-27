@@ -125,25 +125,31 @@ class UniformRandomSampler(ObjectPositionSampler):
 
         z_offset (float): Add a small z-offset to placements. This is useful for fixed objects
             that do not move (i.e. no free joint) to place them above the table.
+
+        z_offset_prob (float): probability with which to apply the offset. Useful to set goals in the air and table. 
     """
 
     def __init__(
         self,
         name,
         mujoco_objects=None,
-        x_range=(0, 0),
-        y_range=(0, 0),
-        rotation=None,
-        rotation_axis='z',
-        ensure_object_boundary_in_range=True,
-        ensure_valid_placement=True,
-        reference_pos=(0, 0, 0),
-        z_offset=0.,
+        x_range         = (0, 0),
+        y_range         = (0, 0),
+        rotation        = None,
+        rotation_axis   = 'z',
+        
+        ensure_object_boundary_in_range = True,
+        ensure_valid_placement          = True,
+        reference_pos                   = (0, 0, 0),
+        
+        z_offset                        = 0.,
+        z_offset_prob                   = 0.,
     ):
         self.x_range        = x_range
         self.y_range        = y_range
         self.rotation       = rotation
         self.rotation_axis  = rotation_axis
+        self.z_offset_prob  = z_offset_prob
 
         super().__init__(
             name                            = name,
@@ -281,7 +287,10 @@ class UniformRandomSampler(ObjectPositionSampler):
             for i in range(100):  # 5000 retries
                 object_x = self._sample_x(horizontal_radius) + base_offset[0]
                 object_y = self._sample_y(horizontal_radius) + base_offset[1]
-                object_z = self.z_offset + base_offset[2]
+
+                # Place the object in the air with z_offset with probability 
+                if self.np_random.uniform() < self.z_offset_prob:
+                    object_z = self.z_offset + base_offset[2]
             
                 if on_top:
                     object_z -= bottom_offset[-1] # subtract the negative bottom_offset equal to adding the top offset. 
