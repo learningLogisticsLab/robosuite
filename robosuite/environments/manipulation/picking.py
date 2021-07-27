@@ -253,7 +253,8 @@ class Picking(SingleArmEnv):
         suite_path              = "",
 
         # Goals/Objects
-        goal                    = 0
+        goal                    = 0,
+        objects_in_target_bin   = []
         
     ):
         print('Generating Picking class.\n')
@@ -308,6 +309,8 @@ class Picking(SingleArmEnv):
         # Goal pose for HER setting
         self.goal_object = {}                   # holds name, pos, quat
         self.object_placements = {}             # placements for all objects upon reset
+        
+        self.objects_in_target_bin = objects_in_target_bin # list of object names (str) in target bin
 
         # (B) Arena: bins_arena.xml
 
@@ -413,7 +416,7 @@ class Picking(SingleArmEnv):
         """
         # compute sparse rewards
         self.is_success()
-        reward = np.sum(self.objects_in_bins)
+        reward = np.sum(self.objects_in_target_bin)
 
         # add in shaped rewards
         if self.reward_shaping:
@@ -447,7 +450,7 @@ class Picking(SingleArmEnv):
         # filter out objects that are already in the correct bins
         active_objs = []
         for i, obj in enumerate(self.objects):
-            if self.objects_in_bins[i]:
+            if self.objects_in_target_bin[i]:
                 continue
             active_objs.append(obj)
 
@@ -546,8 +549,9 @@ class Picking(SingleArmEnv):
         - Each (visual) objects/robot will get a instantiated sampler. 
         - Samplers can be accessed via the samplers object. Each sub-sampler obj is accessed as a dict key self.placement_initializer.samplers[sampler_obj_name]
 
-        TODO: extend this function to place objects according to strategy: wall, organized.
-
+        %---------------------------------------------------------------------------------------------------------
+        TODO: 1) extend this function to place objects according to strategy: wall, organized.
+        %---------------------------------------------------------------------------------------------------------
         """
         if self.object_reset_strategy == 'jumbled':
             self.placement_initializer = SequentialCompositeSampler(name="ObjectSampler")  # Samples position for each object sequentially. Allows chaining multiple placement initializers together - so that object locations can be sampled on top of other objects or relative to other object placements.
@@ -584,7 +588,8 @@ class Picking(SingleArmEnv):
                     ensure_object_boundary_in_range = True,
                     ensure_valid_placement          = True,
                     reference_pos                   = self.bin2_pos,
-                    z_offset                        = 0.,
+                    z_offset                        = 0.20,                        # Set a vertical offset of XXcm above the bin
+                    z_offset_prob                   = 0.50,                        # probability with which to set the z_offset
                 )
             )
 
@@ -670,8 +675,8 @@ class Picking(SingleArmEnv):
             self.obj_body_id[obj.name] = self.sim.model.body_name2id(obj.root_body)
             self.obj_geom_id[obj.name] = [self.sim.model.geom_name2id(g) for g in obj.contact_geoms]
 
-        # keep track of which objects are in their corresponding bins
-        self.objects_in_bins = np.zeros(len(self.objects))
+        # keep track of which objects are in the target bins
+        self.objects_in_target_bin =[]
 
         # target locations in bin for each object type
         self.target_bin_placements = np.zeros((len(self.objects), 3))
@@ -969,9 +974,49 @@ class Picking(SingleArmEnv):
 
         return sorted_obj_dist
 
-    def is_success(self):
+    def _is_success(self, achieved_goal, desdired_goal):
         """
+        HER-Specific check success method comparing achieved and desired positions 
+        TODO: current do not analyze orientation. Test good performance with position only first. 
+
+        Currently the achieved_goal (current position of goal object) and desired_goal are numpy arrays with [pos|quat] shape (7,) 
+
         Check if self.goal_object placed at target location. 
+        TODO: another possible thing to do is instead of checking whether one object reached the target, check for all objects in the target, or both.
+        
+        General structure of method:
+            1. check for success test
+            2. remove current goal_object form list at next iteration
+            3. select new next object_goal 
+
+        Returns:
+            bool: True if object placed correctly
+
+        TODO: consider modifing the definition of is_success according to QT-OPTs criteria to increase reactivity
+        requires reaching a certain height... see paper for more. also connected with one parameter in observations.
+        """        
+
+        error_threshold = 0.05 # hard-coded to 5cm only for position
+
+        # Subtract obj_pos from goal and compute that error's norm:
+        target_dist_error = np.linalg.norm(achieved_goal - desdired_goal)
+
+        if target_dist_error <= 0.05 and self.object_names!=0:
+            # After successfully placing self.goal_object, remove this from the list of considered names for the next round
+            self.object_names.remove(self.goal_object['name'])
+
+            # Get a new object_goal if objs still available
+            self.goal_object,_ = self.get_goal_object() 
+            print(f"Successful placement. New object goal is {self.goal_object['name']}") 
+
+            # Add the current goal object to the list ob objects in target bins
+            self.objects_in_target_bin.append(self.goal_object['name'])            
+
+    def check_success(self):
+        """
+        General check success method based on where the goal object is placed. 
+
+        Check if self.goal_object is placed at target position. 
         To decide: check if a single object has been placed successfully, or if all objects have been placed successfully, or both. 
         
         General structure of method:
@@ -981,14 +1026,19 @@ class Picking(SingleArmEnv):
 
         Returns:
             bool: True if object placed correctly
+
+        TODO: consider modifing the definition of is_success according to QT-OPTs criteria to increase reactivity
+        requires reaching a certain height... see paper for more. also connected with one parameter in observations.
         """
         # Test
         error_threshold = 0.05 # hard-coded to 5cm only for position
 
         obj_pos = self.sim.data.body_xpos[ self.obj_body_id[ self.goal_object['name']]]
-        target_dist_error = np.linalg.norm( obj_pos, self.goal_object['pos'])
 
-        if target_dist_error < 0.05 and self.object_names!=0:
+        # Subtract obj_pos from goal and compute that error's norm:
+        target_dist_error = np.linalg.norm( self.goal_object['pos'] - obj_pos)
+
+        if target_dist_error <= 0.05 and self.object_names!=0:
 
             # After successfully placing self.goal_object, remove this from the list of considered names for the next round
             self.object_names.remove(self.goal_object['name'])
@@ -997,14 +1047,9 @@ class Picking(SingleArmEnv):
             self.goal_object,_ = self.get_goal_object() 
             print(f"Successful placement. New object goal is {self.goal_object['name']}") 
 
-        # # remember objects that are in the correct bins
-        # gripper_site_pos = self.sim.data.site_xpos[self.robots[0].eef_site_id]
-        # for i, obj in enumerate(self.objects):
-        #     obj_str = obj.name
-        #     obj_pos = self.sim.data.body_xpos[self.obj_body_id[obj_str]]
-        #     dist = np.linalg.norm(gripper_site_pos - obj_pos)
-        #     r_reach = 1 - np.tanh(10.0 * dist)
-        #     self.objects_in_bins[i] = int((not self.not_in_bin(obj_pos, i)) and r_reach < 0.6)                             
+            # Add the current goal object to the list ob objects in target bins
+            self.objects_in_target_bin.append(self.goal_object['name'])            
+            
 
         return True
 
@@ -1123,9 +1168,6 @@ class Picking(SingleArmEnv):
 
         return visual_objects, objects   
         
-#-------------------------------------------------------------
-# Including Fetch methods assumed by relational-RL
-#-------------------------------------------------------------
     def _get_obs(self, force_update=False):
         '''
         This declaration comes from the Fetch Block Construction environment in rlkit_relational. In our top class: MujocoEnv
@@ -1152,6 +1194,9 @@ class Picking(SingleArmEnv):
             # (1) End-effector type: use robosuites list to provide an appropriate number to these
             # (2) QT-OPTs DONE parameter for reactivity.
         '''
+
+        # Init achieved_goal
+        achieved_goal = []
 
         # Get robosuite observations as ordered dict
         obs = self._get_observations(force_update) # if called by reset() [see base class] this will be set to True.
@@ -1186,10 +1231,8 @@ class Picking(SingleArmEnv):
         ])
 
         #-------------------------------------------------------------------------- 
-        # 01b) Object observations + Achieved Goals: iteratively augment with # of obj
+        # 01b) Object observations *We do not follow relationalRL here and do not add all objects + grip to achieved goals. Instead just add goal_object
         #-------------------------------------------------------------------------- 
-        
-        achieved_goal = [] 
 
         # Observations for Objects
         # *Note: there are three quantities of interest: (i) (total) num_objs_to_load, (ii) num_objs (to_model), and (iii) goal object. 
@@ -1221,7 +1264,16 @@ class Picking(SingleArmEnv):
             if i == 0: 
                  object_rel_pos = object_i_pos - grip_pos
                  object_rel_rot = T.quat_distance(object_i_quat,grip_quat) # quat_dist returns the difference
-                                 #T.get_orientation_error(target_orn, current_orn) or this one? but returns 3D numpy array
+                 
+                # 02) Achieved Goal: the achieved state will be the object(s) pose(s) of the goal (1st) object         
+                #--------------------------------------------------------------------------
+                # TODO: double check if this works effectively for our context + HER. Otherwise can add objects and grip pose.
+                #--------------------------------------------------------------------------                                 
+                 achieved_goal = np.concatenate([    # 7 * num objects                
+                    object_i_pos.copy(),    # 3 * num_objects
+                    object_i_quat.copy(),   # 4 * num_objects
+                ])
+
             else:
                 object_rel_pos = np.zeros(3)
                 object_rel_rot = np.zeros(4)
@@ -1242,25 +1294,16 @@ class Picking(SingleArmEnv):
             ## TODO: Additional observations
             # (1) End-effector type: use robosuites list to provide an appropriate number to these
             # (2) QT-OPTs DONE parameter for reactivity.
-
-            #--------------------------------------------------------------------------
-            # 02) Achieved Goal: the achieved state will be the object(s) pose(s) followed by grip pose
-            #
-            # TODO: or would it be enough to only keep the state of the goal_object. Must decide based on the context of relationalRL:
-            #--------------------------------------------------------------------------
-            achieved_goal = np.concatenate([    # 7 * num objects
-                achieved_goal, 
-                object_i_pos.copy(),    # 3 * num_objects
-                object_i_quat.copy(),   # 4 * num_objects
-            ])
         
-        # Finally, append the robot's grip xyz 
+        # --------------------------------------------------------------------------------------
+        # Removed from here:   Finally, append the robot's grip xyz 
+        # --------------------------------------------------------------------------------------
         # TODO: should we differentiate between object in hand or not like original fetch?
-        achieved_goal = np.concatenate([
-            achieved_goal, 
-            grip_pos.copy(),
-            grip_quat.copy()
-            ])
+        # achieved_goal = np.concatenate([
+        #     achieved_goal, 
+        #     grip_pos.copy(),
+        #     grip_quat.copy()
+        #     ])
         achieved_goal = np.squeeze(achieved_goal)
 
         #--------------------------------------------------------------------------
@@ -1292,11 +1335,12 @@ class Picking(SingleArmEnv):
 
 #-------------------------------------------------------------
 # Define new permutation of classes to register based on picking for relationalRL code
-for num_blocks in range(1, 5): # use of num_blocks indicates objects. kept for historical reasons.
+#-------------------------------------------------------------
+for num_blocks in range(1, 25): # use of num_blocks indicates objects. kept for historical reasons.
     for num_relational_blocks in [3]: # currently only testin with 3 relational blocks (message passing)
         for num_query_heads in [1]: # number of query heads (multi-head attention) currently fixed at 1
-            for reward_type in ['incremental']: #could add sparse
-                for obs_type in ['dictstate']: #['dictimage', 'np', 'dictstate']:
+            for reward_type in ['incremental','sparse']: #could add sparse
+                for obs_type in ['dictstate','dictimage','np']: #['dictimage', 'np', 'dictstate']:
 
                     # Generate the class name 
                     className = F"picking_blocks{num_blocks}_numrelblocks{num_relational_blocks}_nqh{num_query_heads}_reward{reward_type}_{obs_type}Obs"

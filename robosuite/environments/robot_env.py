@@ -474,7 +474,7 @@ class RobotEnv(MujocoEnv):
         """
         return super().reward(action)
 
-    def is_success(self):
+    def check_success(self):
         """
         Runs superclass method by default
         """
