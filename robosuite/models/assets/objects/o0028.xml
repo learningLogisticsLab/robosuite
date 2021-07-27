@@ -1,6 +1,6 @@
 <mujoco model="fork">
   <asset>
-    <mesh name="fork_mesh" file="./meshes/fork.msh" scale="1 1 1"/>
+    <mesh name="fork_mesh" file="./meshes/fork.msh" scale="1.0 1.0 1.0"/>
     <texture name="tex-fork" file="../textures/fork.png" type="2d"/>
     <material name="fork" reflectance="0.7" texrepeat="15 15" texture="tex-fork" texuniform="true"/>
   </asset>
@@ -10,9 +10,10 @@
         <inertial pos="0.008499561933269988 -0.021533112701872234 0.00670927433639299" mass="0.034" fullinertia="4.7220439312838285e-08 4.692445702053864e-08 6.556117942788107e-10 1.9229895271088358e-23 -1.8779475393844756e-26 -5.699761622758414e-26"/>
         <geom name="fork" pos="0 0 0" mesh="fork_mesh" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" mass="0.034" friction="0.95 0.3 0.1"  material="fork" group="0" condim="4"/>
       </body>
-      <site rgba="1 0 0 1" size="0.005" pos="0 0 0" name="bottom_site"/>
-      <site rgba="0 1 0 1" size="0.005" pos="0 0 0.198" name="top_site"/>
+      <site rgba="1 0 0 1" size="0.005" pos="0 0 -0.021119515012314596" name="bottom_site"/>
+      <site rgba="0 1 0 1" size="0.005" pos="0 0 0.021119515012314596" name="top_site"/>
       <site rgba="0 0 1 1" size="0.005" pos="0.01 0.01 0" name="horizontal_radius_site"/>
+      <site rgba="0 0 0 1" size="0.005" pos="0 0 0.04223903002462919" name="vertical_radius_site"/>
     </body>
   </worldbody>
 </mujoco>

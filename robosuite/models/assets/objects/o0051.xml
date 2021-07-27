@@ -1,6 +1,6 @@
 <mujoco model="golf_ball">
   <asset>
-    <mesh name="golf_ball_mesh" file="./meshes/golf_ball.msh" scale="1 1 1"/>
+    <mesh name="golf_ball_mesh" file="./meshes/golf_ball.msh" scale="1.0 1.0 1.0"/>
     <texture name="tex-golf_ball" file="../textures/golf_ball.png" type="2d"/>
     <material name="golf_ball" reflectance="0.7" texrepeat="15 15" texture="tex-golf_ball" texuniform="true"/>
   </asset>
@@ -10,9 +10,10 @@
         <inertial pos="-0.006528858552747081 -0.03041729713329846 0.02092653007258482" mass="0.046" fullinertia="7.3017341992527055e-09 7.281135817609492e-09 7.2757988108535084e-09 1.671904984721422e-24 -1.7842928104490935e-25 3.706727697751384e-25"/>
         <geom name="golf_ball" pos="0 0 0" mesh="golf_ball_mesh" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" mass="0.046" friction="0.95 0.3 0.1"  material="golf_ball" group="0" condim="4"/>
       </body>
-      <site rgba="1 0 0 1" size="0.005" pos="0 0 0" name="bottom_site"/>
-      <site rgba="0 1 0 1" size="0.005" pos="0 0 0.0427" name="top_site"/>
+      <site rgba="1 0 0 1" size="0.005" pos="0 0 -0.02135" name="bottom_site"/>
+      <site rgba="0 1 0 1" size="0.005" pos="0 0 0.02135" name="top_site"/>
       <site rgba="0 0 1 1" size="0.005" pos="0.02135 0.02135 0" name="horizontal_radius_site"/>
+      <site rgba="0 0 0 1" size="0.005" pos="0 0 0.0427" name="vertical_radius_site"/>
     </body>
   </worldbody>
 </mujoco>

@@ -1,6 +1,6 @@
 <mujoco model="rubiks_cube">
   <asset>
-    <mesh name="rubiks_cube_mesh" file="./meshes/rubiks_cube.msh" scale="1 1 1"/>
+    <mesh name="rubiks_cube_mesh" file="./meshes/rubiks_cube.msh" scale="1.0 1.0 1.0"/>
     <texture name="tex-rubiks_cube" file="../textures/rubiks_cube.png" type="2d"/>
     <material name="rubiks_cube" reflectance="0.7" texrepeat="15 15" texture="tex-rubiks_cube" texuniform="true"/>
   </asset>
@@ -10,9 +10,10 @@
         <inertial pos="-0.016219049878342388 -0.00048529056442859776 0.028589928178413302" mass="0.094" fullinertia="9.85204038073643e-08 9.833577391876143e-08 9.818197457535545e-08 -8.061824208102976e-24 2.097640522420731e-24 -2.1321925661475815e-23"/>
         <geom name="rubiks_cube" pos="0 0 0" mesh="rubiks_cube_mesh" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" mass="0.094" friction="0.95 0.3 0.1"  material="rubiks_cube" group="0" condim="4"/>
       </body>
-      <site rgba="1 0 0 1" size="0.005" pos="0 0 0" name="bottom_site"/>
-      <site rgba="0 1 0 1" size="0.005" pos="0 0 0.057" name="top_site"/>
+      <site rgba="1 0 0 1" size="0.005" pos="0 0 -0.0285" name="bottom_site"/>
+      <site rgba="0 1 0 1" size="0.005" pos="0 0 0.0285" name="top_site"/>
       <site rgba="0 0 1 1" size="0.005" pos="0.0285 0.0285 0" name="horizontal_radius_site"/>
+      <site rgba="0 0 0 1" size="0.005" pos="0 0 0.057" name="vertical_radius_site"/>
     </body>
   </worldbody>
 </mujoco>

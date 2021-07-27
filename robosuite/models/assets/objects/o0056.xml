@@ -1,6 +1,6 @@
 <mujoco model="b_cups">
   <asset>
-    <mesh name="b_cups_mesh" file="./meshes/b_cups.msh" scale="1 1 1"/>
+    <mesh name="b_cups_mesh" file="./meshes/b_cups.msh" scale="1.0 1.0 1.0"/>
     <texture name="tex-b_cups" file="../textures/b_cups.png" type="2d"/>
     <material name="b_cups" reflectance="0.7" texrepeat="15 15" texture="tex-b_cups" texuniform="true"/>
   </asset>
@@ -10,9 +10,10 @@
         <inertial pos="-0.026747550267515283 -0.05365431597117832 0.02994142003313046" mass="0.014" fullinertia="1.5617921854636814e-08 1.5287407239601858e-08 1.3505737033184366e-08 1.1487471198406657e-24 5.904729277005292e-25 -1.359204586342413e-24"/>
         <geom name="b_cups" pos="0 0 0" mesh="b_cups_mesh" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" mass="0.014" friction="0.95 0.3 0.1"  material="b_cups" group="0" condim="4"/>
       </body>
-      <site rgba="1 0 0 1" size="0.005" pos="0 0 0" name="bottom_site"/>
-      <site rgba="0 1 0 1" size="0.005" pos="0 0 0.062" name="top_site"/>
+      <site rgba="1 0 0 1" size="0.005" pos="0 0 -0.031" name="bottom_site"/>
+      <site rgba="0 1 0 1" size="0.005" pos="0 0 0.031" name="top_site"/>
       <site rgba="0 0 1 1" size="0.005" pos="0.03 0.03 0" name="horizontal_radius_site"/>
+      <site rgba="0 0 0 1" size="0.005" pos="0 0 0.062" name="vertical_radius_site"/>
     </body>
   </worldbody>
 </mujoco>

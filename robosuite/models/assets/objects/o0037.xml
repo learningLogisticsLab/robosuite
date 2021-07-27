@@ -1,18 +1,18 @@
 <mujoco model="small_marker">
   <asset>
-    <mesh name="small_marker_mesh" file="./meshes/small_marker.msh" scale="1 1 1"/>
+    <mesh name="small_marker_mesh" file="./meshes/small_marker.msh" scale="1.0 1.0 1.0"/>
     <texture name="tex-small_marker" file="../textures/small_marker.png" type="2d"/>
     <material name="small_marker" reflectance="0.7" texrepeat="15 15" texture="tex-small_marker" texuniform="true"/>
   </asset>
   <worldbody>
     <body>
       <body name="object">
-        <inertial pos="0.0032001725193334116 0.004681558579172993 0.006391496436420896" mass="0.008199999999999999" fullinertia="2.4084715561816797e-09 1.3477104194998567e-09 -7.936753546759866e-10 3.111375619771522e-26 -1.9804695704980209e-25 -2.521483379384548e-25"/>
         <geom name="small_marker" pos="0 0 0" mesh="small_marker_mesh" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" mass="0.008199999999999999" friction="0.95 0.3 0.1"  material="small_marker" group="0" condim="4"/>
       </body>
-      <site rgba="1 0 0 1" size="0.005" pos="0 0 0" name="bottom_site"/>
-      <site rgba="0 1 0 1" size="0.005" pos="0 0 0.135" name="top_site"/>
+      <site rgba="1 0 0 1" size="0.005" pos="0 0 -0.02754112421388301" name="bottom_site"/>
+      <site rgba="0 1 0 1" size="0.005" pos="0 0 0.02754112421388301" name="top_site"/>
       <site rgba="0 0 1 1" size="0.005" pos="0.004 0.004 0" name="horizontal_radius_site"/>
+      <site rgba="0 0 0 1" size="0.005" pos="0 0 0.05508224842776602" name="vertical_radius_site"/>
     </body>
   </worldbody>
 </mujoco>

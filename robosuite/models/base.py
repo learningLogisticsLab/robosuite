@@ -467,6 +467,19 @@ class MujocoModel(object):
         """
         raise NotImplementedError
 
+    @property
+    def vertical_radius(self):
+        """
+        Returns maximum distance from model root body to the longest vertical point of the model.
+
+        Helps us put models programmatically without them flying away due to a huge initial contact force.
+        Must be defined by subclass.
+
+        Returns:
+            float: radius
+        """
+        raise NotImplementedError
+
 
 class MujocoXMLModel(MujocoXML, MujocoModel):
     """
@@ -650,5 +663,9 @@ class MujocoXMLModel(MujocoXML, MujocoModel):
 
     @property
     def horizontal_radius(self):
+        raise NotImplementedError
+
+    @property
+    def vertical_radius(self):
         raise NotImplementedError
 
