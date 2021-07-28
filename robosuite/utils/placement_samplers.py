@@ -32,11 +32,11 @@ class ObjectPositionSampler:
     def __init__(
             self,
             name,
-            mujoco_objects=None,
-            ensure_object_boundary_in_range=True,
-            ensure_valid_placement=True,
-            reference_pos=(0, 0, 0),
-            z_offset=0.,
+            mujoco_objects                  = None,
+            ensure_object_boundary_in_range = True,
+            ensure_valid_placement          = True,
+            reference_pos                   = (0, 0, 0),
+            z_offset                        = 0.,
     ):
 
         # Setup attributes
@@ -49,10 +49,10 @@ class ObjectPositionSampler:
             # Shallow copy the list so we don't modify the inputted list but still keep the object references
             self.mujoco_objects = [mujoco_objects] if isinstance(mujoco_objects, MujocoObject) else copy(mujoco_objects)
 
-        self.ensure_object_boundary_in_range = ensure_object_boundary_in_range
-        self.ensure_valid_placement = ensure_valid_placement
-        self.reference_pos = reference_pos
-        self.z_offset = z_offset
+        self.ensure_object_boundary_in_range    = ensure_object_boundary_in_range
+        self.ensure_valid_placement             = ensure_valid_placement
+        self.reference_pos                      = reference_pos
+        self.z_offset                           = z_offset
 
     def add_objects(self, mujoco_objects):
         """
@@ -393,11 +393,13 @@ class UniformWallSampler(ObjectPositionSampler):
             ensure_valid_placement=True,
             reference_pos=(0, 0, 0),
             z_offset=0.,
+            z_offset_prob=0.,
     ):
         self.x_range = x_range
         self.y_range = y_range
         self.rotation = rotation
         self.rotation_axis = rotation_axis
+        self.z_offset_prob = z_offset_prob
 
         super().__init__(
             name=name,
@@ -548,6 +550,10 @@ class UniformWallSampler(ObjectPositionSampler):
                 object_x = self._sample_x(count, horizontal_radius) + base_offset[0]
                 object_y = self._sample_y(count, horizontal_radius) + base_offset[1]
                 object_z = self.z_offset + base_offset[2]
+
+                # Place the object in the air with z_offset with probability
+                if self.np_random.uniform() < self.z_offset_prob:
+                    object_z = self.z_offset + base_offset[2]
 
                 if on_top:
                     object_z -= bottom_offset[
