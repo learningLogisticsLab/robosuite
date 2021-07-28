@@ -216,23 +216,32 @@ class Picking(SingleArmEnv):
         bin1_pos = (0.1, -0.25, 0.8),           # Follows xml
         bin2_pos = (0.1, 0.28, 0.8),
         
-        # MDP
+        # Observations
         use_camera_obs = True,
         use_object_obs = True,
 
+        # Rewards
         reward_scale    = 1.0,
         reward_shaping  = False,
       
         horizon     = 1000,
         ignore_done = False,
 
-        # Reset & Objects
+        # Objects & Resets & Goals
         num_blocks              = 1,        # blocks to consider in graph. affects rewards. 
         num_objs_to_load        = 1,        # from db       
 
-        hard_reset            = True,       # If True, re-loads model|sim|render object w reset call. Else, only call sim.reset and reset all robosuite-internal variables
         object_reset_strategy = "random",   # [organized, jumbled, wall, random]. random will randomly choose between first three options. 
         object_randomization  = True,       # Randomly select new objects from database after reset or not
+
+        # Reset
+        hard_reset            = True,       # If True, re-loads model|sim|render object w reset call. Else, only call sim.reset and reset all robosuite-internal variables
+
+        # Goals
+        goal                    = 0,
+        objects_in_target_bin   = [],
+
+        goal_pos_error_thresh   = 0.05,     # Used to determine if the current position of the object is within a threshold of goal position
 
         # Camera: RGB
         camera_names            = "agentview",
@@ -250,12 +259,7 @@ class Picking(SingleArmEnv):
 
         # Noise
         initialization_noise    ="default",
-        suite_path              = "",
-
-        # Goals/Objects
-        goal                    = 0,
-        objects_in_target_bin   = []
-        
+        suite_path              = "",        
     ):
         print('Generating Picking class.\n')
         # Task settings
@@ -303,14 +307,16 @@ class Picking(SingleArmEnv):
         # Given the available objects, randomly pick num_objs_to_load and return names, visual names, and name_to_id
         self.object_names, self.visual_object_names, self.object_to_id = self.load_objs_to_simulate(self.num_objs_in_db,self.num_objs_to_load)
         
-        # Goal Object and Other objects
-        self.sorted_objects_to_model = {}       # closes objects to the self.goal_object based on norm2 dist
-        
+        # Objects
+        self.sorted_objects_to_model = {}                    # closes objects to the self.goal_object based on norm2 dist
+        self.object_placements       = {}                    # placements for all objects upon reset    
+        self.other_objs_than_goals   = []
+        self.objects_in_target_bin   = objects_in_target_bin # list of object names (str) in target bin        
+
         # Goal pose for HER setting
-        self.goal_object = {}                   # holds name, pos, quat
-        self.object_placements = {}             # placements for all objects upon reset
-        
-        self.objects_in_target_bin = objects_in_target_bin # list of object names (str) in target bin
+        self.goal_object            = {}                     # holds name, pos, quat
+        self.goal_pos_error_thresh  = goal_pos_error_thresh  # set threshold to determine if current pos of object is at goal.
+
 
         # (B) Arena: bins_arena.xml
 
@@ -360,6 +366,10 @@ class Picking(SingleArmEnv):
             initialization_noise    = initialization_noise,            
         )
 
+    def goal_distance(goal_a, goal_b):
+        assert goal_a.shape == goal_b.shape
+        return np.linalg.norm(goal_a - goal_b, axis=-1)
+
     def get_goal_object(self):
         '''
         Plays the role of selecting a desired object for order fulfillment (name,pose)
@@ -385,28 +395,47 @@ class Picking(SingleArmEnv):
         other_objs_to_consider = self.object_names.copy()
         other_objs_to_consider.remove(goal_obj['name'])
 
-        return goal_obj, other_objs_to_consider
+        return goal_obj.copy(), other_objs_to_consider.copy()
     
+    def compute_reward(self, achieved_goal, desired_goal, info):
+        """
+        Computes discrete sparse reward, perhaps in an off-policy way during training. A negative format is used. So, if the goal is not met, you are penalized with -1. 
+        The policy will be encouraged to minimize the cost. A perfect policy would have returns equal to 0.
+        
+        - Use achieved goal and desired goal positions to determine the reward. 
+        - TODO: test if a normalized incremental reward would be better as done in reward()
+
+        :param achieved_goal:
+        :param goal:
+        :param info:
+        :return:
+        """
+        
+        # Compute position subdistances
+        ag_pos = achieved_goal[:3]
+        dg_pos = desired_goal[:3]
+        dist   = self.subgoal_distances(ag_pos, dg_pos)
+
+        # Sparse reward calculation: negative format
+        # - If you do not reach your target, a -1 will be assigned as the reward, otherwise zero.
+        # - a perfect policy would get returns equivalent to 0
+        reward = np.min([-(dist > self.distance_threshold).astype(np.float32) for d in dist], axis=0)
+        reward = np.asarray(reward)
+            
+        return reward          
+
     def reward(self, action=None):
         """
-        Reward function for the task.
-
-        Sparse un-normalized reward:
-
-          - a discrete reward of 1.0 per object if it is placed in its correct bin
-
-        Un-normalized components if using reward shaping, where the maximum is returned if not solved:
-
-          - Reaching: in [0, 0.1], proportional to the distance between the gripper and the closest object
-          - Grasping: in {0, 0.35}, nonzero if the gripper is grasping an object
-          - Lifting: in {0, [0.35, 0.5]}, nonzero only if object is grasped; proportional to lifting height
-          - Hovering: in {0, [0.5, 0.7]}, nonzero only if object is lifted; proportional to distance from object to bin
-
-        Note that a successfully completed task (object in bin) will return 1.0 per object irregardless of whether the
+        We compute a sparse normalized reward. It is possible that different number of objects are loaded in different experiments, 
+        it is useful to have the sum of rewards be equal to scaled_reward (usually 1)
+        
+        1. Give a discrete reward of 1.0 per object if it is placed in its correct bin
+        *Note that a successfully completed task (object in bin) will return 1.0 per object irregardless of whether the
         environment is using sparse or shaped rewards
 
-        Note that the final reward is normalized and scaled by reward_scale / 4.0 (or 1.0 if only a single object is
-        being used) as well so that the max score is equal to reward_scale
+        2. Check the length of objects in the target bin
+
+        3. Scale and normalize        
 
         Args:
             action (np.array): [NOT USED]
@@ -415,22 +444,23 @@ class Picking(SingleArmEnv):
             float: reward value
         """
         # compute sparse rewards
-        self.is_success()
-        reward = np.sum(self.objects_in_target_bin)
+        if self.is_success():
+            reward = len(self.objects_in_target_bin)
 
         # add in shaped rewards
         if self.reward_shaping:
             staged_rewards = self.staged_rewards()
             reward += max(staged_rewards)
+
         if self.reward_scale is not None:
             reward *= self.reward_scale
             if self.single_object_mode == 0:
-                reward /= 4.0
+                reward /= self.num_objs_to_load
         return reward
 
     def staged_rewards(self):
         """
-        Returns staged rewards based on current physical states.
+        robotsuite staged rewards based on current physical states.
         Stages consist of reaching, grasping, lifting, and hovering.
 
         Returns:
@@ -1114,7 +1144,7 @@ class Picking(SingleArmEnv):
 
         Params:
             self.goal_object:               class level param indicates the name of the object to pick.
-            self.other_objs_than_goals:     class level list with names of objects to model. Recall we may choose to model as nodes less objects than we have loaded
+            self.other_objs_than_goals:     class level list with names of objects to model. Recall we may choose to model fewer graph nodes than the total number of objects loaded into the simulation at one instance
 
 
         '''
@@ -1162,14 +1192,12 @@ class Picking(SingleArmEnv):
 
         TODO: consider modifing the definition of is_success according to QT-OPTs criteria to increase reactivity
         requires reaching a certain height... see paper for more. also connected with one parameter in observations.
-        """        
-
-        error_threshold = 0.05 # hard-coded to 5cm only for position
+        """       
 
         # Subtract obj_pos from goal and compute that error's norm:
         target_dist_error = np.linalg.norm(achieved_goal - desdired_goal)
 
-        if target_dist_error <= 0.05 and self.object_names!=0:
+        if target_dist_error <= self.goal_pos_error_thresh and self.object_names!=0:
             # After successfully placing self.goal_object, remove this from the list of considered names for the next round
             self.object_names.remove(self.goal_object['name'])
 
