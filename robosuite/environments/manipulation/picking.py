@@ -606,23 +606,6 @@ class Picking(SingleArmEnv):
                 )
             )
 
-            # placeObjectSamplers: each visual object receives a sampler that places it in the TARGET bin
-            self.placement_initializer.append_sampler(
-                sampler = UniformRandomSampler(
-                    name                            = "placeObjectSampler",         # name for object sampler for each object
-                    mujoco_objects                  = self.visual_objects,          
-                    x_range                         = [-bin_x_half, bin_x_half],    # This (+ve,-ve) range goes from center to the walls on each side of the bin
-                    y_range                         = [-bin_y_half, bin_y_half],    
-                    rotation                        = None,                         # Add uniform random rotation
-                    rotation_axis                   = 'z',                          # Currently only accepts one axis. TODO: extend to multiple axes.
-                    ensure_object_boundary_in_range = True,
-                    ensure_valid_placement          = True,
-                    reference_pos                   = self.bin2_pos,
-                    z_offset                        = 0.20,                        # Set a vertical offset of XXcm above the bin
-                    z_offset_prob                   = 0.50,                        # probability with which to set the z_offset
-                )
-            )
-
         elif self.object_reset_strategy == 'wall':
             self.placement_initializer = SequentialCompositeSampler(name="ObjectSampler")  # Samples position for each object sequentially. Allows chaining multiple placement initializers together - so that object locations can be sampled on top of other objects or relative to other object placements.
 
@@ -643,23 +626,6 @@ class Picking(SingleArmEnv):
                     ensure_valid_placement          = True,
                     reference_pos                   = self.bin1_pos,
                     z_offset                        = 0.,
-                )
-            )
-
-            # placeObjectSamplers: each visual object receives a sampler that places it in the TARGET bin
-            self.placement_initializer.append_sampler(
-                sampler                             = UniformWallSampler(
-                    name                            = "placeObjectSampler",             # name for object sampler for each object
-                    mujoco_objects                  = self.visual_objects,
-                    x_range                         = [-bin_x_half, bin_x_half],        # This (+ve,-ve) range goes from center to the walls on each side of the bin
-                    y_range                         = [-bin_y_half, bin_y_half],
-                    rotation                        = None,                             # Add uniform random rotation
-                    rotation_axis                   = 'z',                              # Currently only accepts one axis. TODO: extend to multiple axes.
-                    ensure_object_boundary_in_range = True,
-                    ensure_valid_placement          = True,
-                    reference_pos                   = self.bin2_pos,
-                    z_offset                        = 0.20,  # Set a vertical offset of XXcm above the bin
-                    z_offset_prob                   = 0.50,  # probability with which to set the z_offset
                 )
             )
 
@@ -687,22 +653,22 @@ class Picking(SingleArmEnv):
                 )
             )
 
-            # placeObjectSamplers: each visual object receives a sampler that places it in the TARGET bin
-            self.placement_initializer.append_sampler(
-                sampler=UniformRandomSampler(
-                    name                            = "placeObjectSampler",             # name for object sampler for each object
-                    mujoco_objects                  = self.visual_objects,
-                    x_range                         = [-bin_x_half, bin_x_half],        # This (+ve,-ve) range goes from center to the walls on each side of the bin
-                    y_range                         = [-bin_y_half, bin_y_half],
-                    rotation                        = None,                             # Add uniform random rotation
-                    rotation_axis                   = 'z',                              # Currently only accepts one axis. TODO: extend to multiple axes.
-                    ensure_object_boundary_in_range = True,
-                    ensure_valid_placement          = True,
-                    reference_pos                   = self.bin2_pos,
-                    z_offset                        = 0.20,                             # Set a vertical offset of XXcm above the bin
-                    z_offset_prob                   = 0.50,                             # probability with which to set the z_offset
-                )
+        # placeObjectSamplers: each visual object receives a sampler that places it in the TARGET bin
+        self.placement_initializer.append_sampler(
+            sampler=UniformRandomSampler(
+                name                            = "placeObjectSampler",             # name for object sampler for each object
+                mujoco_objects                  = self.visual_objects,
+                x_range                         = [-bin_x_half, bin_x_half],        # This (+ve,-ve) range goes from center to the walls on each side of the bin
+                y_range                         = [-bin_y_half, bin_y_half],
+                rotation                        = None,                             # Add uniform random rotation
+                rotation_axis                   = 'z',                              # Currently only accepts one axis. TODO: extend to multiple axes.
+                ensure_object_boundary_in_range = True,
+                ensure_valid_placement          = True,
+                reference_pos                   = self.bin2_pos,
+                z_offset                        = 0.20,                             # Set a vertical offset of XXcm above the bin
+                z_offset_prob                   = 0.50,                             # probability with which to set the z_offset
             )
+        )
 
         # robot_eefSampler:
         # TODO: this eefSampler probably best placed in robosuite/environments/robot_env.py.reset() where init_qpos + noise is computed.
