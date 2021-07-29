@@ -606,7 +606,6 @@ class UniformWallSampler(ObjectPositionSampler):
                 # raise RandomizationError("Cannot place all objects ):")
             count += 1  # add count, count = (0,2) = place in wall 1, wall 3 , otherwise wall 2, wall 4
             count %= 4
-        print(placed_objects)
         return placed_objects
 
 

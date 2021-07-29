@@ -298,7 +298,7 @@ class Picking(SingleArmEnv):
         
         # Strategies
         self.object_reset_strategy  = object_reset_strategy     # organized|jumbled|wall|random
-        self.object_randomization   = object_randomization      # randomize with new objects after reset (bool)        
+        self.object_randomization   = object_randomization      # randomize with new objects after reset (bool)
         print(f"A total of {self.num_objs_to_load} objects are being loaded. A total of {self.num_objects} will be modeled as nodes.")
         print(f"The object reset strategy is: {self.object_reset_strategy} and new objects will be randomly picked after reset\n")
         #-----------
@@ -306,7 +306,7 @@ class Picking(SingleArmEnv):
         # Objects and Goals
         # Given the available objects, randomly pick num_objs_to_load and return names, visual names, and name_to_id
         self.object_names, self.visual_object_names, self.object_to_id = self.load_objs_to_simulate(self.num_objs_in_db,self.num_objs_to_load)
-        
+
         # Objects
         self.sorted_objects_to_model = {}                    # closes objects to the self.goal_object based on norm2 dist
         self.object_placements       = {}                    # placements for all objects upon reset    
@@ -933,7 +933,7 @@ class Picking(SingleArmEnv):
         # TODO: need to decide when the locations of objects should be updated. if arm does not finish picking everything, do we want to move things around?
         The goal object should also not be changed for this time. Should this only happen in a hard reset?
         """
-        super()._reset_internal() 
+        super()._reset_internal()
 
         # Reset all object positions using initializer sampler if we're not directly loading from an xml
         if not self.deterministic_reset: # i.e. stochastic (flag set in base.py)
@@ -975,7 +975,7 @@ class Picking(SingleArmEnv):
                 self.object_placements = self.placement_initializer.sample()
 
                 # Set goal object to pick up and sort closest objects to model
-                self.goal_object, self.other_objs_than_goals = self.get_goal_object()                
+                self.goal_object, self.other_objs_than_goals = self.get_goal_object()
 
                 # Loop through all (visual) objects and (re) set their placement positions
                 for obj_pos, obj_quat, obj in self.object_placements.values():
@@ -1036,8 +1036,8 @@ class Picking(SingleArmEnv):
             #     # print(f"Updated eef_xpos: {self._eef_xpos}")
             #-------------------------
 
-            if self.object_reset_strategy == 'wall':               
-                
+            if self.object_reset_strategy == 'wall':
+
                 # A) If we want to randomize objects with new reset: select new objects, and update the placement samplers (as done in _load_model). 
                 if self.object_randomization == True:
                     # A. Select new objects
@@ -1058,7 +1058,16 @@ class Picking(SingleArmEnv):
                     # Create placement initializer objects for each existing object (self.placement_initializer): will place according to strategy
                     self._get_placement_initializer()
 
-                    # ----------------- Continue to update placement of objects
+                # ----------------- Continue to update placement of objects
+                ##TODO: need to decide WHEN these locs + GOAL should be updated. The main considerations to discuss are:
+                # If arm does not finish picking goal object do we want to set a new goal or the same?
+                # If all objects are not placed, do we want to move them or keep them in the same place?
+
+                # Sample from the placement initializer for all objects (regular and visual objects)
+                self.object_placements = self.placement_initializer.sample()
+
+                # Set goal object to pick up and sort closest objects to model
+                self.goal_object, self.other_objs_than_goals = self.get_goal_object()
 
                 # Sample from the placement initializer for all objects (regular and visual objects)
                 object_placements = self.placement_initializer.sample()
@@ -1385,9 +1394,9 @@ class Picking(SingleArmEnv):
         # Observations for Objects
         # *Note: there are three quantities of interest: (i) (total) num_objs_to_load, (ii) num_objs (to_model), and (iii) goal object. 
         # We report data for num_objs that are closes to goal_object and ignore the rest. 
-        # We only consider the relative position between the goal object and end-effector, all the rest are set to 0. 
+        # We only consider the relative position between the goal object and end-effector, all the rest are set to 0.
         self.sorted_objects_to_model = self.return_sorted_objs_to_model(obs)
-        
+
         # Place goal object at the front
         self.sorted_objects_to_model
 
