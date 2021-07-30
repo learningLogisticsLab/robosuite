@@ -46,22 +46,42 @@ class GymWrapper(Wrapper, Env):
             # Iterate over all robots to add to state
             for idx in range(len(self.env.robots)):
                 keys += ["robot{}_proprio-state".format(idx)]
-        self.keys = keys
+        self.keys = keys # i.e. ['object-state','robot0_proprio-state']
 
         # Gym specific attributes
         self.env.spec = None
         self.metadata = None
 
-        # set up observation and action spaces
-        obs                 = self.env.reset()                              # dictionary of observables
-        self.modality_dims  = {key: obs[key].shape for key in self.keys}
-        flat_ob             = self._flatten_obs(obs)    # flatten's images... double check this
-        self.obs_dim        = flat_ob.size              # concatenantes proprio, object, and image info into one long contiguous array
-        high                = np.inf * np.ones(self.obs_dim)
-        low                 = -high
-        self.observation_space = spaces.Box(low=low, high=high)
-        low, high           = self.env.action_spec
-        self.action_space   = spaces.Box(low=low, high=high)
+        # HACK: forcing rlkit_relational settings
+        rlkit_relational = True
+
+        if not rlkit_relational:
+            # set up observation and action spaces
+            obs                 = self.env.reset()                              # dictionary of observables
+            self.modality_dims  = {key: obs[key].shape for key in self.keys}
+            flat_ob             = self._flatten_obs(obs)    # flatten's images... double check this
+            self.obs_dim        = flat_ob.size              # concatenantes proprio, object, and image info into one long contiguous array
+            high                = np.inf * np.ones(self.obs_dim)
+            low                 = -high
+            self.observation_space = spaces.Box(low=low, high=high)
+            low, high           = self.env.action_spec
+            self.action_space   = spaces.Box(low=low, high=high)
+
+        if rlkit_relational:
+            # set up observation and action spaces
+            obs                 = self.env.reset()                              # dictionary of observables
+            self.modality_dims  = {key: obs[key].shape for key in self.keys}
+            # No flattening
+            self.obs_dim        = obs['observation'].size                      # dict of obs contains the following keys: 'observations', 'achieved_goal', 'desired_goal'
+            
+            high                = np.inf * np.ones(self.obs_dim)
+            low                 = -high
+            self.observation_space = spaces.Box(low=low, high=high)
+            
+            # Action specs set in robot environ and depend on controller (gripper + robot)
+            # i.e. if 2 gripper fingers => gripper is dim(1), if OSC controller 'fixed' dim is xyz rpy
+            low, high           = self.env.action_spec
+            self.action_space   = spaces.Box(low=low, high=high)        
 
     def _flatten_obs(self, obs_dict, verbose=False):
         """

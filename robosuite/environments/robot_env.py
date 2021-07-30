@@ -226,7 +226,7 @@ class RobotEnv(MujocoEnv):
     @property
     def action_spec(self):
         """
-        Action space (low, high) for this environment
+        Action space (low, high) for this environment. Extracted from robot model and dependent on controller
 
         Returns:
             2-tuple:
@@ -236,7 +236,7 @@ class RobotEnv(MujocoEnv):
         """
         low, high = [], []
         for robot in self.robots:
-            lo, hi = robot.action_limits
+            lo, hi = robot.action_limits # gripper (1) + robot (i.e. OSC xyz rpy) 
             low, high = np.concatenate([low, lo]), np.concatenate([high, hi])
         return low, high
 
@@ -395,10 +395,10 @@ class RobotEnv(MujocoEnv):
         # Reset action dim
         self._action_dim = 0
 
-        # Reset robot and update action space dimension along the way
+        # Reset robot and update action space dimension along the way according to controller [gripper + robot]
         for robot in self.robots:
             robot.reset(deterministic=self.deterministic_reset)
-            self._action_dim += robot.action_dim
+            self._action_dim += robot.action_dim                    # If OSC controller then: [grip (1) xyz rpy]
 
         # Update cameras if appropriate
         if self.use_camera_obs:

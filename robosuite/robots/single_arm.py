@@ -1,18 +1,14 @@
-import numpy as np
-
+import copy
+import os
 from collections import OrderedDict
 
+import numpy as np
 import robosuite.utils.transform_utils as T
-
-from robosuite.models.grippers import gripper_factory
 from robosuite.controllers import controller_factory, load_controller_config
-
+from robosuite.models.grippers import gripper_factory
 from robosuite.robots.manipulator import Manipulator
 from robosuite.utils.buffers import DeltaBuffer, RingBuffer
 from robosuite.utils.observables import Observable, sensor
-
-import os
-import copy
 
 
 class SingleArm(Manipulator):
@@ -354,17 +350,22 @@ class SingleArm(Manipulator):
     @property
     def action_limits(self):
         """
-        Action lower/upper limits per dimension.
-
+        Action lower/upper limits per dimension. TODO: currently set at -1, but these are generic.
+        I.e. panda gripper +/- 0.04m, for robot cartesian eef deltas, thinking eef would not move more than 0.10 in one step. Could set to 0.10
         Returns:
             2-tuple:
 
                 - (np.array) minimum (low) action values
                 - (np.array) maximum (high) action values
         """
-        # Action limits based on controller limits
+        # Action limits based on controller type, i.e. osc pose (which would take xyz rpy)
+        # Gripper
         low, high = ([-1] * self.gripper.dof, [1] * self.gripper.dof) if self.has_gripper else ([], [])
+
+        # Robot (according to controller)
         low_c, high_c = self.controller.control_limits
+
+        # Join to low/high
         low = np.concatenate([low_c, low])
         high = np.concatenate([high_c, high])
 

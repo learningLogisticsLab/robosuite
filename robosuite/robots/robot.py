@@ -139,7 +139,7 @@ class Robot(object):
         # Set initial position in sim
         self.sim.data.qpos[self._ref_joint_pos_indexes] = init_qpos
 
-        # Load controllers
+        # Load controllers (i.e. OSC pose with xyz rpy inputs for robot)
         self._load_controller()
 
         # Update base pos / ori references
