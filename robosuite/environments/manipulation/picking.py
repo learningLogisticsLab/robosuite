@@ -52,6 +52,9 @@ from robosuite.models.tasks import ManipulationTask
 # 05 Observables
 from robosuite.utils.observables import Observable, sensor
 
+# 06 Mujoco
+import mujoco_py
+
 # Globals
 object_reset_strategy_cases = ['organized', 'jumbled', 'wall', 'random']
 
@@ -217,8 +220,8 @@ class Picking(SingleArmEnv):
         bin2_pos = (0.1, 0.28, 0.8),
         
         # Observations
-        use_camera_obs = True,
-        use_object_obs = True,
+        use_camera_obs = True,                  # TODO: Currently these two options are setup to work in oposition it seems. Can we have both to True?
+        use_object_obs = False,
 
         # Rewards
         reward_scale    = 1.0,
@@ -330,7 +333,7 @@ class Picking(SingleArmEnv):
         self.bin2_pos = np.array(bin2_pos)
 
         # reward configuration
-        self.reward_scale   = reward_scale / self.num_objects #TODO: currently scaling rewards based on number of objects modelled by graph. This could be the same number of objects loaded but not necessarily. Could also choose not to scale. 
+        self.reward_scale   = reward_scale                      # Sets a scale for final reward
         self.reward_shaping = reward_shaping
 
         # whether to use ground-truth object states
@@ -405,10 +408,10 @@ class Picking(SingleArmEnv):
         - Use achieved goal and desired goal positions to determine the reward. 
         - TODO: test if a normalized incremental reward would be better as done in reward()
 
-        :param achieved_goal:
-        :param goal:
-        :param info:
-        :return:
+        :param achieved_goal: (numpy array) goal_object's pos(3) and quat(4)
+        :param desired_goal:  (numpy array) target pos(3) and quat(4)
+        :param info:          (bool)        indicating success or failure
+        :return:              (float)       reward 
         """
         
         # Compute position subdistances
@@ -1077,6 +1080,8 @@ class Picking(SingleArmEnv):
                 # Set the bins to the desired position
                 self.sim.model.body_pos[self.sim.model.body_name2id("bin1")] = self.bin1_pos
                 self.sim.model.body_pos[self.sim.model.body_name2id("bin2")] = self.bin2_pos
+        
+        return True
 
     def return_sorted_objs_to_model(self,obs):
         '''
@@ -1319,8 +1324,9 @@ class Picking(SingleArmEnv):
     def _get_obs(self, force_update=False):
         '''
         This declaration comes from the Fetch Block Construction environment in rlkit_relational. In our top class: MujocoEnv
-        we have the _get_observations declaration. It returns a dictionary of observables. This call will set 1 level above the robosuite call to _get_observations
-        # Integrates them.
+        we have the _get_observations declaration. It returns an Ordered dictionary of observables. 
+        This method will get such dict of observations and manipulate them to return a formate amenable to rlkit_relational+HER,
+        namely return a dictionay with keys: 'obsevations', 'achieved_goals', and 'desired_goals' composed of numpy arrays.
 
         We keep this declaration as is for two reasons:
         (1) Facilitate the migration of the rlkit_relational code by keeping the same method name
@@ -1337,6 +1343,10 @@ class Picking(SingleArmEnv):
         Note:
         Currently we do not consider the observable's modalities in this function. 
         The GymWrapper uses hem in its constructor... So far I don't think it will be a problem but need to check. 
+        
+        ## TODO: currently we are collecting quaternions. However, we are using an OSC Controller than requests 
+        xyz rpy for the robot. It seems that observations should match action space to facilitate the learning of the network, 
+        otherwise it needs to learn that mapping as well... but working with Euler angles is prone to singularities when pitch=90 deg
 
         ## TODO: Additional observations
             # (1) End-effector type: use robosuites list to provide an appropriate number to these
@@ -1346,7 +1356,7 @@ class Picking(SingleArmEnv):
         # Init achieved_goal
         achieved_goal = []
 
-        # Get robosuite observations as ordered dict
+        # Get robosuite observations as an Ordered dict
         obs = self._get_observations(force_update) # if called by reset() [see base class] this will be set to True.
 
         # Get prefix for robot to extract observation keys
@@ -1477,10 +1487,135 @@ class Picking(SingleArmEnv):
         }
 
         # Images
-        #TODO
+        #TODO: add image representation
         #if obs[]
         return return_dict
 
+    def step(self, action):
+        '''
+
+        Takes a step in simulation with control command @action:
+
+        01 Move simulation sim.forward() steps 2-21 (http://mujoco.org/book/computation.html#piForward)
+            fk->poses bodies/geoms/sites/cams
+            body inertias+joint axes in global frames centered at CoM
+            tendon lengths/moment arms
+            composite rigid body inertias -> joint-space inertia matrix
+            list of active contacts
+            constraint jacobian and residuals
+            sensor data/potential energy
+            tend/actuator vels
+            body vels and rates of change of the joint axes in global frames at CoM
+            passive forces: spring-dampers and fluid dynamics
+            sensor data that depends on velocity/kinetic energy
+            constraint acceleration
+            coriolis/centrigual/gravitational forces
+            actuator forces/activation dynamics
+            compute joint acceleration from all forces except still unknown constraint forces
+            compute constraint forces with selected solver. update joint acceleration in mjData.aqcc main out of FwdDyns
+            compute sensor data that dpeends on force/acceleration
+            
+        02 Clip action
+        03 Set data to mujoco sim.data.ctrl
+        04 Step (steps 1-24)
+            
+            check pos/vels for unacceptably large vals indicating divergence.
+            ...
+            ... those from above
+            ... 
+            check for unacceptably lare values, if so reset
+            compare FwdDyn | InvDyn to diagnose poor solver conv
+            advance sim state by one time step with selected integrator
+
+        05 Update observables and get new observations
+        06 Update 'Done'
+        07 Process info 
+        08 Process reward
+
+        return obs, reward, done, info 
+
+        Args:
+            action (np.array): Action to execute within the environment
+
+        Returns:
+            4-tuple:
+
+                - (dict) with 'observations', 'achieved_goal', and 'desired_goal' 
+                - (float) reward from the environment
+                - (bool) whether the current episode is completed or not
+                - (dict) misc information
+
+        Raises:
+            ValueError: [Steps past episode termination]        
+        '''
+        if self.done:
+            raise ValueError("executing action in terminated episode")
+
+        self.timestep += 1
+
+        # Since the env.step frequency is slower than the mjsim timestep frequency, the internal controller will output
+        # multiple torque commands in between new high level action commands. Therefore, we need to denote via
+        # 'policy_step' whether the current step we're taking is simply an internal update of the controller,
+        # or an actual policy_step update
+        policy_step = True
+
+
+        # Loop through the simulation at the model timestep rate until we're ready to take the next policy step
+        # (as defined by the control frequency specified at the environment level)
+        for i in range(int(self.control_timestep / self.model_timestep)):
+
+            # 01. sim.forward()
+            self.sim.forward()
+
+            # TODO: is this necessary if we have the NormalizedBoxEnv in robosuite: 
+            # 02. Set (clipped) action in mujoco
+            action = np.clip(action, 
+                             self.action_space.low, 
+                             self.action_space.high)
+            
+        
+            # 03 Copy action to sim.data.ctrl (no mocaps)
+            self._pre_action(action, policy_step)
+
+            # 04 sim.step
+            try:
+                self.sim.step()                             # Advance simulation
+            
+            except mujoco_py.builder.MujocoException as e:
+                print(e)
+                print(F"action {action}") 
+
+            # 05 Update observables and get new observations
+            self._update_observables()
+            env_obs = self._get_obs()
+            
+            policy_step = False
+                                           
+        # Note: this is done all at once to avoid floating point inaccuracies
+        self.cur_time += self.control_timestep        
+
+        # 06 Process Done
+        done = (self.timestep >= self.horizon) and not self.ignore_done
+
+        # 05 Process Reward * Info
+        # TODO: design a manner to describe observations in our graph node setting. currently just 'state', but later will use images in nodes, and can extend beyond.
+        # if "image" in self.obs_type:
+        #     reward = self.compute_reward_image()
+        #     if reward < .05:
+        #         info = { 'is_success': True }
+        #     else:
+        #         info = { 'is_success': False }
+        # elif "state" in self.obs_type: ...
+        # else:
+        #     raise ("Obs_type not recognized")        
+
+        # 07 Process info
+        info   = { 'is_success': self._is_success(env_obs['achieved_goal'], env_obs['desired_goal']) }
+
+        # 08 Process Reward
+        reward = self.compute_reward(env_obs['achieved_goal'], env_obs['desired_goal'], info)
+
+        return env_obs, reward, done, info        
 #-------------------------------------------------------------
 # Define new permutation of classes to register based on picking for relationalRL code
 #-------------------------------------------------------------
