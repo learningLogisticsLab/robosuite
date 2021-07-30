@@ -10,10 +10,10 @@
         <inertial pos="0.0026626279153952586 0.02222386939344705 0.01637227553798352" mass="0.097" fullinertia="1.0868078692455594e-07 1.0863412549561548e-07 8.538219861143397e-09 -1.2768121282873696e-23 4.59999399179554e-24 -7.39265145598228e-24"/>
         <geom name="phillips_screwdriver" pos="0 0 0" mesh="phillips_screwdriver_mesh" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" mass="0.097" friction="0.95 0.3 0.1"  material="phillips_screwdriver" group="0" condim="4"/>
       </body>
-      <site rgba="1 0 0 1" size="0.005" pos="0 0 -0.03365292487536635" name="bottom_site"/>
-      <site rgba="0 1 0 1" size="0.005" pos="0 0 0.03365292487536635" name="top_site"/>
+      <site rgba="1 0 0 1" size="0.005" pos="0 0 -0.030871778662387734" name="bottom_site"/>
+      <site rgba="0 1 0 1" size="0.005" pos="0 0 0.030871778662387734" name="top_site"/>
       <site rgba="0 0 1 1" size="0.005" pos="0.0155 0.0155 0" name="horizontal_radius_site"/>
-      <site rgba="0 0 0 1" size="0.005" pos="0 0 0.0673058497507327" name="vertical_radius_site"/>
+      <site rgba="0 0 0 1" size="0.005" pos="0 0 0.06174355732477547" name="vertical_radius_site"/>
     </body>
   </worldbody>
 </mujoco>
