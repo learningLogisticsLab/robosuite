@@ -1,19 +1,19 @@
 <mujoco model="nine_peg_hole_test">
   <asset>
-    <mesh name="nine_peg_hole_test_mesh" file="./meshes/nine_peg_hole_test.msh" scale="0.04726057209060073 0.04726057209060073 0.04726057209060073"/>
+    <mesh name="nine_peg_hole_test_mesh" file="./meshes/nine_peg_hole_test.msh" scale="0.05457234024091661 0.05457234024091661 0.05457234024091661"/>
     <texture name="tex-nine_peg_hole_test" file="../textures/nine_peg_hole_test.png" type="2d"/>
     <material name="nine_peg_hole_test" reflectance="0.7" texrepeat="15 15" texture="tex-nine_peg_hole_test" texuniform="true"/>
   </asset>
   <worldbody>
     <body>
       <body name="object">
-        <inertial pos="-0.000188539225942058 0.024373721273276618 0.019952866039031774" mass="0.6396787974695273" fullinertia="1.6556355079461083e-06 9.576057723576261e-07 8.65277925286308e-07 4.446166175621472e-24 5.0692044608912555e-24 -1.6308372078768095e-23"/>
-        <geom name="nine_peg_hole_test" pos="0 0 0" mesh="nine_peg_hole_test_mesh" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" mass="0.6396787974695273" friction="0.95 0.3 0.1"  material="nine_peg_hole_test" group="0" condim="4"/>
+        <inertial pos="-0.000188539225942058 0.024373721273276618 0.019952866039031774" mass="0.45201300050606963" fullinertia="1.6556355079461083e-06 9.576057723576261e-07 8.65277925286308e-07 4.446166175621472e-24 5.0692044608912555e-24 -1.6308372078768095e-23"/>
+        <geom name="nine_peg_hole_test" pos="0 0 0" mesh="nine_peg_hole_test_mesh" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" mass="0.45201300050606963" friction="0.95 0.3 0.1"  material="nine_peg_hole_test" group="0" condim="4"/>
       </body>
-      <site rgba="1 0 0 1" size="0.005" pos="0 0 -0.022727020471461787" name="bottom_site"/>
-      <site rgba="0 1 0 1" size="0.005" pos="0 0 0.022727020471461787" name="top_site"/>
-      <site rgba="0 0 1 1" size="0.005" pos="0.027174828952095418 0.027174828952095418 0" name="horizontal_radius_site"/>
-      <site rgba="0 0 0 1" size="0.005" pos="0 0 0.045454040942923574" name="vertical_radius_site"/>
+      <site rgba="1 0 0 1" size="0.005" pos="0 0 -0.028293784861179727" name="bottom_site"/>
+      <site rgba="0 1 0 1" size="0.005" pos="0 0 0.028293784861179727" name="top_site"/>
+      <site rgba="0 0 1 1" size="0.005" pos="0.031379095638527046 0.031379095638527046 0" name="horizontal_radius_site"/>
+      <site rgba="0 0 0 1" size="0.005" pos="0 0 0.056587569722359454" name="vertical_radius_site"/>
     </body>
   </worldbody>
 </mujoco>
