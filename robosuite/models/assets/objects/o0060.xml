@@ -1,6 +1,6 @@
 <mujoco model="f_cups">
   <asset>
-    <mesh name="f_cups_mesh" file="./meshes/f_cups.msh" scale="1.0 1.0 1.0"/>
+    <mesh name="f_cups_mesh" file="./meshes/f_cups.msh" scale="0.5811879267108517 0.5811879267108517 0.5811879267108517"/>
     <texture name="tex-f_cups" file="../textures/f_cups.png" type="2d"/>
     <material name="f_cups" reflectance="0.7" texrepeat="15 15" texture="tex-f_cups" texuniform="true"/>
   </asset>
@@ -12,7 +12,7 @@
       </body>
       <site rgba="1 0 0 1" size="0.005" pos="0 0 -0.035" name="bottom_site"/>
       <site rgba="0 1 0 1" size="0.005" pos="0 0 0.035" name="top_site"/>
-      <site rgba="0 0 1 1" size="0.005" pos="0.04 0.04 0" name="horizontal_radius_site"/>
+      <site rgba="0 0 1 1" size="0.005" pos="0.02324751706843407 0.02324751706843407 0" name="horizontal_radius_site"/>
       <site rgba="0 0 0 1" size="0.005" pos="0 0 0.07" name="vertical_radius_site"/>
     </body>
   </worldbody>

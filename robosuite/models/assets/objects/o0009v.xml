@@ -7,10 +7,10 @@
       <body name="object">
         <geom name="gelatin_box" pos="0 0 0" mesh="gelatin_box_mesh" type="mesh" rgba="0.8 0.8 0.8 0.3" conaffinity="0" contype="0" mass="0.097" friction="0.95 0.3 0.1" group="1" condim="4"/>
       </body>
-      <site rgba="1 0 0 1" size="0.005" pos="0 0 -0.02240267504204942" name="bottom_site"/>
-      <site rgba="0 1 0 1" size="0.005" pos="0 0 0.02240267504204942" name="top_site"/>
-      <site rgba="0 0 1 1" size="0.005" pos="0.0425 0.0425 0" name="horizontal_radius_site"/>
-      <site rgba="0 0 0 1" size="0.005" pos="0 0 0.04480535008409884" name="vertical_radius_site"/>
+      <site rgba="1 0 0 1" size="0.005" pos="0 0 -0.03443086627552011" name="bottom_site"/>
+      <site rgba="0 1 0 1" size="0.005" pos="0 0 0.03443086627552011" name="top_site"/>
+      <site rgba="0 0 1 1" size="0.005" pos="0.02787962883375278 0.02787962883375278 0" name="horizontal_radius_site"/>
+      <site rgba="0 0 0 1" size="0.005" pos="0 0 0.06886173255104022" name="vertical_radius_site"/>
     </body>
   </worldbody>
 </mujoco>
