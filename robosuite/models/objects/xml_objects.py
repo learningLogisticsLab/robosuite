@@ -280,9 +280,9 @@ class DoorObject(MujocoXMLObject):
 # Defs: https://github.com/learningLogisticsLab/binPicking/blob/main/docs/simulation/objects/object_categories_db.xlsx
 
 
-class o0001(MujocoXMLObject):
+class o0001Object(MujocoXMLObject):
     """
-    o0001
+    o0001Object
     """
 
     def __init__(self, name):
@@ -291,9 +291,9 @@ class o0001(MujocoXMLObject):
                          obj_type="all", duplicate_collision_geoms=True)
 
 
-class o0001v(MujocoXMLObject):
+class o0001VisualObject(MujocoXMLObject):
     """
-    o0001v
+    o0001ObjectVisual
     """
 
     def __init__(self, name):
@@ -302,9 +302,9 @@ class o0001v(MujocoXMLObject):
                          obj_type="visual", duplicate_collision_geoms=True)
 
 
-class o0002(MujocoXMLObject):
+class o0002Object(MujocoXMLObject):
     """
-    o0002
+    o0002Object
     """
 
     def __init__(self, name):
@@ -313,9 +313,9 @@ class o0002(MujocoXMLObject):
                          obj_type="all", duplicate_collision_geoms=True)
 
 
-class o0002v(MujocoXMLObject):
+class o0002VisualObject(MujocoXMLObject):
     """
-    o0002v
+    o0002ObjectVisual
     """
 
     def __init__(self, name):
@@ -324,9 +324,9 @@ class o0002v(MujocoXMLObject):
                          obj_type="visual", duplicate_collision_geoms=True)
 
 
-class o0003(MujocoXMLObject):
+class o0003Object(MujocoXMLObject):
     """
-    o0003
+    o0003Object
     """
 
     def __init__(self, name):
@@ -335,9 +335,9 @@ class o0003(MujocoXMLObject):
                          obj_type="all", duplicate_collision_geoms=True)
 
 
-class o0003v(MujocoXMLObject):
+class o0003VisualObject(MujocoXMLObject):
     """
-    o0003v
+    o0003ObjectVisual
     """
 
     def __init__(self, name):
@@ -346,9 +346,9 @@ class o0003v(MujocoXMLObject):
                          obj_type="visual", duplicate_collision_geoms=True)
 
 
-class o0004(MujocoXMLObject):
+class o0004Object(MujocoXMLObject):
     """
-    o0004
+    o0004Object
     """
 
     def __init__(self, name):
@@ -357,9 +357,9 @@ class o0004(MujocoXMLObject):
                          obj_type="all", duplicate_collision_geoms=True)
 
 
-class o0004v(MujocoXMLObject):
+class o0004VisualObject(MujocoXMLObject):
     """
-    o0004v
+    o0004ObjectVisual
     """
 
     def __init__(self, name):
@@ -368,9 +368,9 @@ class o0004v(MujocoXMLObject):
                          obj_type="visual", duplicate_collision_geoms=True)
 
 
-class o0005(MujocoXMLObject):
+class o0005Object(MujocoXMLObject):
     """
-    o0005
+    o0005Object
     """
 
     def __init__(self, name):
@@ -379,9 +379,9 @@ class o0005(MujocoXMLObject):
                          obj_type="all", duplicate_collision_geoms=True)
 
 
-class o0005v(MujocoXMLObject):
+class o0005VisualObject(MujocoXMLObject):
     """
-    o0005v
+    o0005ObjectVisual
     """
 
     def __init__(self, name):
@@ -390,9 +390,9 @@ class o0005v(MujocoXMLObject):
                          obj_type="visual", duplicate_collision_geoms=True)
 
 
-class o0006(MujocoXMLObject):
+class o0006Object(MujocoXMLObject):
     """
-    o0006
+    o0006Object
     """
 
     def __init__(self, name):
@@ -401,9 +401,9 @@ class o0006(MujocoXMLObject):
                          obj_type="all", duplicate_collision_geoms=True)
 
 
-class o0006v(MujocoXMLObject):
+class o0006VisualObject(MujocoXMLObject):
     """
-    o0006v
+    o0006ObjectVisual
     """
 
     def __init__(self, name):
@@ -412,9 +412,9 @@ class o0006v(MujocoXMLObject):
                          obj_type="visual", duplicate_collision_geoms=True)
 
 
-class o0007(MujocoXMLObject):
+class o0007Object(MujocoXMLObject):
     """
-    o0007
+    o0007Object
     """
 
     def __init__(self, name):
@@ -423,9 +423,9 @@ class o0007(MujocoXMLObject):
                          obj_type="all", duplicate_collision_geoms=True)
 
 
-class o0007v(MujocoXMLObject):
+class o0007VisualObject(MujocoXMLObject):
     """
-    o0007v
+    o0007ObjectVisual
     """
 
     def __init__(self, name):
@@ -434,9 +434,9 @@ class o0007v(MujocoXMLObject):
                          obj_type="visual", duplicate_collision_geoms=True)
 
 
-class o0008(MujocoXMLObject):
+class o0008Object(MujocoXMLObject):
     """
-    o0008
+    o0008Object
     """
 
     def __init__(self, name):
@@ -445,9 +445,9 @@ class o0008(MujocoXMLObject):
                          obj_type="all", duplicate_collision_geoms=True)
 
 
-class o0008v(MujocoXMLObject):
+class o0008VisualObject(MujocoXMLObject):
     """
-    o0008v
+    o0008ObjectVisual
     """
 
     def __init__(self, name):
@@ -456,9 +456,9 @@ class o0008v(MujocoXMLObject):
                          obj_type="visual", duplicate_collision_geoms=True)
 
 
-class o0009(MujocoXMLObject):
+class o0009Object(MujocoXMLObject):
     """
-    o0009
+    o0009Object
     """
 
     def __init__(self, name):
@@ -467,9 +467,9 @@ class o0009(MujocoXMLObject):
                          obj_type="all", duplicate_collision_geoms=True)
 
 
-class o0009v(MujocoXMLObject):
+class o0009VisualObject(MujocoXMLObject):
     """
-    o0009v
+    o0009ObjectVisual
     """
 
     def __init__(self, name):
@@ -478,9 +478,9 @@ class o0009v(MujocoXMLObject):
                          obj_type="visual", duplicate_collision_geoms=True)
 
 
-class o0010(MujocoXMLObject):
+class o0010Object(MujocoXMLObject):
     """
-    o0010
+    o0010Object
     """
 
     def __init__(self, name):
@@ -489,9 +489,9 @@ class o0010(MujocoXMLObject):
                          obj_type="all", duplicate_collision_geoms=True)
 
 
-class o0010v(MujocoXMLObject):
+class o0010VisualObject(MujocoXMLObject):
     """
-    o0010v
+    o0010ObjectVisual
     """
 
     def __init__(self, name):
@@ -500,9 +500,9 @@ class o0010v(MujocoXMLObject):
                          obj_type="visual", duplicate_collision_geoms=True)
 
 
-class o0011(MujocoXMLObject):
+class o0011Object(MujocoXMLObject):
     """
-    o0011
+    o0011Object
     """
 
     def __init__(self, name):
@@ -511,9 +511,9 @@ class o0011(MujocoXMLObject):
                          obj_type="all", duplicate_collision_geoms=True)
 
 
-class o0011v(MujocoXMLObject):
+class o0011VisualObject(MujocoXMLObject):
     """
-    o0011v
+    o0011ObjectVisual
     """
 
     def __init__(self, name):
@@ -522,9 +522,9 @@ class o0011v(MujocoXMLObject):
                          obj_type="visual", duplicate_collision_geoms=True)
 
 
-class o0012(MujocoXMLObject):
+class o0012Object(MujocoXMLObject):
     """
-    o0012
+    o0012Object
     """
 
     def __init__(self, name):
@@ -533,9 +533,9 @@ class o0012(MujocoXMLObject):
                          obj_type="all", duplicate_collision_geoms=True)
 
 
-class o0012v(MujocoXMLObject):
+class o0012VisualObject(MujocoXMLObject):
     """
-    o0012v
+    o0012ObjectVisual
     """
 
     def __init__(self, name):
@@ -544,9 +544,9 @@ class o0012v(MujocoXMLObject):
                          obj_type="visual", duplicate_collision_geoms=True)
 
 
-class o0013(MujocoXMLObject):
+class o0013Object(MujocoXMLObject):
     """
-    o0013
+    o0013Object
     """
 
     def __init__(self, name):
@@ -555,9 +555,9 @@ class o0013(MujocoXMLObject):
                          obj_type="all", duplicate_collision_geoms=True)
 
 
-class o0013v(MujocoXMLObject):
+class o0013VisualObject(MujocoXMLObject):
     """
-    o0013v
+    o0013ObjectVisual
     """
 
     def __init__(self, name):
@@ -566,9 +566,9 @@ class o0013v(MujocoXMLObject):
                          obj_type="visual", duplicate_collision_geoms=True)
 
 
-class o0014(MujocoXMLObject):
+class o0014Object(MujocoXMLObject):
     """
-    o0014
+    o0014Object
     """
 
     def __init__(self, name):
@@ -577,9 +577,9 @@ class o0014(MujocoXMLObject):
                          obj_type="all", duplicate_collision_geoms=True)
 
 
-class o0014v(MujocoXMLObject):
+class o0014VisualObject(MujocoXMLObject):
     """
-    o0014v
+    o0014ObjectVisual
     """
 
     def __init__(self, name):
@@ -588,9 +588,9 @@ class o0014v(MujocoXMLObject):
                          obj_type="visual", duplicate_collision_geoms=True)
 
 
-class o0015(MujocoXMLObject):
+class o0015Object(MujocoXMLObject):
     """
-    o0015
+    o0015Object
     """
 
     def __init__(self, name):
@@ -599,9 +599,9 @@ class o0015(MujocoXMLObject):
                          obj_type="all", duplicate_collision_geoms=True)
 
 
-class o0015v(MujocoXMLObject):
+class o0015VisualObject(MujocoXMLObject):
     """
-    o0015v
+    o0015ObjectVisual
     """
 
     def __init__(self, name):
@@ -610,9 +610,9 @@ class o0015v(MujocoXMLObject):
                          obj_type="visual", duplicate_collision_geoms=True)
 
 
-class o0016(MujocoXMLObject):
+class o0016Object(MujocoXMLObject):
     """
-    o0016
+    o0016Object
     """
 
     def __init__(self, name):
@@ -621,9 +621,9 @@ class o0016(MujocoXMLObject):
                          obj_type="all", duplicate_collision_geoms=True)
 
 
-class o0016v(MujocoXMLObject):
+class o0016VisualObject(MujocoXMLObject):
     """
-    o0016v
+    o0016ObjectVisual
     """
 
     def __init__(self, name):
@@ -632,9 +632,9 @@ class o0016v(MujocoXMLObject):
                          obj_type="visual", duplicate_collision_geoms=True)
 
 
-class o0017(MujocoXMLObject):
+class o0017Object(MujocoXMLObject):
     """
-    o0017
+    o0017Object
     """
 
     def __init__(self, name):
@@ -643,9 +643,9 @@ class o0017(MujocoXMLObject):
                          obj_type="all", duplicate_collision_geoms=True)
 
 
-class o0017v(MujocoXMLObject):
+class o0017VisualObject(MujocoXMLObject):
     """
-    o0017v
+    o0017ObjectVisual
     """
 
     def __init__(self, name):
@@ -654,9 +654,9 @@ class o0017v(MujocoXMLObject):
                          obj_type="visual", duplicate_collision_geoms=True)
 
 
-class o0018(MujocoXMLObject):
+class o0018Object(MujocoXMLObject):
     """
-    o0018
+    o0018Object
     """
 
     def __init__(self, name):
@@ -665,9 +665,9 @@ class o0018(MujocoXMLObject):
                          obj_type="all", duplicate_collision_geoms=True)
 
 
-class o0018v(MujocoXMLObject):
+class o0018VisualObject(MujocoXMLObject):
     """
-    o0018v
+    o0018ObjectVisual
     """
 
     def __init__(self, name):
@@ -676,9 +676,9 @@ class o0018v(MujocoXMLObject):
                          obj_type="visual", duplicate_collision_geoms=True)
 
 
-class o0019(MujocoXMLObject):
+class o0019Object(MujocoXMLObject):
     """
-    o0019
+    o0019Object
     """
 
     def __init__(self, name):
@@ -687,9 +687,9 @@ class o0019(MujocoXMLObject):
                          obj_type="all", duplicate_collision_geoms=True)
 
 
-class o0019v(MujocoXMLObject):
+class o0019VisualObject(MujocoXMLObject):
     """
-    o0019v
+    o0019ObjectVisual
     """
 
     def __init__(self, name):
@@ -698,9 +698,9 @@ class o0019v(MujocoXMLObject):
                          obj_type="visual", duplicate_collision_geoms=True)
 
 
-class o0020(MujocoXMLObject):
+class o0020Object(MujocoXMLObject):
     """
-    o0020
+    o0020Object
     """
 
     def __init__(self, name):
@@ -709,9 +709,9 @@ class o0020(MujocoXMLObject):
                          obj_type="all", duplicate_collision_geoms=True)
 
 
-class o0020v(MujocoXMLObject):
+class o0020VisualObject(MujocoXMLObject):
     """
-    o0020v
+    o0020ObjectVisual
     """
 
     def __init__(self, name):
@@ -720,9 +720,9 @@ class o0020v(MujocoXMLObject):
                          obj_type="visual", duplicate_collision_geoms=True)
 
 
-class o0021(MujocoXMLObject):
+class o0021Object(MujocoXMLObject):
     """
-    o0021
+    o0021Object
     """
 
     def __init__(self, name):
@@ -731,9 +731,9 @@ class o0021(MujocoXMLObject):
                          obj_type="all", duplicate_collision_geoms=True)
 
 
-class o0021v(MujocoXMLObject):
+class o0021VisualObject(MujocoXMLObject):
     """
-    o0021v
+    o0021ObjectVisual
     """
 
     def __init__(self, name):
@@ -742,9 +742,9 @@ class o0021v(MujocoXMLObject):
                          obj_type="visual", duplicate_collision_geoms=True)
 
 
-class o0022(MujocoXMLObject):
+class o0022Object(MujocoXMLObject):
     """
-    o0022
+    o0022Object
     """
 
     def __init__(self, name):
@@ -753,9 +753,9 @@ class o0022(MujocoXMLObject):
                          obj_type="all", duplicate_collision_geoms=True)
 
 
-class o0022v(MujocoXMLObject):
+class o0022VisualObject(MujocoXMLObject):
     """
-    o0022v
+    o0022ObjectVisual
     """
 
     def __init__(self, name):
@@ -764,9 +764,9 @@ class o0022v(MujocoXMLObject):
                          obj_type="visual", duplicate_collision_geoms=True)
 
 
-class o0023(MujocoXMLObject):
+class o0023Object(MujocoXMLObject):
     """
-    o0023
+    o0023Object
     """
 
     def __init__(self, name):
@@ -775,9 +775,9 @@ class o0023(MujocoXMLObject):
                          obj_type="all", duplicate_collision_geoms=True)
 
 
-class o0023v(MujocoXMLObject):
+class o0023VisualObject(MujocoXMLObject):
     """
-    o0023v
+    o0023ObjectVisual
     """
 
     def __init__(self, name):
@@ -786,9 +786,9 @@ class o0023v(MujocoXMLObject):
                          obj_type="visual", duplicate_collision_geoms=True)
 
 
-class o0024(MujocoXMLObject):
+class o0024Object(MujocoXMLObject):
     """
-    o0024
+    o0024Object
     """
 
     def __init__(self, name):
@@ -797,9 +797,9 @@ class o0024(MujocoXMLObject):
                          obj_type="all", duplicate_collision_geoms=True)
 
 
-class o0024v(MujocoXMLObject):
+class o0024VisualObject(MujocoXMLObject):
     """
-    o0024v
+    o0024ObjectVisual
     """
 
     def __init__(self, name):
@@ -808,9 +808,9 @@ class o0024v(MujocoXMLObject):
                          obj_type="visual", duplicate_collision_geoms=True)
 
 
-class o0025(MujocoXMLObject):
+class o0025Object(MujocoXMLObject):
     """
-    o0025
+    o0025Object
     """
 
     def __init__(self, name):
@@ -819,9 +819,9 @@ class o0025(MujocoXMLObject):
                          obj_type="all", duplicate_collision_geoms=True)
 
 
-class o0025v(MujocoXMLObject):
+class o0025VisualObject(MujocoXMLObject):
     """
-    o0025v
+    o0025ObjectVisual
     """
 
     def __init__(self, name):
@@ -830,9 +830,9 @@ class o0025v(MujocoXMLObject):
                          obj_type="visual", duplicate_collision_geoms=True)
 
 
-class o0026(MujocoXMLObject):
+class o0026Object(MujocoXMLObject):
     """
-    o0026
+    o0026Object
     """
 
     def __init__(self, name):
@@ -841,9 +841,9 @@ class o0026(MujocoXMLObject):
                          obj_type="all", duplicate_collision_geoms=True)
 
 
-class o0026v(MujocoXMLObject):
+class o0026VisualObject(MujocoXMLObject):
     """
-    o0026v
+    o0026ObjectVisual
     """
 
     def __init__(self, name):
@@ -852,9 +852,9 @@ class o0026v(MujocoXMLObject):
                          obj_type="visual", duplicate_collision_geoms=True)
 
 
-class o0027(MujocoXMLObject):
+class o0027Object(MujocoXMLObject):
     """
-    o0027
+    o0027Object
     """
 
     def __init__(self, name):
@@ -863,9 +863,9 @@ class o0027(MujocoXMLObject):
                          obj_type="all", duplicate_collision_geoms=True)
 
 
-class o0027v(MujocoXMLObject):
+class o0027VisualObject(MujocoXMLObject):
     """
-    o0027v
+    o0027ObjectVisual
     """
 
     def __init__(self, name):
@@ -874,9 +874,9 @@ class o0027v(MujocoXMLObject):
                          obj_type="visual", duplicate_collision_geoms=True)
 
 
-class o0028(MujocoXMLObject):
+class o0028Object(MujocoXMLObject):
     """
-    o0028
+    o0028Object
     """
 
     def __init__(self, name):
@@ -885,9 +885,9 @@ class o0028(MujocoXMLObject):
                          obj_type="all", duplicate_collision_geoms=True)
 
 
-class o0028v(MujocoXMLObject):
+class o0028VisualObject(MujocoXMLObject):
     """
-    o0028v
+    o0028ObjectVisual
     """
 
     def __init__(self, name):
@@ -896,9 +896,9 @@ class o0028v(MujocoXMLObject):
                          obj_type="visual", duplicate_collision_geoms=True)
 
 
-class o0029(MujocoXMLObject):
+class o0029Object(MujocoXMLObject):
     """
-    o0029
+    o0029Object
     """
 
     def __init__(self, name):
@@ -907,9 +907,9 @@ class o0029(MujocoXMLObject):
                          obj_type="all", duplicate_collision_geoms=True)
 
 
-class o0029v(MujocoXMLObject):
+class o0029VisualObject(MujocoXMLObject):
     """
-    o0029v
+    o0029ObjectVisual
     """
 
     def __init__(self, name):
@@ -918,9 +918,9 @@ class o0029v(MujocoXMLObject):
                          obj_type="visual", duplicate_collision_geoms=True)
 
 
-class o0030(MujocoXMLObject):
+class o0030Object(MujocoXMLObject):
     """
-    o0030
+    o0030Object
     """
 
     def __init__(self, name):
@@ -929,9 +929,9 @@ class o0030(MujocoXMLObject):
                          obj_type="all", duplicate_collision_geoms=True)
 
 
-class o0030v(MujocoXMLObject):
+class o0030VisualObject(MujocoXMLObject):
     """
-    o0030v
+    o0030ObjectVisual
     """
 
     def __init__(self, name):
@@ -940,9 +940,9 @@ class o0030v(MujocoXMLObject):
                          obj_type="visual", duplicate_collision_geoms=True)
 
 
-class o0031(MujocoXMLObject):
+class o0031Object(MujocoXMLObject):
     """
-    o0031
+    o0031Object
     """
 
     def __init__(self, name):
@@ -951,9 +951,9 @@ class o0031(MujocoXMLObject):
                          obj_type="all", duplicate_collision_geoms=True)
 
 
-class o0031v(MujocoXMLObject):
+class o0031VisualObject(MujocoXMLObject):
     """
-    o0031v
+    o0031ObjectVisual
     """
 
     def __init__(self, name):
@@ -962,9 +962,9 @@ class o0031v(MujocoXMLObject):
                          obj_type="visual", duplicate_collision_geoms=True)
 
 
-class o0032(MujocoXMLObject):
+class o0032Object(MujocoXMLObject):
     """
-    o0032
+    o0032Object
     """
 
     def __init__(self, name):
@@ -973,9 +973,9 @@ class o0032(MujocoXMLObject):
                          obj_type="all", duplicate_collision_geoms=True)
 
 
-class o0032v(MujocoXMLObject):
+class o0032VisualObject(MujocoXMLObject):
     """
-    o0032v
+    o0032ObjectVisual
     """
 
     def __init__(self, name):
@@ -984,9 +984,9 @@ class o0032v(MujocoXMLObject):
                          obj_type="visual", duplicate_collision_geoms=True)
 
 
-class o0033(MujocoXMLObject):
+class o0033Object(MujocoXMLObject):
     """
-    o0033
+    o0033Object
     """
 
     def __init__(self, name):
@@ -995,9 +995,9 @@ class o0033(MujocoXMLObject):
                          obj_type="all", duplicate_collision_geoms=True)
 
 
-class o0033v(MujocoXMLObject):
+class o0033VisualObject(MujocoXMLObject):
     """
-    o0033v
+    o0033ObjectVisual
     """
 
     def __init__(self, name):
@@ -1006,9 +1006,9 @@ class o0033v(MujocoXMLObject):
                          obj_type="visual", duplicate_collision_geoms=True)
 
 
-class o0034(MujocoXMLObject):
+class o0034Object(MujocoXMLObject):
     """
-    o0034
+    o0034Object
     """
 
     def __init__(self, name):
@@ -1017,9 +1017,9 @@ class o0034(MujocoXMLObject):
                          obj_type="all", duplicate_collision_geoms=True)
 
 
-class o0034v(MujocoXMLObject):
+class o0034VisualObject(MujocoXMLObject):
     """
-    o0034v
+    o0034ObjectVisual
     """
 
     def __init__(self, name):
@@ -1028,9 +1028,9 @@ class o0034v(MujocoXMLObject):
                          obj_type="visual", duplicate_collision_geoms=True)
 
 
-class o0035(MujocoXMLObject):
+class o0035Object(MujocoXMLObject):
     """
-    o0035
+    o0035Object
     """
 
     def __init__(self, name):
@@ -1039,9 +1039,9 @@ class o0035(MujocoXMLObject):
                          obj_type="all", duplicate_collision_geoms=True)
 
 
-class o0035v(MujocoXMLObject):
+class o0035VisualObject(MujocoXMLObject):
     """
-    o0035v
+    o0035ObjectVisual
     """
 
     def __init__(self, name):
@@ -1050,9 +1050,9 @@ class o0035v(MujocoXMLObject):
                          obj_type="visual", duplicate_collision_geoms=True)
 
 
-class o0036(MujocoXMLObject):
+class o0036Object(MujocoXMLObject):
     """
-    o0036
+    o0036Object
     """
 
     def __init__(self, name):
@@ -1061,9 +1061,9 @@ class o0036(MujocoXMLObject):
                          obj_type="all", duplicate_collision_geoms=True)
 
 
-class o0036v(MujocoXMLObject):
+class o0036VisualObject(MujocoXMLObject):
     """
-    o0036v
+    o0036ObjectVisual
     """
 
     def __init__(self, name):
@@ -1072,9 +1072,9 @@ class o0036v(MujocoXMLObject):
                          obj_type="visual", duplicate_collision_geoms=True)
 
 
-class o0037(MujocoXMLObject):
+class o0037Object(MujocoXMLObject):
     """
-    o0037
+    o0037Object
     """
 
     def __init__(self, name):
@@ -1083,9 +1083,9 @@ class o0037(MujocoXMLObject):
                          obj_type="all", duplicate_collision_geoms=True)
 
 
-class o0037v(MujocoXMLObject):
+class o0037VisualObject(MujocoXMLObject):
     """
-    o0037v
+    o0037ObjectVisual
     """
 
     def __init__(self, name):
@@ -1094,9 +1094,9 @@ class o0037v(MujocoXMLObject):
                          obj_type="visual", duplicate_collision_geoms=True)
 
 
-class o0038(MujocoXMLObject):
+class o0038Object(MujocoXMLObject):
     """
-    o0038
+    o0038Object
     """
 
     def __init__(self, name):
@@ -1105,9 +1105,9 @@ class o0038(MujocoXMLObject):
                          obj_type="all", duplicate_collision_geoms=True)
 
 
-class o0038v(MujocoXMLObject):
+class o0038VisualObject(MujocoXMLObject):
     """
-    o0038v
+    o0038ObjectVisual
     """
 
     def __init__(self, name):
@@ -1116,9 +1116,9 @@ class o0038v(MujocoXMLObject):
                          obj_type="visual", duplicate_collision_geoms=True)
 
 
-class o0039(MujocoXMLObject):
+class o0039Object(MujocoXMLObject):
     """
-    o0039
+    o0039Object
     """
 
     def __init__(self, name):
@@ -1127,9 +1127,9 @@ class o0039(MujocoXMLObject):
                          obj_type="all", duplicate_collision_geoms=True)
 
 
-class o0039v(MujocoXMLObject):
+class o0039VisualObject(MujocoXMLObject):
     """
-    o0039v
+    o0039ObjectVisual
     """
 
     def __init__(self, name):
@@ -1138,9 +1138,9 @@ class o0039v(MujocoXMLObject):
                          obj_type="visual", duplicate_collision_geoms=True)
 
 
-class o0040(MujocoXMLObject):
+class o0040Object(MujocoXMLObject):
     """
-    o0040
+    o0040Object
     """
 
     def __init__(self, name):
@@ -1149,9 +1149,9 @@ class o0040(MujocoXMLObject):
                          obj_type="all", duplicate_collision_geoms=True)
 
 
-class o0040v(MujocoXMLObject):
+class o0040VisualObject(MujocoXMLObject):
     """
-    o0040v
+    o0040ObjectVisual
     """
 
     def __init__(self, name):
@@ -1160,9 +1160,9 @@ class o0040v(MujocoXMLObject):
                          obj_type="visual", duplicate_collision_geoms=True)
 
 
-class o0041(MujocoXMLObject):
+class o0041Object(MujocoXMLObject):
     """
-    o0041
+    o0041Object
     """
 
     def __init__(self, name):
@@ -1171,9 +1171,9 @@ class o0041(MujocoXMLObject):
                          obj_type="all", duplicate_collision_geoms=True)
 
 
-class o0041v(MujocoXMLObject):
+class o0041VisualObject(MujocoXMLObject):
     """
-    o0041v
+    o0041ObjectVisual
     """
 
     def __init__(self, name):
@@ -1182,9 +1182,9 @@ class o0041v(MujocoXMLObject):
                          obj_type="visual", duplicate_collision_geoms=True)
 
 
-class o0042(MujocoXMLObject):
+class o0042Object(MujocoXMLObject):
     """
-    o0042
+    o0042Object
     """
 
     def __init__(self, name):
@@ -1193,9 +1193,9 @@ class o0042(MujocoXMLObject):
                          obj_type="all", duplicate_collision_geoms=True)
 
 
-class o0042v(MujocoXMLObject):
+class o0042VisualObject(MujocoXMLObject):
     """
-    o0042v
+    o0042ObjectVisual
     """
 
     def __init__(self, name):
@@ -1204,9 +1204,9 @@ class o0042v(MujocoXMLObject):
                          obj_type="visual", duplicate_collision_geoms=True)
 
 
-class o0043(MujocoXMLObject):
+class o0043Object(MujocoXMLObject):
     """
-    o0043
+    o0043Object
     """
 
     def __init__(self, name):
@@ -1215,9 +1215,9 @@ class o0043(MujocoXMLObject):
                          obj_type="all", duplicate_collision_geoms=True)
 
 
-class o0043v(MujocoXMLObject):
+class o0043VisualObject(MujocoXMLObject):
     """
-    o0043v
+    o0043ObjectVisual
     """
 
     def __init__(self, name):
@@ -1226,9 +1226,9 @@ class o0043v(MujocoXMLObject):
                          obj_type="visual", duplicate_collision_geoms=True)
 
 
-class o0044(MujocoXMLObject):
+class o0044Object(MujocoXMLObject):
     """
-    o0044
+    o0044Object
     """
 
     def __init__(self, name):
@@ -1237,9 +1237,9 @@ class o0044(MujocoXMLObject):
                          obj_type="all", duplicate_collision_geoms=True)
 
 
-class o0044v(MujocoXMLObject):
+class o0044VisualObject(MujocoXMLObject):
     """
-    o0044v
+    o0044ObjectVisual
     """
 
     def __init__(self, name):
@@ -1248,9 +1248,9 @@ class o0044v(MujocoXMLObject):
                          obj_type="visual", duplicate_collision_geoms=True)
 
 
-class o0045(MujocoXMLObject):
+class o0045Object(MujocoXMLObject):
     """
-    o0045
+    o0045Object
     """
 
     def __init__(self, name):
@@ -1259,9 +1259,9 @@ class o0045(MujocoXMLObject):
                          obj_type="all", duplicate_collision_geoms=True)
 
 
-class o0045v(MujocoXMLObject):
+class o0045VisualObject(MujocoXMLObject):
     """
-    o0045v
+    o0045ObjectVisual
     """
 
     def __init__(self, name):
@@ -1270,9 +1270,9 @@ class o0045v(MujocoXMLObject):
                          obj_type="visual", duplicate_collision_geoms=True)
 
 
-class o0046(MujocoXMLObject):
+class o0046Object(MujocoXMLObject):
     """
-    o0046
+    o0046Object
     """
 
     def __init__(self, name):
@@ -1281,9 +1281,9 @@ class o0046(MujocoXMLObject):
                          obj_type="all", duplicate_collision_geoms=True)
 
 
-class o0046v(MujocoXMLObject):
+class o0046VisualObject(MujocoXMLObject):
     """
-    o0046v
+    o0046ObjectVisual
     """
 
     def __init__(self, name):
@@ -1292,9 +1292,9 @@ class o0046v(MujocoXMLObject):
                          obj_type="visual", duplicate_collision_geoms=True)
 
 
-class o0047(MujocoXMLObject):
+class o0047Object(MujocoXMLObject):
     """
-    o0047
+    o0047Object
     """
 
     def __init__(self, name):
@@ -1303,9 +1303,9 @@ class o0047(MujocoXMLObject):
                          obj_type="all", duplicate_collision_geoms=True)
 
 
-class o0047v(MujocoXMLObject):
+class o0047VisualObject(MujocoXMLObject):
     """
-    o0047v
+    o0047ObjectVisual
     """
 
     def __init__(self, name):
@@ -1314,9 +1314,9 @@ class o0047v(MujocoXMLObject):
                          obj_type="visual", duplicate_collision_geoms=True)
 
 
-class o0048(MujocoXMLObject):
+class o0048Object(MujocoXMLObject):
     """
-    o0048
+    o0048Object
     """
 
     def __init__(self, name):
@@ -1325,9 +1325,9 @@ class o0048(MujocoXMLObject):
                          obj_type="all", duplicate_collision_geoms=True)
 
 
-class o0048v(MujocoXMLObject):
+class o0048VisualObject(MujocoXMLObject):
     """
-    o0048v
+    o0048ObjectVisual
     """
 
     def __init__(self, name):
@@ -1336,9 +1336,9 @@ class o0048v(MujocoXMLObject):
                          obj_type="visual", duplicate_collision_geoms=True)
 
 
-class o0049(MujocoXMLObject):
+class o0049Object(MujocoXMLObject):
     """
-    o0049
+    o0049Object
     """
 
     def __init__(self, name):
@@ -1347,9 +1347,9 @@ class o0049(MujocoXMLObject):
                          obj_type="all", duplicate_collision_geoms=True)
 
 
-class o0049v(MujocoXMLObject):
+class o0049VisualObject(MujocoXMLObject):
     """
-    o0049v
+    o0049ObjectVisual
     """
 
     def __init__(self, name):
@@ -1358,9 +1358,9 @@ class o0049v(MujocoXMLObject):
                          obj_type="visual", duplicate_collision_geoms=True)
 
 
-class o0050(MujocoXMLObject):
+class o0050Object(MujocoXMLObject):
     """
-    o0050
+    o0050Object
     """
 
     def __init__(self, name):
@@ -1369,9 +1369,9 @@ class o0050(MujocoXMLObject):
                          obj_type="all", duplicate_collision_geoms=True)
 
 
-class o0050v(MujocoXMLObject):
+class o0050VisualObject(MujocoXMLObject):
     """
-    o0050v
+    o0050ObjectVisual
     """
 
     def __init__(self, name):
@@ -1380,9 +1380,9 @@ class o0050v(MujocoXMLObject):
                          obj_type="visual", duplicate_collision_geoms=True)
 
 
-class o0051(MujocoXMLObject):
+class o0051Object(MujocoXMLObject):
     """
-    o0051
+    o0051Object
     """
 
     def __init__(self, name):
@@ -1391,9 +1391,9 @@ class o0051(MujocoXMLObject):
                          obj_type="all", duplicate_collision_geoms=True)
 
 
-class o0051v(MujocoXMLObject):
+class o0051VisualObject(MujocoXMLObject):
     """
-    o0051v
+    o0051ObjectVisual
     """
 
     def __init__(self, name):
@@ -1402,9 +1402,9 @@ class o0051v(MujocoXMLObject):
                          obj_type="visual", duplicate_collision_geoms=True)
 
 
-class o0052(MujocoXMLObject):
+class o0052Object(MujocoXMLObject):
     """
-    o0052
+    o0052Object
     """
 
     def __init__(self, name):
@@ -1413,9 +1413,9 @@ class o0052(MujocoXMLObject):
                          obj_type="all", duplicate_collision_geoms=True)
 
 
-class o0052v(MujocoXMLObject):
+class o0052VisualObject(MujocoXMLObject):
     """
-    o0052v
+    o0052ObjectVisual
     """
 
     def __init__(self, name):
@@ -1424,9 +1424,9 @@ class o0052v(MujocoXMLObject):
                          obj_type="visual", duplicate_collision_geoms=True)
 
 
-class o0053(MujocoXMLObject):
+class o0053Object(MujocoXMLObject):
     """
-    o0053
+    o0053Object
     """
 
     def __init__(self, name):
@@ -1435,9 +1435,9 @@ class o0053(MujocoXMLObject):
                          obj_type="all", duplicate_collision_geoms=True)
 
 
-class o0053v(MujocoXMLObject):
+class o0053VisualObject(MujocoXMLObject):
     """
-    o0053v
+    o0053ObjectVisual
     """
 
     def __init__(self, name):
@@ -1446,9 +1446,9 @@ class o0053v(MujocoXMLObject):
                          obj_type="visual", duplicate_collision_geoms=True)
 
 
-class o0054(MujocoXMLObject):
+class o0054Object(MujocoXMLObject):
     """
-    o0054
+    o0054Object
     """
 
     def __init__(self, name):
@@ -1457,9 +1457,9 @@ class o0054(MujocoXMLObject):
                          obj_type="all", duplicate_collision_geoms=True)
 
 
-class o0054v(MujocoXMLObject):
+class o0054VisualObject(MujocoXMLObject):
     """
-    o0054v
+    o0054ObjectVisual
     """
 
     def __init__(self, name):
@@ -1468,9 +1468,9 @@ class o0054v(MujocoXMLObject):
                          obj_type="visual", duplicate_collision_geoms=True)
 
 
-class o0055(MujocoXMLObject):
+class o0055Object(MujocoXMLObject):
     """
-    o0055
+    o0055Object
     """
 
     def __init__(self, name):
@@ -1479,9 +1479,9 @@ class o0055(MujocoXMLObject):
                          obj_type="all", duplicate_collision_geoms=True)
 
 
-class o0055v(MujocoXMLObject):
+class o0055VisualObject(MujocoXMLObject):
     """
-    o0055v
+    o0055ObjectVisual
     """
 
     def __init__(self, name):
@@ -1490,9 +1490,9 @@ class o0055v(MujocoXMLObject):
                          obj_type="visual", duplicate_collision_geoms=True)
 
 
-class o0056(MujocoXMLObject):
+class o0056Object(MujocoXMLObject):
     """
-    o0056
+    o0056Object
     """
 
     def __init__(self, name):
@@ -1501,9 +1501,9 @@ class o0056(MujocoXMLObject):
                          obj_type="all", duplicate_collision_geoms=True)
 
 
-class o0056v(MujocoXMLObject):
+class o0056VisualObject(MujocoXMLObject):
     """
-    o0056v
+    o0056ObjectVisual
     """
 
     def __init__(self, name):
@@ -1512,9 +1512,9 @@ class o0056v(MujocoXMLObject):
                          obj_type="visual", duplicate_collision_geoms=True)
 
 
-class o0057(MujocoXMLObject):
+class o0057Object(MujocoXMLObject):
     """
-    o0057
+    o0057Object
     """
 
     def __init__(self, name):
@@ -1523,9 +1523,9 @@ class o0057(MujocoXMLObject):
                          obj_type="all", duplicate_collision_geoms=True)
 
 
-class o0057v(MujocoXMLObject):
+class o0057VisualObject(MujocoXMLObject):
     """
-    o0057v
+    o0057ObjectVisual
     """
 
     def __init__(self, name):
@@ -1534,9 +1534,9 @@ class o0057v(MujocoXMLObject):
                          obj_type="visual", duplicate_collision_geoms=True)
 
 
-class o0058(MujocoXMLObject):
+class o0058Object(MujocoXMLObject):
     """
-    o0058
+    o0058Object
     """
 
     def __init__(self, name):
@@ -1545,9 +1545,9 @@ class o0058(MujocoXMLObject):
                          obj_type="all", duplicate_collision_geoms=True)
 
 
-class o0058v(MujocoXMLObject):
+class o0058VisualObject(MujocoXMLObject):
     """
-    o0058v
+    o0058ObjectVisual
     """
 
     def __init__(self, name):
@@ -1556,9 +1556,9 @@ class o0058v(MujocoXMLObject):
                          obj_type="visual", duplicate_collision_geoms=True)
 
 
-class o0059(MujocoXMLObject):
+class o0059Object(MujocoXMLObject):
     """
-    o0059
+    o0059Object
     """
 
     def __init__(self, name):
@@ -1567,9 +1567,9 @@ class o0059(MujocoXMLObject):
                          obj_type="all", duplicate_collision_geoms=True)
 
 
-class o0059v(MujocoXMLObject):
+class o0059VisualObject(MujocoXMLObject):
     """
-    o0059v
+    o0059ObjectVisual
     """
 
     def __init__(self, name):
@@ -1578,9 +1578,9 @@ class o0059v(MujocoXMLObject):
                          obj_type="visual", duplicate_collision_geoms=True)
 
 
-class o0060(MujocoXMLObject):
+class o0060Object(MujocoXMLObject):
     """
-    o0060
+    o0060Object
     """
 
     def __init__(self, name):
@@ -1589,9 +1589,9 @@ class o0060(MujocoXMLObject):
                          obj_type="all", duplicate_collision_geoms=True)
 
 
-class o0060v(MujocoXMLObject):
+class o0060VisualObject(MujocoXMLObject):
     """
-    o0060v
+    o0060ObjectVisual
     """
 
     def __init__(self, name):
@@ -1600,9 +1600,9 @@ class o0060v(MujocoXMLObject):
                          obj_type="visual", duplicate_collision_geoms=True)
 
 
-class o0061(MujocoXMLObject):
+class o0061Object(MujocoXMLObject):
     """
-    o0061
+    o0061Object
     """
 
     def __init__(self, name):
@@ -1611,9 +1611,9 @@ class o0061(MujocoXMLObject):
                          obj_type="all", duplicate_collision_geoms=True)
 
 
-class o0061v(MujocoXMLObject):
+class o0061VisualObject(MujocoXMLObject):
     """
-    o0061v
+    o0061ObjectVisual
     """
 
     def __init__(self, name):
@@ -1622,9 +1622,9 @@ class o0061v(MujocoXMLObject):
                          obj_type="visual", duplicate_collision_geoms=True)
 
 
-class o0062(MujocoXMLObject):
+class o0062Object(MujocoXMLObject):
     """
-    o0062
+    o0062Object
     """
 
     def __init__(self, name):
@@ -1633,9 +1633,9 @@ class o0062(MujocoXMLObject):
                          obj_type="all", duplicate_collision_geoms=True)
 
 
-class o0062v(MujocoXMLObject):
+class o0062VisualObject(MujocoXMLObject):
     """
-    o0062v
+    o0062ObjectVisual
     """
 
     def __init__(self, name):
@@ -1644,9 +1644,9 @@ class o0062v(MujocoXMLObject):
                          obj_type="visual", duplicate_collision_geoms=True)
 
 
-class o0063(MujocoXMLObject):
+class o0063Object(MujocoXMLObject):
     """
-    o0063
+    o0063Object
     """
 
     def __init__(self, name):
@@ -1655,9 +1655,9 @@ class o0063(MujocoXMLObject):
                          obj_type="all", duplicate_collision_geoms=True)
 
 
-class o0063v(MujocoXMLObject):
+class o0063VisualObject(MujocoXMLObject):
     """
-    o0063v
+    o0063ObjectVisual
     """
 
     def __init__(self, name):
@@ -1666,9 +1666,9 @@ class o0063v(MujocoXMLObject):
                          obj_type="visual", duplicate_collision_geoms=True)
 
 
-class o0064(MujocoXMLObject):
+class o0064Object(MujocoXMLObject):
     """
-    o0064
+    o0064Object
     """
 
     def __init__(self, name):
@@ -1677,9 +1677,9 @@ class o0064(MujocoXMLObject):
                          obj_type="all", duplicate_collision_geoms=True)
 
 
-class o0064v(MujocoXMLObject):
+class o0064VisualObject(MujocoXMLObject):
     """
-    o0064v
+    o0064ObjectVisual
     """
 
     def __init__(self, name):
@@ -1688,9 +1688,9 @@ class o0064v(MujocoXMLObject):
                          obj_type="visual", duplicate_collision_geoms=True)
 
 
-class o0065(MujocoXMLObject):
+class o0065Object(MujocoXMLObject):
     """
-    o0065
+    o0065Object
     """
 
     def __init__(self, name):
@@ -1699,9 +1699,9 @@ class o0065(MujocoXMLObject):
                          obj_type="all", duplicate_collision_geoms=True)
 
 
-class o0065v(MujocoXMLObject):
+class o0065VisualObject(MujocoXMLObject):
     """
-    o0065v
+    o0065ObjectVisual
     """
 
     def __init__(self, name):
@@ -1710,9 +1710,9 @@ class o0065v(MujocoXMLObject):
                          obj_type="visual", duplicate_collision_geoms=True)
 
 
-class o0066(MujocoXMLObject):
+class o0066Object(MujocoXMLObject):
     """
-    o0066
+    o0066Object
     """
 
     def __init__(self, name):
@@ -1721,9 +1721,9 @@ class o0066(MujocoXMLObject):
                          obj_type="all", duplicate_collision_geoms=True)
 
 
-class o0066v(MujocoXMLObject):
+class o0066VisualObject(MujocoXMLObject):
     """
-    o0066v
+    o0066ObjectVisual
     """
 
     def __init__(self, name):
@@ -1732,9 +1732,9 @@ class o0066v(MujocoXMLObject):
                          obj_type="visual", duplicate_collision_geoms=True)
 
 
-class o0067(MujocoXMLObject):
+class o0067Object(MujocoXMLObject):
     """
-    o0067
+    o0067Object
     """
 
     def __init__(self, name):
@@ -1743,9 +1743,9 @@ class o0067(MujocoXMLObject):
                          obj_type="all", duplicate_collision_geoms=True)
 
 
-class o0067v(MujocoXMLObject):
+class o0067VisualObject(MujocoXMLObject):
     """
-    o0067v
+    o0067ObjectVisual
     """
 
     def __init__(self, name):
@@ -1754,9 +1754,9 @@ class o0067v(MujocoXMLObject):
                          obj_type="visual", duplicate_collision_geoms=True)
 
 
-class o0068(MujocoXMLObject):
+class o0068Object(MujocoXMLObject):
     """
-    o0068
+    o0068Object
     """
 
     def __init__(self, name):
@@ -1765,9 +1765,9 @@ class o0068(MujocoXMLObject):
                          obj_type="all", duplicate_collision_geoms=True)
 
 
-class o0068v(MujocoXMLObject):
+class o0068VisualObject(MujocoXMLObject):
     """
-    o0068v
+    o0068ObjectVisual
     """
 
     def __init__(self, name):
@@ -1776,9 +1776,9 @@ class o0068v(MujocoXMLObject):
                          obj_type="visual", duplicate_collision_geoms=True)
 
 
-class o0069(MujocoXMLObject):
+class o0069Object(MujocoXMLObject):
     """
-    o0069
+    o0069Object
     """
 
     def __init__(self, name):
@@ -1787,9 +1787,9 @@ class o0069(MujocoXMLObject):
                          obj_type="all", duplicate_collision_geoms=True)
 
 
-class o0069v(MujocoXMLObject):
+class o0069VisualObject(MujocoXMLObject):
     """
-    o0069v
+    o0069ObjectVisual
     """
 
     def __init__(self, name):
