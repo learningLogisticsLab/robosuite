@@ -14,7 +14,7 @@ from robosuite.utils.placement_samplers import SequentialCompositeSampler, Unifo
 from robosuite.models.objects import * 
 
 # After importing we can extract objects by getting the modules via dir()
-mods = dir() 
+mods = dir()
 
 # Name Assumptions:
 # object names: oXXXX
@@ -22,8 +22,8 @@ mods = dir()
 # class names will follow the same name as object names and visual object names. This is a departure from robosuite which sets them as: MilkObject, MilkVisualObject, Milk, and Milkvisual for object name, visual object name, object class, and visual object class name respectively. 
 
 # Assumes names have VisualObject TODO: this may change to o00XXv
-visual_objs_in_db   = [ item for item in mods if 'o' in item if 'v' in item ]
-objs_in_db          = [ item.replace('v','') for item in visual_objs_in_db ] # 
+visual_objs_in_db   = [ item for item in mods if 'VisualObject' in item]
+objs_in_db          = [ item.replace('Visual','') for item in visual_objs_in_db ] #
 num_objs_in_db = len(objs_in_db)
 # (
 #     MilkObject,
@@ -1232,39 +1232,39 @@ class Picking(SingleArmEnv):
         object_names           = []
         visual_object_names    = []
 
-        objs_to_consider = random.sample( range(num_objs_in_db), num_objs_to_load)
-        for idx, val in enumerate(objs_to_consider):   
+        objs_to_consider = random.sample( range(num_objs_in_db), num_objs_to_load) #objs_to_consider = [69, 66, 64, 55, 65]
+        for idx, val in enumerate(objs_to_consider):
 
-            # Collect all objects whose file name starts with an 'o' as in oXXXX
-            if objs_in_db[ objs_to_consider[idx] ][0] == 'o':        
+            # Collect all objects whose file name starts with an 'o' and contain 'Object' as in OXXXXObject
+            if objs_in_db[ objs_to_consider[idx] ][0] == 'o' and "Object" in objs_in_db[ objs_to_consider[idx] ]:
                 digit = objs_in_db[ objs_to_consider[idx] ]
                 digits.append(digit)            # Keep list of existing objects
+                # Create map name:id
+                object_to_id.update({digit:idx+1})             # idx starts from 1 for diff objs: o00X8:1, oOOX3:2, oOOX9:3
+                object_names.append(digit)                     # o0001, o0002,...,o0010...
+                visual_object_names.append(digit[:5]+'VisualObject')          # o0001VisualObject
             
             # Otherwise keep a list of those that do not
             else:
                 obj_wo_o.append(idx)
 
-            # Create map name:id
-            object_to_id.update({digit:idx+1})             # idx starts from 1 for diff objs: o00X8:1, oOOX3:2, oOOX9:3
-            object_names.append(digit)                     # o0001, o0002,...,o0010...
-            visual_object_names.append(digit+'v')          # o0001v
 
         # Do a second sweep to deal with objects that do not start with 'o'. Compare with list of registered objects
         for idx in obj_wo_o:
-            temp = 'o' + str(counter).zfill(4)
+            temp = 'o' + str(counter).zfill(4) + 'Object'
             
             # If this number exists, increment and try again before registering. 
             while temp in digits:
                 counter += 1
-                temp = 'o' + str(counter).zfill(4)
+                temp = 'o' + str(counter).zfill(4) + 'Object'
                 
             digit = temp
             digits.append(digit)            
 
             # Create map name:id
             object_to_id.update({digit:idx})               # idx starts from 1 for diff objs: o00X8:1, oOOX3:2, oOOX9:3
-            object_names.append(digit)                     # o0001, o0002,...,o0010...  
-            visual_object_names.append(digit+'v')          # o0001v          
+            object_names.append(digit)                     # o0001Object, o0002Object,...,o0010Object...
+            visual_object_names.append(digit[:5]+'VisualObject')          # o0001VisualObject
 
         return (object_names, visual_object_names, object_to_id)
 
