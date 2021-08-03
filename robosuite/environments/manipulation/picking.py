@@ -946,31 +946,47 @@ class Picking(SingleArmEnv):
                 # Set goal object to pick up and sort closest objects to model
                 self.goal_object, self.other_objs_than_goals = self.get_goal_object()
 
+                self.placed_robots = self.robot_placement_initializer.sample()
+                for robot in self.robot_placement_initializer.mujoco_robots:
+                    eef_pos = self.placed_robots[robot.name][0]  # get eef pos quat
+                    eef_quat = self.placed_robots[robot.name][1]
+                    self.robots[0].robot_model.set_base_xpos(eef_pos)
+                    # compute correct transformation for goal object placement wrt eef
+                    # load and update robot model
+                    xpos = self.robots[0].robot_model.base_xpos_offset["table"](self.table_full_size)
+                    self.robots[0].robot_model.set_base_xpos(xpos)
+
                 # Loop through all (visual) objects and (re) set their placement positions
                 for obj_pos, obj_quat, obj in self.object_placements.values():
 
                     # Set the visual object body locations
-                    if "v" in obj.name.lower():                             # switched "visual" for "v"
+                    if "visualobject" in obj.name.lower():                             # switched "visual" for "v"
                         self.sim.model.body_pos[self.obj_body_id[obj.name]]  = obj_pos
                         self.sim.model.body_quat[self.obj_body_id[obj.name]] = obj_quat
+                        print(self.goal_object['name'])
 
                         ## Addition ---
                         # self.object_placements is a place holder for all objects. However:
                         # Under HER paradigm, we have a self.goal variable for the desired goal +
                         # Under our current architecture we set self.goal_object as a single goal until that object is placed. 
                         # Use this to fill self.goal which will be used in _get_obs to set the desired_goal.
-                        if obj.name.lower() == self.goal_object['name'] + 'v':
-                            self.goal_object['pos']  = obj_pos
-                            self.goal_object['quat'] = obj_quat                        
+                        if obj.name.lower() == self.goal_object['name'][:5] + 'visualobject':
+                            self.goal_object['pos']  = eef_pos
+                            self.goal_object['quat'] = eef_quat
 
                     # Set the position of 'collision' objects:
-                    else:                        
-                        self.sim.data.set_joint_qpos(obj.joints[0], np.concatenate([np.array(obj_pos), np.array(obj_quat)]))                                         
+                    elif obj.name.lower() == self.goal_object['name'].lower():
+                        self.sim.data.set_joint_qpos(obj.joints[0], np.concatenate([np.array(eef_pos), np.array(eef_quat)]))
+                        print(obj_pos)
+                        print(eef_pos)
+                    else:
+                        self.sim.data.set_joint_qpos(obj.joints[0], np.concatenate([np.array(obj_pos), np.array(obj_quat)]))
+
 
                 # Set the bins to the desired position
                 self.sim.model.body_pos[self.sim.model.body_name2id("bin1")] = self.bin1_pos
                 self.sim.model.body_pos[self.sim.model.body_name2id("bin2")] = self.bin2_pos
-           
+
             # Robot EEF: TODO not sure this is the right way to move the end-effector. Needs follow-up study.
             # 1. Call robot placement_initializer to sample eef poses above bin1. Ret's dict of robots with (pos,quat,obj)
             #----------------------
