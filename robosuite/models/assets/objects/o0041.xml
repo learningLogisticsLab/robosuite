@@ -1,6 +1,6 @@
 <mujoco model="hammer">
   <asset>
-    <mesh name="hammer_mesh" file="./meshes/hammer.msh" scale="0.4532283006740272 0.4532283006740272 0.4532283006740272"/>
+    <mesh name="hammer_mesh" file="./meshes/hammer.msh" scale="0.40076539177079207 0.40076539177079207 0.40076539177079207"/>
     <texture name="tex-hammer" file="../textures/hammer.png" type="2d"/>
     <material name="hammer" reflectance="0.7" texrepeat="15 15" texture="tex-hammer" texuniform="true"/>
   </asset>
@@ -10,10 +10,10 @@
         <inertial pos="-0.028570860769310643 -0.012672673714671625 0.01565348414608536" mass="0.665" fullinertia="3.0777686441060457e-06 3.000606515000971e-06 9.993910910349302e-08 9.734196514540432e-23 -4.328574853083107e-22 9.120106978918967e-24"/>
         <geom name="hammer" pos="0 0 0" mesh="hammer_mesh" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" mass="0.665" friction="0.95 0.3 0.1"  material="hammer" group="0" condim="4"/>
       </body>
-      <site rgba="1 0 0 1" size="0.005" pos="0 0 -0.030592910295496836" name="bottom_site"/>
-      <site rgba="0 1 0 1" size="0.005" pos="0 0 0.030592910295496836" name="top_site"/>
-      <site rgba="0 0 1 1" size="0.005" pos="0.017 0.017 0" name="horizontal_radius_site"/>
-      <site rgba="0 0 0 1" size="0.005" pos="0 0 0.06118582059099367" name="vertical_radius_site"/>
+      <site rgba="1 0 0 1" size="0.005" pos="0 0 -0.016" name="bottom_site"/>
+      <site rgba="0 1 0 1" size="0.005" pos="0 0 0.016" name="top_site"/>
+      <site rgba="0 0 1 1" size="0.005" pos="0.027051663944528466 0.027051663944528466 0" name="horizontal_radius_site"/>
+      <site rgba="0 0 0 1" size="0.005" pos="0 0 0.032" name="vertical_radius_site"/>
     </body>
   </worldbody>
 </mujoco>

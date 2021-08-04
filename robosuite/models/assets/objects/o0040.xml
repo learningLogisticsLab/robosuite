@@ -1,6 +1,6 @@
 <mujoco model="flat_screwdriver">
   <asset>
-    <mesh name="flat_screwdriver_mesh" file="./meshes/flat_screwdriver.msh" scale="0.27325166473507856 0.27325166473507856 0.27325166473507856"/>
+    <mesh name="flat_screwdriver_mesh" file="./meshes/flat_screwdriver.msh" scale="0.19940708410216315 0.19940708410216315 0.19940708410216315"/>
     <texture name="tex-flat_screwdriver" file="../textures/flat_screwdriver.png" type="2d"/>
     <material name="flat_screwdriver" reflectance="0.7" texrepeat="15 15" texture="tex-flat_screwdriver" texuniform="true"/>
   </asset>
@@ -10,10 +10,10 @@
         <inertial pos="0.023228351441964463 -0.02270556071884342 0.016179821688211804" mass="0.0984" fullinertia="1.0455872762990073e-07 1.045355134114841e-07 8.5096611833145e-09 1.2978673122254933e-23 7.690434192648382e-24 8.454789472824443e-24"/>
         <geom name="flat_screwdriver" pos="0 0 0" mesh="flat_screwdriver_mesh" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" mass="0.0984" friction="0.95 0.3 0.1"  material="flat_screwdriver" group="0" condim="4"/>
       </body>
-      <site rgba="1 0 0 1" size="0.005" pos="0 0 -0.029374553959020947" name="bottom_site"/>
-      <site rgba="0 1 0 1" size="0.005" pos="0 0 0.029374553959020947" name="top_site"/>
-      <site rgba="0 0 1 1" size="0.005" pos="0.0155 0.0155 0" name="horizontal_radius_site"/>
-      <site rgba="0 0 0 1" size="0.005" pos="0 0 0.058749107918041894" name="vertical_radius_site"/>
+      <site rgba="1 0 0 1" size="0.005" pos="0 0 -0.0155" name="bottom_site"/>
+      <site rgba="0 1 0 1" size="0.005" pos="0 0 0.0155" name="top_site"/>
+      <site rgba="0 0 1 1" size="0.005" pos="0.02333474488368515 0.02333474488368515 0" name="horizontal_radius_site"/>
+      <site rgba="0 0 0 1" size="0.005" pos="0 0 0.031" name="vertical_radius_site"/>
     </body>
   </worldbody>
 </mujoco>

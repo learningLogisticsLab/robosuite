@@ -1,16 +1,16 @@
 <mujoco model="orangev">
   <asset>
-    <mesh name="orange_mesh" file="./meshes/untextured_orange.stl" scale="0.6607612720999789 0.6607612720999789 0.6607612720999789"/>
+    <mesh name="orange_mesh" file="./meshes/untextured_orange.stl" scale="0.6399415692996663 0.6399415692996663 0.6399415692996663"/>
   </asset>
   <worldbody>
     <body>
       <body name="object">
         <geom name="orange" pos="0 0 0" mesh="orange_mesh" type="mesh" rgba="0.8 0.8 0.8 0.3" conaffinity="0" contype="0" mass="0.047" friction="0.95 0.3 0.1" group="1" condim="4"/>
       </body>
-      <site rgba="1 0 0 1" size="0.005" pos="0 0 -0.02411778643164923" name="bottom_site"/>
-      <site rgba="0 1 0 1" size="0.005" pos="0 0 0.02411778643164923" name="top_site"/>
-      <site rgba="0 0 1 1" size="0.005" pos="0.02690442087231592 0.02690442087231592 0" name="horizontal_radius_site"/>
-      <site rgba="0 0 0 1" size="0.005" pos="0 0 0.04823557286329846" name="vertical_radius_site"/>
+      <site rgba="1 0 0 1" size="0.005" pos="0 0 -0.023357867279437818" name="bottom_site"/>
+      <site rgba="0 1 0 1" size="0.005" pos="0 0 0.023357867279437818" name="top_site"/>
+      <site rgba="0 0 1 1" size="0.005" pos="0.028574635312603024 0.028574635312603024 0" name="horizontal_radius_site"/>
+      <site rgba="0 0 0 1" size="0.005" pos="0 0 0.046715734558875635" name="vertical_radius_site"/>
     </body>
   </worldbody>
 </mujoco>

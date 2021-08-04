@@ -1,6 +1,6 @@
 <mujoco model="large_clamp">
   <asset>
-    <mesh name="large_clamp_mesh" file="./meshes/large_clamp.msh" scale="0.3679915466979411 0.3679915466979411 0.3679915466979411"/>
+    <mesh name="large_clamp_mesh" file="./meshes/large_clamp.msh" scale="0.2670824645986621 0.2670824645986621 0.2670824645986621"/>
     <texture name="tex-large_clamp" file="../textures/large_clamp.png" type="2d"/>
     <material name="large_clamp" reflectance="0.7" texrepeat="15 15" texture="tex-large_clamp" texuniform="true"/>
   </asset>
@@ -12,7 +12,7 @@
       </body>
       <site rgba="1 0 0 1" size="0.005" pos="0 0 -0.016" name="bottom_site"/>
       <site rgba="0 1 0 1" size="0.005" pos="0 0 0.016" name="top_site"/>
-      <site rgba="0 0 1 1" size="0.005" pos="0.030359302602580143 0.030359302602580143 0" name="horizontal_radius_site"/>
+      <site rgba="0 0 1 1" size="0.005" pos="0.022034303329389625 0.022034303329389625 0" name="horizontal_radius_site"/>
       <site rgba="0 0 0 1" size="0.005" pos="0 0 0.032" name="vertical_radius_site"/>
     </body>
   </worldbody>

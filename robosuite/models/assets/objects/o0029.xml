@@ -1,6 +1,6 @@
 <mujoco model="spoon">
   <asset>
-    <mesh name="spoon_mesh" file="./meshes/spoon.msh" scale="0.2972069461846069 0.2972069461846069 0.2972069461846069"/>
+    <mesh name="spoon_mesh" file="./meshes/spoon.msh" scale="0.28127479981789527 0.28127479981789527 0.28127479981789527"/>
     <texture name="tex-spoon" file="../textures/spoon.png" type="2d"/>
     <material name="spoon" reflectance="0.7" texrepeat="15 15" texture="tex-spoon" texuniform="true"/>
   </asset>
@@ -10,10 +10,10 @@
         <inertial pos="-0.01805591680130397 -0.010160565119345408 0.010048592434568833" mass="0.03" fullinertia="9.09619682743923e-08 9.038583292816072e-08 1.181937118728266e-09 -1.0534979894775994e-24 3.3015997618724924e-26 1.9826154671139572e-23"/>
         <geom name="spoon" pos="0 0 0" mesh="spoon_mesh" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" mass="0.03" friction="0.95 0.3 0.1"  material="spoon" group="0" condim="4"/>
       </body>
-      <site rgba="1 0 0 1" size="0.005" pos="0 0 -0.028977677252999177" name="bottom_site"/>
-      <site rgba="0 1 0 1" size="0.005" pos="0 0 0.028977677252999177" name="top_site"/>
-      <site rgba="0 0 1 1" size="0.005" pos="0.01 0.01 0" name="horizontal_radius_site"/>
-      <site rgba="0 0 0 1" size="0.005" pos="0 0 0.057955354505998355" name="vertical_radius_site"/>
+      <site rgba="1 0 0 1" size="0.005" pos="0 0 -0.01" name="bottom_site"/>
+      <site rgba="0 1 0 1" size="0.005" pos="0 0 0.01" name="top_site"/>
+      <site rgba="0 0 1 1" size="0.005" pos="0.02742429298224479 0.02742429298224479 0" name="horizontal_radius_site"/>
+      <site rgba="0 0 0 1" size="0.005" pos="0 0 0.02" name="vertical_radius_site"/>
     </body>
   </worldbody>
 </mujoco>

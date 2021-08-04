@@ -1,6 +1,6 @@
 <mujoco model="cracker_box">
   <asset>
-    <mesh name="cracker_box_mesh" file="./meshes/cracker_box.msh" scale="0.29982356297401264 0.29982356297401264 0.29982356297401264"/>
+    <mesh name="cracker_box_mesh" file="./meshes/cracker_box.msh" scale="0.2353215773311117 0.2353215773311117 0.2353215773311117"/>
     <texture name="tex-cracker_box" file="../textures/cracker_box.png" type="2d"/>
     <material name="cracker_box" reflectance="0.7" texrepeat="15 15" texture="tex-cracker_box" texuniform="true"/>
   </asset>
@@ -10,10 +10,10 @@
         <inertial pos="-0.01485355781018036 -0.01420505447388014 0.10220486833098277" mass="0.411" fullinertia="1.2667764335249046e-05 8.895223860935137e-06 5.284067250610004e-06 1.729536435737038e-24 -2.9969843650251416e-23 6.726307907846409e-22"/>
         <geom name="cracker_box" pos="0 0 0" mesh="cracker_box_mesh" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" mass="0.411" friction="0.95 0.3 0.1"  material="cracker_box" group="0" condim="4"/>
       </body>
-      <site rgba="1 0 0 1" size="0.005" pos="0 0 -0.031481474112271327" name="bottom_site"/>
-      <site rgba="0 1 0 1" size="0.005" pos="0 0 0.031481474112271327" name="top_site"/>
+      <site rgba="1 0 0 1" size="0.005" pos="0 0 -0.024708765619766728" name="bottom_site"/>
+      <site rgba="0 1 0 1" size="0.005" pos="0 0 0.024708765619766728" name="top_site"/>
       <site rgba="0 0 1 1" size="0.005" pos="0.03 0.03 0" name="horizontal_radius_site"/>
-      <site rgba="0 0 0 1" size="0.005" pos="0 0 0.06296294822454265" name="vertical_radius_site"/>
+      <site rgba="0 0 0 1" size="0.005" pos="0 0 0.049417531239533456" name="vertical_radius_site"/>
     </body>
   </worldbody>
 </mujoco>

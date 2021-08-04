@@ -1,6 +1,6 @@
 <mujoco model="wood_block">
   <asset>
-    <mesh name="wood_block_mesh" file="./meshes/wood_block.msh" scale="0.28908141947169214 0.28908141947169214 0.28908141947169214"/>
+    <mesh name="wood_block_mesh" file="./meshes/wood_block.msh" scale="0.24148543989829482 0.24148543989829482 0.24148543989829482"/>
     <texture name="tex-wood_block" file="../textures/wood_block.png" type="2d"/>
     <material name="wood_block" reflectance="0.7" texrepeat="15 15" texture="tex-wood_block" texuniform="true"/>
   </asset>
@@ -10,10 +10,10 @@
         <inertial pos="0.0233730518561954 -0.010273626224740963 0.10276919233489218" mass="0.729" fullinertia="6.531830066020671e-06 6.496788321917068e-06 2.0235216718785673e-06 -9.289556032355845e-22 -6.382039770510119e-22 -1.1996538048028797e-21"/>
         <geom name="wood_block" pos="0 0 0" mesh="wood_block_mesh" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" mass="0.729" friction="0.95 0.3 0.1"  material="wood_block" group="0" condim="4"/>
       </body>
-      <site rgba="1 0 0 1" size="0.005" pos="0 0 -0.028908141947169216" name="bottom_site"/>
-      <site rgba="0 1 0 1" size="0.005" pos="0 0 0.028908141947169216" name="top_site"/>
-      <site rgba="0 0 1 1" size="0.005" pos="0.030411137747058878 0.030411137747058878 0" name="horizontal_radius_site"/>
-      <site rgba="0 0 0 1" size="0.005" pos="0 0 0.05781628389433843" name="vertical_radius_site"/>
+      <site rgba="1 0 0 1" size="0.005" pos="0 0 -0.024148543989829484" name="bottom_site"/>
+      <site rgba="0 1 0 1" size="0.005" pos="0 0 0.024148543989829484" name="top_site"/>
+      <site rgba="0 0 1 1" size="0.005" pos="0.027493313265975688 0.027493313265975688 0" name="horizontal_radius_site"/>
+      <site rgba="0 0 0 1" size="0.005" pos="0 0 0.04829708797965897" name="vertical_radius_site"/>
     </body>
   </worldbody>
 </mujoco>
