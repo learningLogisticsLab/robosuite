@@ -10,10 +10,10 @@
         <inertial pos="-0.032840352216858736 -0.02635271439745596 0.03783085009135961" mass="0.37" fullinertia="4.287366513749583e-07 3.228086963634995e-07 2.4925393166117206e-07 -2.020309373055796e-23 -4.823406226388371e-24 -5.302497140952807e-25"/>
         <geom name="potted_meat_can" pos="0 0 0" mesh="potted_meat_can_mesh" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" mass="0.37" friction="0.95 0.3 0.1"  material="potted_meat_can" group="0" condim="4"/>
       </body>
-      <site rgba="1 0 0 1" size="0.005" pos="0 0 -0.023552011447014666" name="bottom_site"/>
-      <site rgba="0 1 0 1" size="0.005" pos="0 0 0.023552011447014666" name="top_site"/>
-      <site rgba="0 0 1 1" size="0.005" pos="0.026966511526860287 0.026966511526860287 0" name="horizontal_radius_site"/>
-      <site rgba="0 0 0 1" size="0.005" pos="0 0 0.04710402289402933" name="vertical_radius_site"/>
+      <site rgba="1 0 0 1" size="0.005" pos="0 0 -0.02578887993711174" name="bottom_site"/>
+      <site rgba="0 1 0 1" size="0.005" pos="0 0 0.02578887993711174" name="top_site"/>
+      <site rgba="0 0 1 1" size="0.005" pos="0.028766008323731863 0.028766008323731863 0" name="horizontal_radius_site"/>
+      <site rgba="0 0 0 1" size="0.005" pos="0 0 0.05157775987422348" name="vertical_radius_site"/>
     </body>
   </worldbody>
 </mujoco>
