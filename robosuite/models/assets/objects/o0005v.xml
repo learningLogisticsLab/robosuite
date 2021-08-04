@@ -1,16 +1,16 @@
 <mujoco model="tomato_soup_canv">
   <asset>
-    <mesh name="tomato_soup_can_mesh" file="./meshes/untextured_tomato_soup_can.stl" scale="1.0 1.0 1.0"/>
+    <mesh name="tomato_soup_can_mesh" file="./meshes/untextured_tomato_soup_can.stl" scale="0.49046488049326203 0.49046488049326203 0.49046488049326203"/>
   </asset>
   <worldbody>
     <body>
       <body name="object">
         <geom name="tomato_soup_can" pos="0 0 0" mesh="tomato_soup_can_mesh" type="mesh" rgba="0.8 0.8 0.8 0.3" conaffinity="0" contype="0" mass="0.034" friction="0.95 0.3 0.1" group="1" condim="4"/>
       </body>
-      <site rgba="1 0 0 1" size="0.005" pos="0 0 -0.030459483899510323" name="bottom_site"/>
-      <site rgba="0 1 0 1" size="0.005" pos="0 0 0.030459483899510323" name="top_site"/>
+      <site rgba="1 0 0 1" size="0.005" pos="0 0 -0.024768476464909733" name="bottom_site"/>
+      <site rgba="0 1 0 1" size="0.005" pos="0 0 0.024768476464909733" name="top_site"/>
       <site rgba="0 0 1 1" size="0.005" pos="0.033 0.033 0" name="horizontal_radius_site"/>
-      <site rgba="0 0 0 1" size="0.005" pos="0 0 0.060918967799020646" name="vertical_radius_site"/>
+      <site rgba="0 0 0 1" size="0.005" pos="0 0 0.04953695292981947" name="vertical_radius_site"/>
     </body>
   </worldbody>
 </mujoco>
