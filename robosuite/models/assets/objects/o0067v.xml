@@ -1,16 +1,16 @@
 <mujoco model="toy_airplanev">
   <asset>
-    <mesh name="toy_airplane_mesh" file="./meshes/untextured_toy_airplane.stl" scale="0.23052125526918532 0.23052125526918532 0.23052125526918532"/>
+    <mesh name="toy_airplane_mesh" file="./meshes/untextured_toy_airplane.stl" scale="0.23699360441504874 0.23699360441504874 0.23699360441504874"/>
   </asset>
   <worldbody>
     <body>
       <body name="object">
         <geom name="toy_airplane" pos="0 0 0" mesh="toy_airplane_mesh" type="mesh" rgba="0.8 0.8 0.8 0.3" conaffinity="0" contype="0" mass="0.57" friction="0.95 0.3 0.1" group="1" condim="4"/>
       </body>
-      <site rgba="1 0 0 1" size="0.005" pos="0 0 -0.03227297573768595" name="bottom_site"/>
-      <site rgba="0 1 0 1" size="0.005" pos="0 0 0.03227297573768595" name="top_site"/>
-      <site rgba="0 0 1 1" size="0.005" pos="0.029461756972176085 0.029461756972176085 0" name="horizontal_radius_site"/>
-      <site rgba="0 0 0 1" size="0.005" pos="0 0 0.0645459514753719" name="vertical_radius_site"/>
+      <site rgba="1 0 0 1" size="0.005" pos="0 0 -0.020319075722831367" name="bottom_site"/>
+      <site rgba="0 1 0 1" size="0.005" pos="0 0 0.020319075722831367" name="top_site"/>
+      <site rgba="0 0 1 1" size="0.005" pos="0.029271706245669903 0.029271706245669903 0" name="horizontal_radius_site"/>
+      <site rgba="0 0 0 1" size="0.005" pos="0 0 0.04063815144566273" name="vertical_radius_site"/>
     </body>
   </worldbody>
 </mujoco>

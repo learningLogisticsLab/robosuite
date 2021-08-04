@@ -1,6 +1,6 @@
 <mujoco model="gelatin_box">
   <asset>
-    <mesh name="gelatin_box_mesh" file="./meshes/gelatin_box.msh" scale="0.784266959749837 0.784266959749837 0.784266959749837"/>
+    <mesh name="gelatin_box_mesh" file="./meshes/gelatin_box.msh" scale="1.0 1.0 1.0"/>
     <texture name="tex-gelatin_box" file="../textures/gelatin_box.png" type="2d"/>
     <material name="gelatin_box" reflectance="0.7" texrepeat="15 15" texture="tex-gelatin_box" texuniform="true"/>
   </asset>
@@ -10,10 +10,10 @@
         <inertial pos="-0.02267551794293906 -0.007860203252540228 0.013877966045089096" mass="0.097" fullinertia="1.808808464126736e-07 1.1880213011661255e-07 8.422039755656733e-08 1.4602785412432844e-25 -1.5848748448179987e-24 -1.531563919376384e-23"/>
         <geom name="gelatin_box" pos="0 0 0" mesh="gelatin_box_mesh" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" mass="0.097" friction="0.95 0.3 0.1"  material="gelatin_box" group="0" condim="4"/>
       </body>
-      <site rgba="1 0 0 1" size="0.005" pos="0 0 -0.02862574403086905" name="bottom_site"/>
-      <site rgba="0 1 0 1" size="0.005" pos="0 0 0.02862574403086905" name="top_site"/>
-      <site rgba="0 0 1 1" size="0.005" pos="0.02223627493843215 0.02223627493843215 0" name="horizontal_radius_site"/>
-      <site rgba="0 0 0 1" size="0.005" pos="0 0 0.0572514880617381" name="vertical_radius_site"/>
+      <site rgba="1 0 0 1" size="0.005" pos="0 0 -0.0255015527479824" name="bottom_site"/>
+      <site rgba="0 1 0 1" size="0.005" pos="0 0 0.0255015527479824" name="top_site"/>
+      <site rgba="0 0 1 1" size="0.005" pos="0.024806574985631227 0.024806574985631227 0" name="horizontal_radius_site"/>
+      <site rgba="0 0 0 1" size="0.005" pos="0 0 0.0510031054959648" name="vertical_radius_site"/>
     </body>
   </worldbody>
 </mujoco>

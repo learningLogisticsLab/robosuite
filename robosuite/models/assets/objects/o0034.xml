@@ -1,6 +1,6 @@
 <mujoco model="scissors">
   <asset>
-    <mesh name="scissors_mesh" file="./meshes/scissors.msh" scale="0.33557302769231384 0.33557302769231384 0.33557302769231384"/>
+    <mesh name="scissors_mesh" file="./meshes/scissors.msh" scale="1.0 1.0 1.0"/>
     <texture name="tex-scissors" file="../textures/scissors.png" type="2d"/>
     <material name="scissors" reflectance="0.7" texrepeat="15 15" texture="tex-scissors" texuniform="true"/>
   </asset>
@@ -12,7 +12,7 @@
       </body>
       <site rgba="1 0 0 1" size="0.005" pos="0 0 -0.007" name="bottom_site"/>
       <site rgba="0 1 0 1" size="0.005" pos="0 0 0.007" name="top_site"/>
-      <site rgba="0 0 1 1" size="0.005" pos="0.033557302769231384 0.033557302769231384 0" name="horizontal_radius_site"/>
+      <site rgba="0 0 1 1" size="0.005" pos="0.028260577894509416 0.028260577894509416 0" name="horizontal_radius_site"/>
       <site rgba="0 0 0 1" size="0.005" pos="0 0 0.014" name="vertical_radius_site"/>
     </body>
   </worldbody>

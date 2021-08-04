@@ -1,16 +1,16 @@
 <mujoco model="applev">
   <asset>
-    <mesh name="apple_mesh" file="./meshes/untextured_apple.stl" scale="0.8267384489090133 0.8267384489090133 0.8267384489090133"/>
+    <mesh name="apple_mesh" file="./meshes/untextured_apple.stl" scale="0.7597275345174369 0.7597275345174369 0.7597275345174369"/>
   </asset>
   <worldbody>
     <body>
       <body name="object">
         <geom name="apple" pos="0 0 0" mesh="apple_mesh" type="mesh" rgba="0.8 0.8 0.8 0.3" conaffinity="0" contype="0" mass="0.068" friction="0.95 0.3 0.1" group="1" condim="4"/>
       </body>
-      <site rgba="1 0 0 1" size="0.005" pos="0 0 -0.031002691834087995" name="bottom_site"/>
-      <site rgba="0 1 0 1" size="0.005" pos="0 0 0.031002691834087995" name="top_site"/>
-      <site rgba="0 0 1 1" size="0.005" pos="0.03019147709828461 0.03019147709828461 0" name="horizontal_radius_site"/>
-      <site rgba="0 0 0 1" size="0.005" pos="0 0 0.06200538366817599" name="vertical_radius_site"/>
+      <site rgba="1 0 0 1" size="0.005" pos="0 0 -0.02848978254440388" name="bottom_site"/>
+      <site rgba="0 1 0 1" size="0.005" pos="0 0 0.02848978254440388" name="top_site"/>
+      <site rgba="0 0 1 1" size="0.005" pos="0.029705134249856296 0.029705134249856296 0" name="horizontal_radius_site"/>
+      <site rgba="0 0 0 1" size="0.005" pos="0 0 0.05697956508880776" name="vertical_radius_site"/>
     </body>
   </worldbody>
 </mujoco>
