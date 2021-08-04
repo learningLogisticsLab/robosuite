@@ -1,6 +1,6 @@
 <mujoco model="extra_large_clampv">
   <asset>
-    <mesh name="extra_large_clamp_mesh" file="./meshes/untextured_extra_large_clamp.stl" scale="0.22600808039795064 0.22600808039795064 0.22600808039795064"/>
+    <mesh name="extra_large_clamp_mesh" file="./meshes/untextured_extra_large_clamp.stl" scale="0.246633678510903 0.246633678510903 0.246633678510903"/>
   </asset>
   <worldbody>
     <body>
@@ -9,7 +9,7 @@
       </body>
       <site rgba="1 0 0 1" size="0.005" pos="0 0 -0.0185" name="bottom_site"/>
       <site rgba="0 1 0 1" size="0.005" pos="0 0 0.0185" name="top_site"/>
-      <site rgba="0 0 1 1" size="0.005" pos="0.024069860562381744 0.024069860562381744 0" name="horizontal_radius_site"/>
+      <site rgba="0 0 1 1" size="0.005" pos="0.029577298363902174 0.029577298363902174 0" name="horizontal_radius_site"/>
       <site rgba="0 0 0 1" size="0.005" pos="0 0 0.037" name="vertical_radius_site"/>
     </body>
   </worldbody>

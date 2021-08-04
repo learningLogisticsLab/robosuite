@@ -1,19 +1,19 @@
 <mujoco model="windex_bottle">
   <asset>
-    <mesh name="windex_bottle_mesh" file="./meshes/windex_bottle.msh" scale="0.21762071018014725 0.21762071018014725 0.21762071018014725"/>
+    <mesh name="windex_bottle_mesh" file="./meshes/windex_bottle.msh" scale="0.21823888472231096 0.21823888472231096 0.21823888472231096"/>
     <texture name="tex-windex_bottle" file="../textures/windex_bottle.png" type="2d"/>
     <material name="windex_bottle" reflectance="0.7" texrepeat="15 15" texture="tex-windex_bottle" texuniform="true"/>
   </asset>
   <worldbody>
     <body>
       <body name="object">
-        <inertial pos="0.013942564305577316 0.00843004384724436 0.10236853791650995" mass="0.7102589579291876" fullinertia="3.599403028749102e-06 3.4888416388457247e-06 5.245896766047286e-07 -1.5671014203232698e-22 -3.676113843798971e-24 -1.8731300446796854e-22"/>
-        <geom name="windex_bottle" pos="0 0 0" mesh="windex_bottle_mesh" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" mass="0.7102589579291876" friction="0.95 0.3 0.1"  material="windex_bottle" group="0" condim="4"/>
+        <inertial pos="0.013942564305577316 0.00843004384724436 0.10236853791650995" mass="0.9208664665321138" fullinertia="3.599403028749102e-06 3.4888416388457247e-06 5.245896766047286e-07 -1.5671014203232698e-22 -3.676113843798971e-24 -1.8731300446796854e-22"/>
+        <geom name="windex_bottle" pos="0 0 0" mesh="windex_bottle_mesh" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" mass="0.9208664665321138" friction="0.95 0.3 0.1"  material="windex_bottle" group="0" condim="4"/>
       </body>
-      <site rgba="1 0 0 1" size="0.005" pos="0 0 -0.02937879587431988" name="bottom_site"/>
-      <site rgba="0 1 0 1" size="0.005" pos="0 0 0.02937879587431988" name="top_site"/>
-      <site rgba="0 0 1 1" size="0.005" pos="0.024533557881177046 0.024533557881177046 0" name="horizontal_radius_site"/>
-      <site rgba="0 0 0 1" size="0.005" pos="0 0 0.05875759174863976" name="vertical_radius_site"/>
+      <site rgba="1 0 0 1" size="0.005" pos="0 0 -0.02946224943751198" name="bottom_site"/>
+      <site rgba="0 1 0 1" size="0.005" pos="0 0 0.02946224943751198" name="top_site"/>
+      <site rgba="0 0 1 1" size="0.005" pos="0.02765952478927132 0.02765952478927132 0" name="horizontal_radius_site"/>
+      <site rgba="0 0 0 1" size="0.005" pos="0 0 0.05892449887502396" name="vertical_radius_site"/>
     </body>
   </worldbody>
 </mujoco>

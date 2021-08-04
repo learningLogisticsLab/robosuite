@@ -1,6 +1,6 @@
 <mujoco model="bowl">
   <asset>
-    <mesh name="bowl_mesh" file="./meshes/bowl.msh" scale="0.2902198563955651 0.2902198563955651 0.2902198563955651"/>
+    <mesh name="bowl_mesh" file="./meshes/bowl.msh" scale="0.31232536655406573 0.31232536655406573 0.31232536655406573"/>
     <texture name="tex-bowl" file="../textures/bowl.png" type="2d"/>
     <material name="bowl" reflectance="0.7" texrepeat="15 15" texture="tex-bowl" texuniform="true"/>
   </asset>
@@ -12,7 +12,7 @@
       </body>
       <site rgba="1 0 0 1" size="0.005" pos="0 0 -0.0265" name="bottom_site"/>
       <site rgba="0 1 0 1" size="0.005" pos="0 0 0.0265" name="top_site"/>
-      <site rgba="0 0 1 1" size="0.005" pos="0.025473784080361446 0.025473784080361446 0" name="horizontal_radius_site"/>
+      <site rgba="0 0 1 1" size="0.005" pos="0.02693346009484471 0.02693346009484471 0" name="horizontal_radius_site"/>
       <site rgba="0 0 0 1" size="0.005" pos="0 0 0.053" name="vertical_radius_site"/>
     </body>
   </worldbody>

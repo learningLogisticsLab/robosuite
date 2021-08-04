@@ -1,6 +1,6 @@
 <mujoco model="banana">
   <asset>
-    <mesh name="banana_mesh" file="./meshes/banana.msh" scale="0.21821463761350518 0.21821463761350518 0.21821463761350518"/>
+    <mesh name="banana_mesh" file="./meshes/banana.msh" scale="0.24660462487380352 0.24660462487380352 0.24660462487380352"/>
     <texture name="tex-banana" file="../textures/banana.png" type="2d"/>
     <material name="banana" reflectance="0.7" texrepeat="15 15" texture="tex-banana" texuniform="true"/>
   </asset>
@@ -10,10 +10,10 @@
         <inertial pos="-0.009936102440002158 0.004072679186328214 0.01712688923116843" mass="0.066" fullinertia="4.2719946419307267e-07 4.1076640307383204e-07 4.0753878020832136e-08 4.516552657778931e-24 9.370980255872296e-23 5.611821474058033e-23"/>
         <geom name="banana" pos="0 0 0" mesh="banana_mesh" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" mass="0.066" friction="0.95 0.3 0.1"  material="banana" group="0" condim="4"/>
       </body>
-      <site rgba="1 0 0 1" size="0.005" pos="0 0 -0.020730390573282992" name="bottom_site"/>
-      <site rgba="0 1 0 1" size="0.005" pos="0 0 0.020730390573282992" name="top_site"/>
+      <site rgba="1 0 0 1" size="0.005" pos="0 0 -0.023427439363011334" name="bottom_site"/>
+      <site rgba="0 1 0 1" size="0.005" pos="0 0 0.023427439363011334" name="top_site"/>
       <site rgba="0 0 1 1" size="0.005" pos="0.018 0.018 0" name="horizontal_radius_site"/>
-      <site rgba="0 0 0 1" size="0.005" pos="0 0 0.041460781146565984" name="vertical_radius_site"/>
+      <site rgba="0 0 0 1" size="0.005" pos="0 0 0.04685487872602267" name="vertical_radius_site"/>
     </body>
   </worldbody>
 </mujoco>
