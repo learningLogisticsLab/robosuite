@@ -55,6 +55,9 @@ from robosuite.utils.observables import Observable, sensor
 # 06 Mujoco
 import mujoco_py
 
+# 07 Gym Spaces
+from gym import spaces
+
 # Globals
 object_reset_strategy_cases = ['organized', 'jumbled', 'wall', 'random']
 
@@ -378,7 +381,7 @@ class Picking(SingleArmEnv):
         Plays the role of selecting a desired object for order fulfillment (name,pose)
         Currently, randomly choose an object from the list of self.object_names which has num_objs_to_load.
 
-        Assumes that (visual) object placements from _reset_internal() are available: 
+        Assumes that (visual) object placements from reset_sim() are available: 
         self.object_placements = self.placement_initializer.sample()
         
         Could make more sophisticated in the future
@@ -1060,7 +1063,7 @@ class Picking(SingleArmEnv):
 
     def return_sorted_objs_to_model(self,obs):
         '''
-        The goal of this method is to return a list of num_objects in length that are closest to self.goal_object and that we want to model as nodes
+        The goal of this method is to return a dictionary num_objects in length that are closest to self.goal_object ['name'] that we want to model in the graph as nodes
         1) Access all objects that are not the goal
         2) Compute their norm with the goal
         3) Sort them
@@ -1108,6 +1111,7 @@ class Picking(SingleArmEnv):
         """
         HER-Specific check success method comparing achieved and desired positions 
         TODO: current do not analyze orientation. Test good performance with position only first. 
+        TODO: Should also add an additional check to see if the object is in fact touching the fingers. This check is done in standard robosuite and should be integrated here. 
 
         Currently the achieved_goal (current position of goal object) and desired_goal are numpy arrays with [pos|quat] shape (7,) 
 
@@ -1132,6 +1136,9 @@ class Picking(SingleArmEnv):
         if target_dist_error <= self.goal_pos_error_thresh and self.object_names!=0:
             # After successfully placing self.goal_object, remove this from the list of considered names for the next round
             self.object_names.remove(self.goal_object['name'])
+
+            # TODO: double check if the above line is enough, or we aldso need the line below. Also remove from sorted_object list so that it is no longer considered in computing the observations in the next iteration
+            self.sorted_objects_to_model.__delitem__(self.goal_object['name'])
 
             # Get a new object_goal if objs still available
             self.goal_object,_ = self.get_goal_object() 
@@ -1312,15 +1319,19 @@ class Picking(SingleArmEnv):
         2. Achieved goal: [obj1_pos obj2_pos ... objn_pos grip_xyz]
         3. Desired goal: goal obtained in ._sample_goal()
 
-        Achieve Goal
+        Achieved Goal
         if it has the object, use robotic gripper. otherwise use the object position.     
 
         Note:
         Currently we do not consider the observable's modalities in this function. 
-        The GymWrapper uses hem in its constructor... So far I don't think it will be a problem but need to check. 
+        The GymWrapper uses them in its constructor... So far I don't think it will be a problem but need to check. 
         
-        ## TODO: currently we are collecting quaternions. However, we are using an OSC Controller than requests 
-        xyz rpy for the robot. It seems that observations should match action space to facilitate the learning of the network, 
+        ## TODO: currently we are collecting quaternions in our robot and object observations as well as for achieved goals and desired goal. 
+        However, for actions, we are using the robosuite Operational Space Controller (OSC) that requests 
+        xyz rpy updates for the robot. 
+        
+        Under this format, the NN will need to learn pos+quat observations to xyzrpy actions... Will attempt this format first. If not, may change to represent observations as rpy too.
+        ...It seems that observations should match action space to facilitate the learning of the network, 
         otherwise it needs to learn that mapping as well... but working with Euler angles is prone to singularities when pitch=90 deg
 
         ## TODO: Additional observations
@@ -1369,13 +1380,15 @@ class Picking(SingleArmEnv):
 
         # Observations for Objects
         # *Note: there are three quantities of interest: (i) (total) num_objs_to_load, (ii) num_objs (to_model), and (iii) goal object. 
-        # We report data for num_objs that are closes to goal_object and ignore the rest. 
+        # We report data for num_objs that are closest to goal_object and ignore the rest. This list is updated when is_success is True.
         # We only consider the relative position between the goal object and end-effector, all the rest are set to 0.
         self.sorted_objects_to_model = self.return_sorted_objs_to_model(obs)
 
         # Place goal object at the front
         self.sorted_objects_to_model
 
+        # TODO: sorted_objects should be updated when an object is successfully picked. Such that when there is one object less, 
+        # the new dimensionality is reflected in these observations as well.
         for i in range( len(self.sorted_objects_to_model )):
 
             name_list = list(self.sorted_objects_to_model)

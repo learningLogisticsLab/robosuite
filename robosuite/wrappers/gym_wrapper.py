@@ -76,7 +76,17 @@ class GymWrapper(Wrapper, Env):
             
             high                = np.inf * np.ones(self.obs_dim)
             low                 = -high
-            self.observation_space = spaces.Box(low=low, high=high)
+
+            #-------------------------------------------------------------------------------------------------------------
+            ## rlkit-relational interface: The ObsDictRelabelingBuffer used for the ReplayBuffer checks for the following below:
+            #-------------------------------------------------------------------------------------------------------------
+            # Set the observation space as a spaces.Dict. Can check rlkit_relational/FCB/FCB/envs/robotics/robot_env.py__init__
+            # Spatial Information:
+            self.observation_space = spaces.Dict(dict(
+                desired_goal  = spaces.Box(-np.inf, np.inf, shape=obs['achieved_goal'].shape, dtype='float32'),
+                achieved_goal = spaces.Box(-np.inf, np.inf, shape=obs['achieved_goal'].shape, dtype='float32'),
+                observation   = spaces.Box(-np.inf, np.inf, shape=obs['observation'].shape, dtype='float32'),
+            ))
             
             # Action specs set in robot environ and depend on controller (gripper + robot)
             # i.e. if 2 gripper fingers => gripper is dim(1), if OSC controller 'fixed' dim is xyz rpy
