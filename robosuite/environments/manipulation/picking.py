@@ -946,42 +946,98 @@ class Picking(SingleArmEnv):
                 # Set goal object to pick up and sort closest objects to model
                 self.goal_object, self.other_objs_than_goals = self.get_goal_object()
 
-                self.placed_robots = self.robot_placement_initializer.sample()
-                for robot in self.robot_placement_initializer.mujoco_robots:
-                    eef_pos = self.placed_robots[robot.name][0]  # get eef pos quat
-                    eef_quat = self.placed_robots[robot.name][1]
-                    self.robots[0].robot_model.set_base_xpos(eef_pos)
-                    # compute correct transformation for goal object placement wrt eef
-                    # load and update robot model
-                    xpos = self.robots[0].robot_model.base_xpos_offset["table"](self.table_full_size)
-                    self.robots[0].robot_model.set_base_xpos(xpos)
-
+                eef_pos = self._eef_xpos
+                # # Move eef
+                # if hasattr(self, 'robot_placement_initializer'):
+                #     robot_placements = self.robot_placement_initializer.sample()
+                #     # 2. set pose of robot. (data.ctrl is for joint angles not pose).
+                #     for robot in robot_placements.keys():
+                #         if self.sim.data.ctrl is not None:
+                #             print(f"Starting eef_xpos: {self._eef_xpos}. \nDesired xpos {robot_placements[robot][0][:3]}")
+                #             self.sim.data.site_xpos[self.robots[0].eef_site_id] = robot_placements[robot][0][:3]
+                #             #self.sim.data_site_
+                #             self.sim.data.site_xpos[2] = robot_placements[robot][0][:3]
+                #             self.sim.data.site_xpos[3] = robot_placements[robot][0][1]
+                #             self.sim.data.site_xpos[4] = robot_placements[robot][0][2]
+                #
+                #             self.sim.data.set_joint_qpos('robot0_joint1', robot_placements[robot][0][0])
+                #             self.sim.data.set_joint_qpos('robot0_joint2', robot_placements[robot][0][1])
+                #             self.sim.data.set_joint_qpos('robot0_joint3', robot_placements[robot][0][2])
+                #             self.sim.data.set_joint_qpos('robot0_joint4', robot_placements[robot][1][0])
+                #             self.sim.data.set_joint_qpos('robot0_joint5', robot_placements[robot][1][1])
+                #             self.sim.data.set_joint_qpos('robot0_joint6', robot_placements[robot][1][2])
+                #             self.sim.data.set_joint_qpos('robot0_joint7', robot_placements[robot][1][3])
+                #
+                #             self.sim.data.ctrl[:3]  =  np.asarray(robot_placements[robot][0])   # pos
+                #             self.sim.data.ctrl[3:7] =  np.asarray(robot_placements[robot][1])   # quat
+                #             self.sim.data.ctrl[7:9] =  np.array([0,0])                          # two fingers
+                #
+                #         for i in range(10):
+                #             self.sim.step()
+                #             self._update_observables()
+                #     print(f"Updated eef_xpos: {self._eef_xpos}")
+                # for obj in self.placement_initializer.mujoco_objects:
+                #     print(obj)
+                #     print(obj.name)
+                #     print(obj.horizontal_radius)
+                # for obj_pos, obj_quat, obj in self.object_placements.values():
+                #     print(obj)
                 # Loop through all (visual) objects and (re) set their placement positions
                 for obj_pos, obj_quat, obj in self.object_placements.values():
+                    # Set HER 50% of the time
+                    HER = np.random.uniform() < 0.50
+                    HER = True
 
                     # Set the visual object body locations
                     if "visualobject" in obj.name.lower():                             # switched "visual" for "v"
                         self.sim.model.body_pos[self.obj_body_id[obj.name]]  = obj_pos
                         self.sim.model.body_quat[self.obj_body_id[obj.name]] = obj_quat
-                        print(self.goal_object['name'])
-
                         ## Addition ---
                         # self.object_placements is a place holder for all objects. However:
                         # Under HER paradigm, we have a self.goal variable for the desired goal +
                         # Under our current architecture we set self.goal_object as a single goal until that object is placed. 
                         # Use this to fill self.goal which will be used in _get_obs to set the desired_goal.
                         if obj.name.lower() == self.goal_object['name'][:5] + 'visualobject':
-                            self.goal_object['pos']  = eef_pos
-                            self.goal_object['quat'] = eef_quat
+                            if HER:
+                                self.goal_object['pos']  = HER_pos
+                                self.goal_object['quat'] = HER_quat
+                            else:
+                                self.goal_object['pos'] = obj_pos
+                                self.goal_object['quat'] = obj_quat
 
                     # Set the position of 'collision' objects:
                     elif obj.name.lower() == self.goal_object['name'].lower():
-                        self.sim.data.set_joint_qpos(obj.joints[0], np.concatenate([np.array(eef_pos), np.array(eef_quat)]))
-                        print(obj_pos)
-                        print(eef_pos)
+                        if HER:
+
+                            # Lower HER_pos accordingly
+                            HER_pos = eef_pos
+                            print("Now object pos is {}".format(HER_pos))
+                            if (obj.vertical_radius > 0.03):
+                                print("Vertical radius is {}".format(obj.vertical_radius))
+                                print("Horizontal radius is {}".format(obj.horizontal_radius))
+                                HER_pos[2] -= obj.vertical_radius
+                                print("Object pos is downgraded to {}".format(HER_pos))
+                            else:
+                                print("Object pos is unchanged")
+
+                            # Rotate HER_quat accordingly
+                            HER_quat = obj_quat
+                            print("Now obj_quat is {}".format(HER_quat))
+                            if min(obj.horizontal_radius, obj.vertical_radius) == obj.horizontal_radius:
+                                # HER_quat = [1, 0, 0, 0]
+                                HER_quat = HER_quat
+                                print("Object quat is unchanged")
+                            else:
+                                HER_quat = [0, 0, 1, 0]
+                                print("Now Object quat is changed to {}".format(HER_quat))
+                            print(self.goal_object['name'])
+
+                            # Update goal_object with (HER_pos, HER_quat) on the simulation
+                            self.sim.data.set_joint_qpos(obj.joints[0], np.concatenate([np.array(HER_pos), np.array(HER_quat)]))
+                        else:
+                            self.sim.data.set_joint_qpos(obj.joints[0], np.concatenate([np.array(obj_pos), np.array(obj_quat)]))
                     else:
                         self.sim.data.set_joint_qpos(obj.joints[0], np.concatenate([np.array(obj_pos), np.array(obj_quat)]))
-
 
                 # Set the bins to the desired position
                 self.sim.model.body_pos[self.sim.model.body_name2id("bin1")] = self.bin1_pos
@@ -1357,7 +1413,7 @@ class Picking(SingleArmEnv):
         #--------------------------------------------------------------------------
         # 01a) EEF: pos and vel 
         #--------------------------------------------------------------------------
-        grip_pos  = obs[f'{pf}eef_pos']         
+        grip_pos  = obs[f'{pf}eef_pos']
         grip_quat = obs[f'{pf}eef_quat']        
 
         grip_velp = obs[f'{pf}eef_velp'] * dt   
