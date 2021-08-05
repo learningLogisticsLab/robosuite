@@ -947,6 +947,7 @@ class Picking(SingleArmEnv):
                 self.goal_object, self.other_objs_than_goals = self.get_goal_object()
 
                 eef_pos = self._eef_xpos
+                #print("Testing {}".format(self._observables))
                 # # Move eef
                 # if hasattr(self, 'robot_placement_initializer'):
                 #     robot_placements = self.robot_placement_initializer.sample()
@@ -1015,7 +1016,7 @@ class Picking(SingleArmEnv):
                             if (obj.vertical_radius > 0.03):
                                 print("Vertical radius is {}".format(obj.vertical_radius))
                                 print("Horizontal radius is {}".format(obj.horizontal_radius))
-                                HER_pos[2] -= obj.vertical_radius
+                                HER_pos[2] -= (obj.vertical_radius - 0.03)
                                 print("Object pos is downgraded to {}".format(HER_pos))
                             else:
                                 print("Object pos is unchanged")
@@ -1031,7 +1032,6 @@ class Picking(SingleArmEnv):
                                 HER_quat = [0, 0, 1, 0]
                                 print("Now Object quat is changed to {}".format(HER_quat))
                             print(self.goal_object['name'])
-
                             # Update goal_object with (HER_pos, HER_quat) on the simulation
                             self.sim.data.set_joint_qpos(obj.joints[0], np.concatenate([np.array(HER_pos), np.array(HER_quat)]))
                         else:
