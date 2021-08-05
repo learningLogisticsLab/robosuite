@@ -1,16 +1,16 @@
 <mujoco model="chips_canv">
   <asset>
-    <mesh name="chips_can_mesh" file="./meshes/untextured_chips_can.stl" scale="0.6593431658910062 0.6593431658910062 0.6593431658910062"/>
+    <mesh name="chips_can_mesh" file="./meshes/untextured_chips_can.stl" scale="0.5475793607811117 0.5475793607811117 0.5475793607811117"/>
   </asset>
   <worldbody>
     <body>
       <body name="object">
         <geom name="chips_can" pos="0 0 0" mesh="chips_can_mesh" type="mesh" rgba="0.8 0.8 0.8 0.3" conaffinity="0" contype="0" mass="0.205" friction="0.95 0.3 0.1" group="1" condim="4"/>
       </body>
-      <site rgba="1 0 0 1" size="0.005" pos="0 0 -0.08241789573637577" name="bottom_site"/>
-      <site rgba="0 1 0 1" size="0.005" pos="0 0 0.08241789573637577" name="top_site"/>
-      <site rgba="0 0 1 1" size="0.005" pos="0.02472536872091273 0.02472536872091273 0" name="horizontal_radius_site"/>
-      <site rgba="0 0 0 1" size="0.005" pos="0 0 0.16483579147275154" name="vertical_radius_site"/>
+      <site rgba="1 0 0 1" size="0.005" pos="0 0 -0.06844742009763896" name="bottom_site"/>
+      <site rgba="0 1 0 1" size="0.005" pos="0 0 0.06844742009763896" name="top_site"/>
+      <site rgba="0 0 1 1" size="0.005" pos="0.020534226029291686 0.020534226029291686 0" name="horizontal_radius_site"/>
+      <site rgba="0 0 0 1" size="0.005" pos="0 0 0.13689484019527792" name="vertical_radius_site"/>
     </body>
   </worldbody>
 </mujoco>

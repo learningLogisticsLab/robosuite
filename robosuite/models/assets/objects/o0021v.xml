@@ -1,16 +1,16 @@
 <mujoco model="windex_bottlev">
   <asset>
-    <mesh name="windex_bottle_mesh" file="./meshes/untextured_windex_bottle.stl" scale="0.6896519902577973 0.6896519902577973 0.6896519902577973"/>
+    <mesh name="windex_bottle_mesh" file="./meshes/untextured_windex_bottle.stl" scale="0.6629239559969018 0.6629239559969018 0.6629239559969018"/>
   </asset>
   <worldbody>
     <body>
       <body name="object">
-        <geom name="windex_bottle" pos="0 0 0" mesh="windex_bottle_mesh" type="mesh" rgba="0.8 0.8 0.8 0.3" conaffinity="0" contype="0" mass="0.9792396424508092" friction="0.95 0.3 0.1" group="1" condim="4"/>
+        <geom name="windex_bottle" pos="0 0 0" mesh="windex_bottle_mesh" type="mesh" rgba="0.8 0.8 0.8 0.3" conaffinity="0" contype="0" mass="0.9115987709853739" friction="0.95 0.3 0.1" group="1" condim="4"/>
       </body>
-      <site rgba="1 0 0 1" size="0.005" pos="0 0 -0.09310301868480264" name="bottom_site"/>
-      <site rgba="0 1 0 1" size="0.005" pos="0 0 0.09310301868480264" name="top_site"/>
-      <site rgba="0 0 1 1" size="0.005" pos="0.03620672948853436 0.03620672948853436 0" name="horizontal_radius_site"/>
-      <site rgba="0 0 0 1" size="0.005" pos="0 0 0.18620603736960528" name="vertical_radius_site"/>
+      <site rgba="1 0 0 1" size="0.005" pos="0 0 -0.08949473405958175" name="bottom_site"/>
+      <site rgba="0 1 0 1" size="0.005" pos="0 0 0.08949473405958175" name="top_site"/>
+      <site rgba="0 0 1 1" size="0.005" pos="0.034803507689837344 0.034803507689837344 0" name="horizontal_radius_site"/>
+      <site rgba="0 0 0 1" size="0.005" pos="0 0 0.1789894681191635" name="vertical_radius_site"/>
     </body>
   </worldbody>
 </mujoco>

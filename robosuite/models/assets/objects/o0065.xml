@@ -1,6 +1,6 @@
 <mujoco model="a_colored_wood_blocks">
   <asset>
-    <mesh name="a_colored_wood_blocks_mesh" file="./meshes/a_colored_wood_blocks.msh" scale="0.059721122639436554 0.059721122639436554 0.059721122639436554"/>
+    <mesh name="a_colored_wood_blocks_mesh" file="./meshes/a_colored_wood_blocks.msh" scale="0.26003958805814453 0.26003958805814453 0.26003958805814453"/>
     <texture name="tex-a_colored_wood_blocks" file="../textures/a_colored_wood_blocks.png" type="2d"/>
     <material name="a_colored_wood_blocks" reflectance="0.7" texrepeat="15 15" texture="tex-a_colored_wood_blocks" texuniform="true"/>
   </asset>
@@ -10,10 +10,10 @@
         <inertial pos="0.02119015620537026 0.008545373467665459 0.07390911070766724" mass="0.0108" fullinertia="7.759890525927944e-06 7.470598943639884e-06 6.172891559358153e-06 -2.534036454735204e-23 1.9710003320809621e-22 2.8196188405463796e-22"/>
         <geom name="a_colored_wood_blocks" pos="0 0 0" mesh="a_colored_wood_blocks_mesh" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" mass="0.0108" friction="0.95 0.3 0.1"  material="a_colored_wood_blocks" group="0" condim="4"/>
       </body>
-      <site rgba="1 0 0 1" size="0.005" pos="0 0 -0.029860561319718277" name="bottom_site"/>
-      <site rgba="0 1 0 1" size="0.005" pos="0 0 0.029860561319718277" name="top_site"/>
-      <site rgba="0 0 1 1" size="0.005" pos="0.029860561319718277 0.029860561319718277 0" name="horizontal_radius_site"/>
-      <site rgba="0 0 0 1" size="0.005" pos="0 0 0.059721122639436554" name="vertical_radius_site"/>
+      <site rgba="1 0 0 1" size="0.005" pos="0 0 -0.05200791761162891" name="bottom_site"/>
+      <site rgba="0 1 0 1" size="0.005" pos="0 0 0.05200791761162891" name="top_site"/>
+      <site rgba="0 0 1 1" size="0.005" pos="0.026003958805814454 0.026003958805814454 0" name="horizontal_radius_site"/>
+      <site rgba="0 0 0 1" size="0.005" pos="0 0 0.10401583522325782" name="vertical_radius_site"/>
     </body>
   </worldbody>
 </mujoco>

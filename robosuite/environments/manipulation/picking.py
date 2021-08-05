@@ -1024,13 +1024,22 @@ class Picking(SingleArmEnv):
                             # Rotate HER_quat accordingly
                             HER_quat = obj_quat
                             print("Now obj_quat is {}".format(HER_quat))
-                            if min(obj.horizontal_radius, obj.vertical_radius) == obj.horizontal_radius:
-                                # HER_quat = [1, 0, 0, 0]
-                                HER_quat = HER_quat
-                                print("Object quat is unchanged")
+                            if min(obj.horizontal_radius * 2, obj.vertical_radius) == (obj.horizontal_radius * 2):
+                                if(obj.horizontal_radius * 2 >= 0.07):
+                                    HER_quat = [0, 0.7, 0, 0.7] # rotate 90 degrees
+                                    print("Object quat is rotated 90 degrees")
+                                else:
+                                    HER_quat = [0, 0, 0, 1]
+                                    print("Object quat is unchanged")
                             else:
-                                HER_quat = [0, 0, 1, 0]
-                                print("Now Object quat is changed to {}".format(HER_quat))
+                                HER_quat = [0, 0, 0.7, 0.7] # rotate 90 degrees
+                                print("Now Object quat is rotated 90 degrees in x direction {}".format(HER_quat))
+                                if(obj.horizontal_radius > 0.03):
+                                    HER_pos[2] -= (obj.horizontal_radius - 0.03)
+                                    print("Object vertical pos is downgraded to {}".format(HER_pos))
+                                if(obj.vertical_radius/2 > 0.03):
+                                    HER_pos[1] += obj.vertical_radius/2
+                                    print("Object horizontal pos is moved to the left for half of v radius")
                             print(self.goal_object['name'])
                             # Update goal_object with (HER_pos, HER_quat) on the simulation
                             self.sim.data.set_joint_qpos(obj.joints[0], np.concatenate([np.array(HER_pos), np.array(HER_quat)]))

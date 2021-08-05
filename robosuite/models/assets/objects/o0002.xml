@@ -1,6 +1,6 @@
 <mujoco model="master_chef_can">
   <asset>
-    <mesh name="master_chef_can_mesh" file="./meshes/master_chef_can.msh" scale="0.446112609459348 0.446112609459348 0.446112609459348"/>
+    <mesh name="master_chef_can_mesh" file="./meshes/master_chef_can.msh" scale="0.5089134484887494 0.5089134484887494 0.5089134484887494"/>
     <texture name="tex-master_chef_can" file="../textures/master_chef_can.png" type="2d"/>
     <material name="master_chef_can" reflectance="0.7" texrepeat="15 15" texture="tex-master_chef_can" texuniform="true"/>
   </asset>
@@ -10,10 +10,10 @@
         <inertial pos="-0.01707072958296921 -0.009762855837207728 0.07058421978429177" mass="0.414" fullinertia="2.2661150547293207e-06 2.2610912927773742e-06 1.3207509037839938e-06 9.057937362229798e-23 -2.333396488731115e-22 6.037620295467954e-22"/>
         <geom name="master_chef_can" pos="0 0 0" mesh="master_chef_can_mesh" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" mass="0.414" friction="0.95 0.3 0.1"  material="master_chef_can" group="0" condim="4"/>
       </body>
-      <site rgba="1 0 0 1" size="0.005" pos="0 0 -0.03100482635742469" name="bottom_site"/>
-      <site rgba="0 1 0 1" size="0.005" pos="0 0 0.03100482635742469" name="top_site"/>
-      <site rgba="0 0 1 1" size="0.005" pos="0.022751743082426747 0.022751743082426747 0" name="horizontal_radius_site"/>
-      <site rgba="0 0 0 1" size="0.005" pos="0 0 0.06200965271484938" name="vertical_radius_site"/>
+      <site rgba="1 0 0 1" size="0.005" pos="0 0 -0.03536948466996809" name="bottom_site"/>
+      <site rgba="0 1 0 1" size="0.005" pos="0 0 0.03536948466996809" name="top_site"/>
+      <site rgba="0 0 1 1" size="0.005" pos="0.02595458587292622 0.02595458587292622 0" name="horizontal_radius_site"/>
+      <site rgba="0 0 0 1" size="0.005" pos="0 0 0.07073896933993618" name="vertical_radius_site"/>
     </body>
   </worldbody>
 </mujoco>
