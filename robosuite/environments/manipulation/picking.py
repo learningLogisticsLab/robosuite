@@ -56,7 +56,7 @@ from robosuite.utils.observables import Observable, sensor
 import mujoco_py
 
 # 07 spatialmath petercorke toolbox
-from spatialmath.base import qqmul
+from spatialmath.base import qqmul, inner
 
 # 08 math
 from math import sqrt, acos, pi
@@ -1028,14 +1028,22 @@ class Picking(SingleArmEnv):
                                 # Rotate if current orientation is too long
                                 # Currently trying quat multiplication to handle objects with undefault pose
                                 if(obj.horizontal_radius * 2 >= longitude_max):
-                                    # quat = (x,y,z,w)
+                                    # # quat = (x,y,z,w)
+                                    # rot90quatx = [0.7, 0, 0, 0.7]
+                                    # HER_quat = qqmul(obj_quat, rot90quatx)
+                                    # the spatial maths quat = (w, x,y,z)
                                     rot90quatx = [0.7, 0, 0, 0.7]
-                                    HER_quat = qqmul(HER_quat, rot90quatx)
-                                    print(acos(inner(obj_quat, rot90quatx))*180/pi)
+                                    quat = obj_quat
+                                    quat[0] = obj_quat[3]
+                                    quat[1] = obj_quat[0]
+                                    quat[2] = obj_quat[1]
+                                    quat[3] = obj_quat[2]
+                                    print(quat)
+                                    angle = acos(inner(quat, rot90quatx))*180/pi
                                     # # rotate 90 degrees
                                     # HER_quat = [0.7, 0, 0, 0.7]
-                                    print("Object quat is rotated 90 degrees sideways from {} to {}".
-                                          format(obj_quat,HER_quat))
+                                    print("Object quat is rotated {} degrees sideways from {} to {}".
+                                          format(angle, obj_quat,quat))
                                 # Otherwise keep current orientation
                                 else:
                                     HER_quat = HER_quat
