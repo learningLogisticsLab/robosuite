@@ -977,13 +977,7 @@ class Picking(SingleArmEnv):
                 #             self.sim.step()
                 #             self._update_observables()
                 #     print(f"Updated eef_xpos: {self._eef_xpos}")
-                # for obj in self.placement_initializer.mujoco_objects:
-                #     print(obj)
-                #     print(obj.name)
-                #     print(obj.horizontal_radius)
-                # for obj_pos, obj_quat, obj in self.object_placements.values():
-                #     print(obj)
-                # Loop through all (visual) objects and (re) set their placement positions
+
                 for obj_pos, obj_quat, obj in self.object_placements.values():
                     # Set HER 50% of the time
                     HER = np.random.uniform() < 0.50
@@ -999,10 +993,6 @@ class Picking(SingleArmEnv):
                         # Under our current architecture we set self.goal_object as a single goal until that object is placed. 
                         # Use this to fill self.goal which will be used in _get_obs to set the desired_goal.
                         if obj.name.lower() == self.goal_object['name'][:5] + 'visualobject':
-                            if HER:
-                                self.goal_object['pos']  = HER_pos
-                                self.goal_object['quat'] = HER_quat
-                            else:
                                 self.goal_object['pos'] = obj_pos
                                 self.goal_object['quat'] = obj_quat
 
@@ -1010,36 +1000,35 @@ class Picking(SingleArmEnv):
                     elif obj.name.lower() == self.goal_object['name'].lower():
                         if HER:
 
-                            # Lower HER_pos accordingly
+                            # Redefine goal object pos as eef pos, goal object quat
                             HER_pos = eef_pos
-                            print("Now object pos is {}".format(HER_pos))
-                            if (obj.vertical_radius > 0.03):
-                                print("Vertical radius is {}".format(obj.vertical_radius))
-                                print("Horizontal radius is {}".format(obj.horizontal_radius))
-                                HER_pos[2] -= (obj.vertical_radius - 0.03)
-                                print("Object pos is downgraded to {}".format(HER_pos))
-                            else:
-                                print("Object pos is unchanged")
+                            HER_quat = obj_quat
+                            print("Original object pos is {}".format(HER_pos))
+                            print("Original obj_quat is {}".format(HER_quat))
 
                             # Rotate HER_quat accordingly
-                            HER_quat = obj_quat
-                            print("Now obj_quat is {}".format(HER_quat))
                             if min(obj.horizontal_radius * 2, obj.vertical_radius) == (obj.horizontal_radius * 2):
+                                if (obj.vertical_radius > 0.03):
+                                    print("Vertical radius is {}".format(obj.vertical_radius))
+                                    print("Horizontal radius is {}".format(obj.horizontal_radius))
+                                    HER_pos[2] -= (obj.vertical_radius - 0.03)
+                                    print("Object height is downgraded to {}".format(HER_pos))
                                 if(obj.horizontal_radius * 2 >= 0.07):
-                                    HER_quat = [0, 0.7, 0, 0.7] # rotate 90 degrees
-                                    print("Object quat is rotated 90 degrees")
+                                    HER_quat = [0.7, 0, 0, 0.7]  # rotate 90 degrees
+                                    print("Object quat is rotated 90 degrees sideways from {} to {}".
+                                          format(obj_quat,HER_quat))
                                 else:
-                                    HER_quat = [0, 0, 0, 1]
+                                    HER_quat = HER_quat
                                     print("Object quat is unchanged")
                             else:
-                                HER_quat = [0, 0, 0.7, 0.7] # rotate 90 degrees
+                                HER_quat = [0, 0, 0.7, -0.7] # rotate 90 degrees
                                 print("Now Object quat is rotated 90 degrees in x direction {}".format(HER_quat))
                                 if(obj.horizontal_radius > 0.03):
                                     HER_pos[2] -= (obj.horizontal_radius - 0.03)
                                     print("Object vertical pos is downgraded to {}".format(HER_pos))
-                                if(obj.vertical_radius/2 > 0.03):
-                                    HER_pos[1] += obj.vertical_radius/2
-                                    print("Object horizontal pos is moved to the left for half of v radius")
+                                HER_pos[1] += obj.vertical_radius/2
+                                print("Object horizontal pos is moved to the left for half of v radius")
+                                print("Now obj pos is {}".format(HER_pos))
                             print(self.goal_object['name'])
                             # Update goal_object with (HER_pos, HER_quat) on the simulation
                             self.sim.data.set_joint_qpos(obj.joints[0], np.concatenate([np.array(HER_pos), np.array(HER_quat)]))

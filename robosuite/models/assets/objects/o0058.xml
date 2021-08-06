@@ -1,6 +1,6 @@
 <mujoco model="d_cups">
   <asset>
-    <mesh name="d_cups_mesh" file="./meshes/d_cups.msh" scale="0.6283157726538876 0.6283157726538876 0.6283157726538876"/>
+    <mesh name="d_cups_mesh" file="./meshes/d_cups.msh" scale="0.7098154422083957 0.7098154422083957 0.7098154422083957"/>
     <texture name="tex-d_cups" file="../textures/d_cups.png" type="2d"/>
     <material name="d_cups" reflectance="0.7" texrepeat="15 15" texture="tex-d_cups" texuniform="true"/>
   </asset>
@@ -10,10 +10,10 @@
         <inertial pos="-0.018377150074668475 -0.059786665220060674 0.03158304348204601" mass="0.019" fullinertia="2.9013789460339997e-08 2.871027632126721e-08 2.658488549776032e-08 -3.3481393284926994e-24 2.1951196370184575e-24 -6.1048447726017975e-24"/>
         <geom name="d_cups" pos="0 0 0" mesh="d_cups_mesh" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" mass="0.019" friction="0.95 0.3 0.1"  material="d_cups" group="0" condim="4"/>
       </body>
-      <site rgba="1 0 0 1" size="0.005" pos="0 0 -0.02073442049757829" name="bottom_site"/>
-      <site rgba="0 1 0 1" size="0.005" pos="0 0 0.02073442049757829" name="top_site"/>
-      <site rgba="0 0 1 1" size="0.005" pos="0.021991052042886067 0.021991052042886067 0" name="horizontal_radius_site"/>
-      <site rgba="0 0 0 1" size="0.005" pos="0 0 0.04146884099515658" name="vertical_radius_site"/>
+      <site rgba="1 0 0 1" size="0.005" pos="0 0 -0.023423909592877056" name="bottom_site"/>
+      <site rgba="0 1 0 1" size="0.005" pos="0 0 0.023423909592877056" name="top_site"/>
+      <site rgba="0 0 1 1" size="0.005" pos="0.02484354047729385 0.02484354047729385 0" name="horizontal_radius_site"/>
+      <site rgba="0 0 0 1" size="0.005" pos="0 0 0.04684781918575411" name="vertical_radius_site"/>
     </body>
   </worldbody>
 </mujoco>

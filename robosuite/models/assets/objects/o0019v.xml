@@ -1,16 +1,16 @@
 <mujoco model="pitcher_basev">
   <asset>
-    <mesh name="pitcher_base_mesh" file="./meshes/untextured_pitcher_base.stl" scale="0.4177412504552877 0.4177412504552877 0.4177412504552877"/>
+    <mesh name="pitcher_base_mesh" file="./meshes/untextured_pitcher_base.stl" scale="0.4495165115575705 0.4495165115575705 0.4495165115575705"/>
   </asset>
   <worldbody>
     <body>
       <body name="object">
         <geom name="pitcher_base" pos="0 0 0" mesh="pitcher_base_mesh" type="mesh" rgba="0.8 0.8 0.8 0.3" conaffinity="0" contype="0" mass="0.178" friction="0.95 0.3 0.1" group="1" condim="4"/>
       </body>
-      <site rgba="1 0 0 1" size="0.005" pos="0 0 -0.0490845969284963" name="bottom_site"/>
-      <site rgba="0 1 0 1" size="0.005" pos="0 0 0.0490845969284963" name="top_site"/>
-      <site rgba="0 0 1 1" size="0.005" pos="0.022558027524585536 0.022558027524585536 0" name="horizontal_radius_site"/>
-      <site rgba="0 0 0 1" size="0.005" pos="0 0 0.0981691938569926" name="vertical_radius_site"/>
+      <site rgba="1 0 0 1" size="0.005" pos="0 0 -0.05281819010801453" name="bottom_site"/>
+      <site rgba="0 1 0 1" size="0.005" pos="0 0 0.05281819010801453" name="top_site"/>
+      <site rgba="0 0 1 1" size="0.005" pos="0.024273891624108805 0.024273891624108805 0" name="horizontal_radius_site"/>
+      <site rgba="0 0 0 1" size="0.005" pos="0 0 0.10563638021602906" name="vertical_radius_site"/>
     </body>
   </worldbody>
 </mujoco>
