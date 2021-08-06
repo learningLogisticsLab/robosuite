@@ -55,6 +55,12 @@ from robosuite.utils.observables import Observable, sensor
 # 06 Mujoco
 import mujoco_py
 
+# 07 spatialmath petercorke toolbox
+from spatialmath.base import qqmul
+
+# 08 math
+from math import sqrt, acos, pi
+
 # Globals
 object_reset_strategy_cases = ['organized', 'jumbled', 'wall', 'random']
 
@@ -981,6 +987,11 @@ class Picking(SingleArmEnv):
                 for obj_pos, obj_quat, obj in self.object_placements.values():
                     # Set HER 50% of the time
                     HER = np.random.uniform() < 0.50
+                    # introduce offset between grip site and gripper mount to prevent collision
+                    offset = 0.03
+                    # maximum gripping space
+                    longitude_max = 0.07
+                    # HER flag for activating HER 100% all the time
                     HER = True
 
                     # Set the visual object body locations
@@ -999,33 +1010,47 @@ class Picking(SingleArmEnv):
                     # Set the position of 'collision' objects:
                     elif obj.name.lower() == self.goal_object['name'].lower():
                         if HER:
-
-                            # Redefine goal object pos as eef pos, goal object quat
+                            # Rename goal object pos as eef pos, goal object quat
                             HER_pos = eef_pos
                             HER_quat = obj_quat
                             print("Original object pos is {}".format(HER_pos))
                             print("Original obj_quat is {}".format(HER_quat))
 
-                            # Rotate HER_quat accordingly
+                            # Gripping strategy if horizontal radius is the shorter side
                             if min(obj.horizontal_radius * 2, obj.vertical_radius) == (obj.horizontal_radius * 2):
-                                if (obj.vertical_radius > 0.03):
+                                # Check for offset
+                                if (obj.vertical_radius > offset):
                                     print("Vertical radius is {}".format(obj.vertical_radius))
                                     print("Horizontal radius is {}".format(obj.horizontal_radius))
-                                    HER_pos[2] -= (obj.vertical_radius - 0.03)
+                                    HER_pos[2] -= (obj.vertical_radius - offset)
                                     print("Object height is downgraded to {}".format(HER_pos))
-                                if(obj.horizontal_radius * 2 >= 0.07):
-                                    HER_quat = [0.7, 0, 0, 0.7]  # rotate 90 degrees
+                                # Strategy to find shorter side to grip
+                                # Rotate if current orientation is too long
+                                # Currently trying quat multiplication to handle objects with undefault pose
+                                if(obj.horizontal_radius * 2 >= longitude_max):
+                                    # quat = (x,y,z,w)
+                                    rot90quatx = [0.7, 0, 0, 0.7]
+                                    HER_quat = qqmul(HER_quat, rot90quatx)
+                                    print(acos(inner(obj_quat, rot90quatx))*180/pi)
+                                    # # rotate 90 degrees
+                                    # HER_quat = [0.7, 0, 0, 0.7]
                                     print("Object quat is rotated 90 degrees sideways from {} to {}".
                                           format(obj_quat,HER_quat))
+                                # Otherwise keep current orientation
                                 else:
                                     HER_quat = HER_quat
                                     print("Object quat is unchanged")
+                            # Gripping strategy if the vertical radius is the shorter side
                             else:
                                 HER_quat = [0, 0, 0.7, -0.7] # rotate 90 degrees
+                                # rot90quatz = [0, 0, 0.7, -0.7]
+                                # HER_quat = qqmul(HER_quat, rot90quatz)
                                 print("Now Object quat is rotated 90 degrees in x direction {}".format(HER_quat))
-                                if(obj.horizontal_radius > 0.03):
-                                    HER_pos[2] -= (obj.horizontal_radius - 0.03)
+                                # Check for offset
+                                if(obj.horizontal_radius > offset):
+                                    HER_pos[2] -= (obj.horizontal_radius - offset)
                                     print("Object vertical pos is downgraded to {}".format(HER_pos))
+                                # Adjust obj position after rotation
                                 HER_pos[1] += obj.vertical_radius/2
                                 print("Object horizontal pos is moved to the left for half of v radius")
                                 print("Now obj pos is {}".format(HER_pos))
