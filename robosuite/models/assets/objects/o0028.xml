@@ -1,6 +1,6 @@
 <mujoco model="fork">
   <asset>
-    <mesh name="fork_mesh" file="./meshes/fork.msh" scale="0.27808302338297297 0.27808302338297297 0.27808302338297297"/>
+    <mesh name="fork_mesh" file="./meshes/fork.msh" scale="1.0 1.0 1.0"/>
     <texture name="tex-fork" file="../textures/fork.png" type="2d"/>
     <material name="fork" reflectance="0.7" texrepeat="15 15" texture="tex-fork" texuniform="true"/>
   </asset>
@@ -12,7 +12,7 @@
       </body>
       <site rgba="1 0 0 1" size="0.005" pos="0 0 -0.01" name="bottom_site"/>
       <site rgba="0 1 0 1" size="0.005" pos="0 0 0.01" name="top_site"/>
-      <site rgba="0 0 1 1" size="0.005" pos="0.027530219314914325 0.027530219314914325 0" name="horizontal_radius_site"/>
+      <site rgba="0 0 1 1" size="0.005" pos="0.099 0.007 0" name="horizontal_radius_site"/>
       <site rgba="0 0 0 1" size="0.005" pos="0 0 0.02" name="vertical_radius_site"/>
     </body>
   </worldbody>

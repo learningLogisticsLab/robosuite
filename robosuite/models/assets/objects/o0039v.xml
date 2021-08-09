@@ -1,6 +1,6 @@
 <mujoco model="phillips_screwdriverv">
   <asset>
-    <mesh name="phillips_screwdriver_mesh" file="./meshes/untextured_phillips_screwdriver.stl" scale="0.1861229859471999 0.1861229859471999 0.1861229859471999"/>
+    <mesh name="phillips_screwdriver_mesh" file="./meshes/untextured_phillips_screwdriver.stl" scale="1.0 1.0 1.0"/>
   </asset>
   <worldbody>
     <body>
@@ -9,7 +9,7 @@
       </body>
       <site rgba="1 0 0 1" size="0.005" pos="0 0 -0.0155" name="bottom_site"/>
       <site rgba="0 1 0 1" size="0.005" pos="0 0 0.0155" name="top_site"/>
-      <site rgba="0 0 1 1" size="0.005" pos="0.021747512321660487 0.021747512321660487 0" name="horizontal_radius_site"/>
+      <site rgba="0 0 1 1" size="0.005" pos="0.1075 0.0155 0" name="horizontal_radius_site"/>
       <site rgba="0 0 0 1" size="0.005" pos="0 0 0.031" name="vertical_radius_site"/>
     </body>
   </worldbody>

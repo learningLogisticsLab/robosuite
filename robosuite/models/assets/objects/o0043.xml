@@ -1,6 +1,6 @@
 <mujoco model="medium_clamp">
   <asset>
-    <mesh name="medium_clamp_mesh" file="./meshes/medium_clamp.msh" scale="0.45539774912066466 0.45539774912066466 0.45539774912066466"/>
+    <mesh name="medium_clamp_mesh" file="./meshes/medium_clamp.msh" scale="1.0 1.0 1.0"/>
     <texture name="tex-medium_clamp" file="../textures/medium_clamp.png" type="2d"/>
     <material name="medium_clamp" reflectance="0.7" texrepeat="15 15" texture="tex-medium_clamp" texuniform="true"/>
   </asset>
@@ -12,7 +12,7 @@
       </body>
       <site rgba="1 0 0 1" size="0.005" pos="0 0 -0.0135" name="bottom_site"/>
       <site rgba="0 1 0 1" size="0.005" pos="0 0 0.0135" name="top_site"/>
-      <site rgba="0 0 1 1" size="0.005" pos="0.02618537057443822 0.02618537057443822 0" name="horizontal_radius_site"/>
+      <site rgba="0 0 1 1" size="0.005" pos="0.045 0.0575 0" name="horizontal_radius_site"/>
       <site rgba="0 0 0 1" size="0.005" pos="0 0 0.027" name="vertical_radius_site"/>
     </body>
   </worldbody>

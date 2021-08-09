@@ -1,6 +1,6 @@
 <mujoco model="padlock">
   <asset>
-    <mesh name="padlock_mesh" file="./meshes/padlock.msh" scale="0.7612872643130046 0.7612872643130046 0.7612872643130046"/>
+    <mesh name="padlock_mesh" file="./meshes/padlock.msh" scale="1.0 1.0 1.0"/>
     <texture name="tex-padlock" file="../textures/padlock.png" type="2d"/>
     <material name="padlock" reflectance="0.7" texrepeat="15 15" texture="tex-padlock" texuniform="true"/>
   </asset>
@@ -10,10 +10,10 @@
         <inertial pos="-0.01707606691752894 0.00951738900221132 0.013626341524550546" mass="0.208" fullinertia="1.548488478544847e-08 1.1426254423194741e-08 8.409682265277153e-09 -2.8991985493440624e-24 3.6896049559677124e-25 -2.487050850367256e-25"/>
         <geom name="padlock" pos="0 0 0" mesh="padlock_mesh" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" mass="0.208" friction="0.95 0.3 0.1"  material="padlock" group="0" condim="4"/>
       </body>
-      <site rgba="1 0 0 1" size="0.005" pos="0 0 -0.02474183609017265" name="bottom_site"/>
-      <site rgba="0 1 0 1" size="0.005" pos="0 0 0.02474183609017265" name="top_site"/>
-      <site rgba="0 0 1 1" size="0.005" pos="0.0235 0.0235 0" name="horizontal_radius_site"/>
-      <site rgba="0 0 0 1" size="0.005" pos="0 0 0.0494836721803453" name="vertical_radius_site"/>
+      <site rgba="1 0 0 1" size="0.005" pos="0 0 -0.012" name="bottom_site"/>
+      <site rgba="0 1 0 1" size="0.005" pos="0 0 0.012" name="top_site"/>
+      <site rgba="0 0 1 1" size="0.005" pos="0.0235 0.0325 0" name="horizontal_radius_site"/>
+      <site rgba="0 0 0 1" size="0.005" pos="0 0 0.024" name="vertical_radius_site"/>
     </body>
   </worldbody>
 </mujoco>
