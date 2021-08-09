@@ -1,16 +1,16 @@
 <mujoco model="mugv">
   <asset>
-    <mesh name="mug_mesh" file="./meshes/untextured_mug.stl" scale="0.6912000785600214 0.6912000785600214 0.6912000785600214"/>
+    <mesh name="mug_mesh" file="./meshes/untextured_mug.stl" scale="0.5829877838748391 0.5829877838748391 0.5829877838748391"/>
   </asset>
   <worldbody>
     <body>
       <body name="object">
         <geom name="mug" pos="0 0 0" mesh="mug_mesh" type="mesh" rgba="0.8 0.8 0.8 0.3" conaffinity="0" contype="0" mass="0.118" friction="0.95 0.3 0.1" group="1" condim="4"/>
       </body>
-      <site rgba="1 0 0 1" size="0.005" pos="0 0 -0.028795217996414574" name="bottom_site"/>
-      <site rgba="0 1 0 1" size="0.005" pos="0 0 0.028795217996414574" name="top_site"/>
-      <site rgba="0 0 1 1" size="0.005" pos="0.02764800314240086 0.02764800314240086 0" name="horizontal_radius_site"/>
-      <site rgba="0 0 0 1" size="0.005" pos="0 0 0.05759043599282915" name="vertical_radius_site"/>
+      <site rgba="1 0 0 1" size="0.005" pos="0 0 -0.023902499138868404" name="bottom_site"/>
+      <site rgba="0 1 0 1" size="0.005" pos="0 0 0.023902499138868404" name="top_site"/>
+      <site rgba="0 0 1 1" size="0.005" pos="0.023319511354993563 0.023319511354993563 0" name="horizontal_radius_site"/>
+      <site rgba="0 0 0 1" size="0.005" pos="0 0 0.04780499827773681" name="vertical_radius_site"/>
     </body>
   </worldbody>
 </mujoco>

@@ -1,16 +1,16 @@
 <mujoco model="pearv">
   <asset>
-    <mesh name="pear_mesh" file="./meshes/untextured_pear.stl" scale="0.7053098677469922 0.7053098677469922 0.7053098677469922"/>
+    <mesh name="pear_mesh" file="./meshes/untextured_pear.stl" scale="0.7109934785415766 0.7109934785415766 0.7109934785415766"/>
   </asset>
   <worldbody>
     <body>
       <body name="object">
         <geom name="pear" pos="0 0 0" mesh="pear_mesh" type="mesh" rgba="0.8 0.8 0.8 0.3" conaffinity="0" contype="0" mass="0.049" friction="0.95 0.3 0.1" group="1" condim="4"/>
       </body>
-      <site rgba="1 0 0 1" size="0.005" pos="0 0 -0.023515790399934615" name="bottom_site"/>
-      <site rgba="0 1 0 1" size="0.005" pos="0 0 0.023515790399934615" name="top_site"/>
-      <site rgba="0 0 1 1" size="0.005" pos="0.02859453099796567 0.02859453099796567 0" name="horizontal_radius_site"/>
-      <site rgba="0 0 0 1" size="0.005" pos="0 0 0.04703158079986923" name="vertical_radius_site"/>
+      <site rgba="1 0 0 1" size="0.005" pos="0 0 -0.023533884139726187" name="bottom_site"/>
+      <site rgba="0 1 0 1" size="0.005" pos="0 0 0.023533884139726187" name="top_site"/>
+      <site rgba="0 0 1 1" size="0.005" pos="0.03554967392707883 0.03554967392707883 0" name="horizontal_radius_site"/>
+      <site rgba="0 0 0 1" size="0.005" pos="0 0 0.047067768279452374" name="vertical_radius_site"/>
     </body>
   </worldbody>
 </mujoco>
