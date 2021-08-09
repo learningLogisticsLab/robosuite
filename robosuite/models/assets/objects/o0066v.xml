@@ -5,7 +5,7 @@
   <worldbody>
     <body>
       <body name="object">
-        <geom name="nine_peg_hole_test" pos="0 0 0" mesh="nine_peg_hole_test_mesh" type="mesh" rgba="0.8 0.8 0.8 0.3" conaffinity="0" contype="0" mass="0.285495594653712" friction="0.95 0.3 0.1" group="1" condim="4"/>
+        <geom name="nine_peg_hole_test" pos="0 0 0" mesh="nine_peg_hole_test_mesh" type="mesh" rgba="0.8 0.8 0.8 0.3" conaffinity="0" contype="0" mass="0.6627058326594794" friction="0.95 0.3 0.1" group="1" condim="4"/>
       </body>
       <site rgba="1 0 0 1" size="0.005" pos="0 0 -0.025" name="bottom_site"/>
       <site rgba="0 1 0 1" size="0.005" pos="0 0 0.025" name="top_site"/>

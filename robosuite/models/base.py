@@ -480,6 +480,15 @@ class MujocoModel(object):
         """
         raise NotImplementedError
 
+    @property
+    def x_radius(self):
+        """
+        Returns x in (x,y,z) format where x refers to the position in mujoco & excel database.
+
+        Added to encode object orientation when performing computations. if x > y, then object is wider.
+        """
+        raise NotImplementedError
+
 
 class MujocoXMLModel(MujocoXML, MujocoModel):
     """
@@ -668,4 +677,9 @@ class MujocoXMLModel(MujocoXML, MujocoModel):
     @property
     def vertical_radius(self):
         raise NotImplementedError
+
+    @property
+    def x_radius(self):
+        raise NotImplementedError
+
 

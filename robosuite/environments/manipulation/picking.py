@@ -2,6 +2,8 @@
 import sys
 import random
 import os.path
+
+import math
 import numpy as np
 from collections import OrderedDict
 
@@ -54,12 +56,6 @@ from robosuite.utils.observables import Observable, sensor
 
 # 06 Mujoco
 import mujoco_py
-
-# 07 spatialmath petercorke toolbox
-from spatialmath.base import qqmul, inner
-
-# 08 math
-from math import sqrt, acos, pi
 
 # Globals
 object_reset_strategy_cases = ['organized', 'jumbled', 'wall', 'random']
@@ -952,7 +948,7 @@ class Picking(SingleArmEnv):
                 # Set goal object to pick up and sort closest objects to model
                 self.goal_object, self.other_objs_than_goals = self.get_goal_object()
 
-                eef_pos = self._eef_xpos
+                #eef_pos = self._eef_xpos
                 #print("Testing {}".format(self._observables))
                 # # Move eef
                 # if hasattr(self, 'robot_placement_initializer'):
@@ -1011,60 +1007,42 @@ class Picking(SingleArmEnv):
                     elif obj.name.lower() == self.goal_object['name'].lower():
                         if HER:
                             # Rename goal object pos as eef pos, goal object quat
-                            HER_pos = eef_pos
+                            HER_pos = self._eef_xpos
+
                             HER_quat = obj_quat
                             print("Original object pos is {}".format(HER_pos))
                             print("Original obj_quat is {}".format(HER_quat))
 
                             # Gripping strategy if horizontal radius is the shorter side
-                            if min(obj.horizontal_radius * 2, obj.vertical_radius) == (obj.horizontal_radius * 2):
+                            if min(obj.x_radius * 2, obj.horizontal_radius * 2, obj.vertical_radius) == (obj.horizontal_radius * 2) or \
+                                    min(obj.x_radius * 2, obj.horizontal_radius * 2, obj.vertical_radius) == (obj.x_radius * 2):
+
                                 # Check for offset
                                 if (obj.vertical_radius > offset):
-                                    print("Vertical radius is {}".format(obj.vertical_radius))
-                                    print("Horizontal radius is {}".format(obj.horizontal_radius))
                                     HER_pos[2] -= (obj.vertical_radius - offset)
-                                    print("Object height is downgraded to {}".format(HER_pos))
-                                # Strategy to find shorter side to grip
+
                                 # Rotate if current orientation is too long
-                                # Currently trying quat multiplication to handle objects with undefault pose
-                                if(obj.horizontal_radius * 2 >= longitude_max):
-                                    # # quat = (x,y,z,w)
-                                    # rot90quatx = [0.7, 0, 0, 0.7]
-                                    # HER_quat = qqmul(obj_quat, rot90quatx)
-                                    # the spatial maths quat = (w, x,y,z)
-                                    rot90quatx = [0.7, 0, 0, 0.7]
-                                    quat = obj_quat
-                                    quat[0] = obj_quat[3]
-                                    quat[1] = obj_quat[0]
-                                    quat[2] = obj_quat[1]
-                                    quat[3] = obj_quat[2]
-                                    print(quat)
-                                    angle = acos(inner(quat, rot90quatx))*180/pi
-                                    # # rotate 90 degrees
-                                    # HER_quat = [0.7, 0, 0, 0.7]
-                                    print("Object quat is rotated {} degrees sideways from {} to {}".
-                                          format(angle, obj_quat,quat))
+                                if(obj.x_radius * 2 >= longitude_max):
+                                    # quat = (x,y,z,w)
+                                    # rx 90 degrees
+                                    HER_quat = [0.98, 0, 0, 0]
                                 # Otherwise keep current orientation
                                 else:
                                     HER_quat = HER_quat
-                                    print("Object quat is unchanged")
+
                             # Gripping strategy if the vertical radius is the shorter side
-                            else:
-                                HER_quat = [0, 0, 0.7, -0.7] # rotate 90 degrees
-                                # rot90quatz = [0, 0, 0.7, -0.7]
-                                # HER_quat = qqmul(HER_quat, rot90quatz)
-                                print("Now Object quat is rotated 90 degrees in x direction {}".format(HER_quat))
+                            else: # rz 90 degreez
+                                HER_quat = [0, 0, 0.7, -0.7]
                                 # Check for offset
                                 if(obj.horizontal_radius > offset):
                                     HER_pos[2] -= (obj.horizontal_radius - offset)
-                                    print("Object vertical pos is downgraded to {}".format(HER_pos))
                                 # Adjust obj position after rotation
                                 HER_pos[1] += obj.vertical_radius/2
-                                print("Object horizontal pos is moved to the left for half of v radius")
-                                print("Now obj pos is {}".format(HER_pos))
-                            print(self.goal_object['name'])
+
                             # Update goal_object with (HER_pos, HER_quat) on the simulation
                             self.sim.data.set_joint_qpos(obj.joints[0], np.concatenate([np.array(HER_pos), np.array(HER_quat)]))
+                            print("Update HER pos for {} to {}".format(self.goal_object['name'], HER_pos))
+                            print("Update HER pose for {} to {}".format(self.goal_object['name'], HER_quat))
                         else:
                             self.sim.data.set_joint_qpos(obj.joints[0], np.concatenate([np.array(obj_pos), np.array(obj_quat)]))
                     else:
