@@ -7,7 +7,7 @@
   <worldbody>
     <body>
       <body name="object">
-        <geom name="small_clamp" pos="0 0 0" mesh="small_clamp_mesh" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" mass="0.0192" friction="0.95 0.3 0.1"  material="small_clamp" group="0" condim="4"/>
+        <geom name="small_clamp" pos="0.0627367642891381 -0.035986465034120146 -0.008958684012755989" mesh="small_clamp_mesh" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" mass="0.0192" friction="0.95 0.3 0.1"  material="small_clamp" group="0" condim="4"/>
       </body>
       <site rgba="1 0 0 1" size="0.005" pos="0 0 -0.005" name="bottom_site"/>
       <site rgba="0 1 0 1" size="0.005" pos="0 0 0.005" name="top_site"/>

@@ -8,7 +8,7 @@
     <body>
       <body name="object">
         <inertial pos="-0.01485355781018036 -0.01420505447388014 0.10220486833098277" mass="0.411" fullinertia="1.2667764335249046e-05 8.895223860935137e-06 5.284067250610004e-06 1.729536435737038e-24 -2.9969843650251416e-23 6.726307907846409e-22"/>
-        <geom name="cracker_box" pos="0 0 0" mesh="cracker_box_mesh" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" mass="0.411" friction="0.95 0.3 0.1"  material="cracker_box" group="0" condim="4"/>
+        <geom name="cracker_box" pos="0.012237672220723719 0.013942700178122219 -0.10348996754153711" mesh="cracker_box_mesh" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" mass="0.411" friction="0.95 0.3 0.1"  material="cracker_box" group="0" condim="4"/>
       </body>
       <site rgba="1 0 0 1" size="0.005" pos="0 0 -0.105" name="bottom_site"/>
       <site rgba="0 1 0 1" size="0.005" pos="0 0 0.105" name="top_site"/>

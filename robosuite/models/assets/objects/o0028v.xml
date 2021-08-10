@@ -5,7 +5,7 @@
   <worldbody>
     <body>
       <body name="object">
-        <geom name="fork" pos="0 0 0" mesh="fork_mesh" type="mesh" rgba="0.8 0.8 0.8 0.3" conaffinity="0" contype="0" mass="0.034" friction="0.95 0.3 0.1" group="1" condim="4"/>
+        <geom name="fork" pos="0.025402417506670747 0.022335965440183993 -0.005860810243817459" mesh="fork_mesh" type="mesh" rgba="0.8 0.8 0.8 0.3" conaffinity="0" contype="0" mass="0.034" friction="0.95 0.3 0.1" group="1" condim="4"/>
       </body>
       <site rgba="1 0 0 1" size="0.005" pos="0 0 -0.01" name="bottom_site"/>
       <site rgba="0 1 0 1" size="0.005" pos="0 0 0.01" name="top_site"/>

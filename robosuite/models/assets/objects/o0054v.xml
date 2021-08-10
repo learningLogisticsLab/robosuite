@@ -5,7 +5,7 @@
   <worldbody>
     <body>
       <body name="object">
-        <geom name="dice" pos="0 0 0" mesh="dice_mesh" type="mesh" rgba="0.8 0.8 0.8 0.3" conaffinity="0" contype="0" mass="0.0052" friction="0.95 0.3 0.1" group="1" condim="4"/>
+        <geom name="dice" pos="0.011170668455510631 -0.009189695752293687 -0.008472" mesh="dice_mesh" type="mesh" rgba="0.8 0.8 0.8 0.3" conaffinity="0" contype="0" mass="0.0052" friction="0.95 0.3 0.1" group="1" condim="4"/>
       </body>
       <site rgba="1 0 0 1" size="0.005" pos="0 0 -0.0081" name="bottom_site"/>
       <site rgba="0 1 0 1" size="0.005" pos="0 0 0.0081" name="top_site"/>
