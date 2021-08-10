@@ -1,19 +1,19 @@
 <mujoco model="bleach_cleanser">
   <asset>
-    <mesh name="bleach_cleanser_mesh" file="./meshes/bleach_cleanser.msh" scale="0.7926556705770071 0.7926556705770071 0.7926556705770071"/>
+    <mesh name="bleach_cleanser_mesh" file="./meshes/bleach_cleanser.msh" scale="0.6429368862597948 0.6429368862597948 0.6429368862597948"/>
     <texture name="tex-bleach_cleanser" file="../textures/bleach_cleanser.png" type="2d"/>
     <material name="bleach_cleanser" reflectance="0.7" texrepeat="15 15" texture="tex-bleach_cleanser" texuniform="true"/>
   </asset>
   <worldbody>
     <body>
       <body name="object">
-        <inertial pos="-0.017138949272641098 0.011574369859748879 0.09969796254743377" mass="0.7159995220334631" fullinertia="4.566127982914434e-06 4.251487136560933e-06 7.65292449271737e-07 -1.2690307799270565e-22 7.808246706822421e-22 -1.5988800156155683e-22"/>
-        <geom name="bleach_cleanser" pos="0 0 0" mesh="bleach_cleanser_mesh" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" mass="0.7159995220334631" friction="0.95 0.3 0.1"  material="bleach_cleanser" group="0" condim="4"/>
+        <inertial pos="-0.017138949272641098 0.011574369859748879 0.09969796254743377" mass="0.4876968977924532" fullinertia="4.566127982914434e-06 4.251487136560933e-06 7.65292449271737e-07 -1.2690307799270565e-22 7.808246706822421e-22 -1.5988800156155683e-22"/>
+        <geom name="bleach_cleanser" pos="0.014261147267791333 -0.007491407545471325 -0.08026295500690028" mesh="bleach_cleanser_mesh" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" mass="0.4876968977924532" friction="0.95 0.3 0.1"  material="bleach_cleanser" group="0" condim="4"/>
       </body>
-      <site rgba="1 0 0 1" size="0.005" pos="0 0 -0.09908195882212589" name="bottom_site"/>
-      <site rgba="0 1 0 1" size="0.005" pos="0 0 0.09908195882212589" name="top_site"/>
-      <site rgba="0 0 1 1" size="0.005" pos="0.03884012785827335 0.025761309293752734 0" name="horizontal_radius_site"/>
-      <site rgba="0 0 0 1" size="0.005" pos="0 0 0.19816391764425179" name="vertical_radius_site"/>
+      <site rgba="1 0 0 1" size="0.005" pos="0 0 -0.08036711078247435" name="bottom_site"/>
+      <site rgba="0 1 0 1" size="0.005" pos="0 0 0.08036711078247435" name="top_site"/>
+      <site rgba="0 0 1 1" size="0.005" pos="0.03150390742672995 0.020895448803443333 0" name="horizontal_radius_site"/>
+      <site rgba="0 0 0 1" size="0.005" pos="0 0 0.1607342215649487" name="vertical_radius_site"/>
     </body>
   </worldbody>
 </mujoco>

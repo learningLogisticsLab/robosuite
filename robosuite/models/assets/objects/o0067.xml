@@ -1,6 +1,6 @@
 <mujoco model="toy_airplane">
   <asset>
-    <mesh name="toy_airplane_mesh" file="./meshes/toy_airplane.msh" scale="0.2706779460435721 0.2706779460435721 0.2706779460435721"/>
+    <mesh name="toy_airplane_mesh" file="./meshes/toy_airplane.msh" scale="0.31006398514888683 0.31006398514888683 0.31006398514888683"/>
     <texture name="tex-toy_airplane" file="../textures/toy_airplane.png" type="2d"/>
     <material name="toy_airplane" reflectance="0.7" texrepeat="15 15" texture="tex-toy_airplane" texuniform="true"/>
   </asset>
@@ -8,12 +8,12 @@
     <body>
       <body name="object">
         <inertial pos="0.03572475763431454 0.030807398220545207 0.09092314374993266" mass="0.57" fullinertia="9.43995020953257e-06 7.940826855115171e-06 5.371234151048594e-06 3.6285041313882006e-23 1.0895386204604454e-22 -9.786512231260026e-23"/>
-        <geom name="toy_airplane" pos="0 0 0" mesh="toy_airplane_mesh" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" mass="0.57" friction="0.95 0.3 0.1"  material="toy_airplane" group="0" condim="4"/>
+        <geom name="toy_airplane" pos="-0.011321113882612784 -0.004691005346246286 -0.024266419050755883" mesh="toy_airplane_mesh" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" mass="0.57" friction="0.95 0.3 0.1"  material="toy_airplane" group="0" condim="4"/>
       </body>
-      <site rgba="1 0 0 1" size="0.005" pos="0 0 -0.023142964386725414" name="bottom_site"/>
-      <site rgba="0 1 0 1" size="0.005" pos="0 0 0.023142964386725414" name="top_site"/>
-      <site rgba="0 0 1 1" size="0.005" pos="0.03600016682379509 0.0378949124461001 0" name="horizontal_radius_site"/>
-      <site rgba="0 0 0 1" size="0.005" pos="0 0 0.04628592877345083" name="vertical_radius_site"/>
+      <site rgba="1 0 0 1" size="0.005" pos="0 0 -0.026510470730229826" name="bottom_site"/>
+      <site rgba="0 1 0 1" size="0.005" pos="0 0 0.026510470730229826" name="top_site"/>
+      <site rgba="0 0 1 1" size="0.005" pos="0.04123851002480195 0.04340895792084416 0" name="horizontal_radius_site"/>
+      <site rgba="0 0 0 1" size="0.005" pos="0 0 0.05302094146045965" name="vertical_radius_site"/>
     </body>
   </worldbody>
 </mujoco>

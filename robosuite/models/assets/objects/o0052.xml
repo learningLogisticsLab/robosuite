@@ -8,7 +8,7 @@
     <body>
       <body name="object">
         <inertial pos="-0.034274940120650695 0.018175325943306266 0.009010247611937368" mass="0.1" fullinertia="1.3307905578269502e-06 7.338900067550512e-07 6.025740314983342e-07 2.9706615307710403e-24 2.830200646146508e-23 -4.663563268167356e-23"/>
-        <geom name="chain" pos="0 0 0" mesh="chain_mesh" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" mass="0.1" friction="0.95 0.3 0.1"  material="chain" group="0" condim="4"/>
+        <geom name="chain" pos="0.03543105396808252 -0.02063213761629334 -0.012237999999999997" mesh="chain_mesh" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" mass="0.1" friction="0.95 0.3 0.1"  material="chain" group="0" condim="4"/>
       </body>
       <site rgba="1 0 0 1" size="0.005" pos="0 0 -0.005" name="bottom_site"/>
       <site rgba="0 1 0 1" size="0.005" pos="0 0 0.005" name="top_site"/>

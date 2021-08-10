@@ -8,7 +8,7 @@
     <body>
       <body name="object">
         <inertial pos="-0.006528858552747081 -0.03041729713329846 0.02092653007258482" mass="0.046" fullinertia="7.3017341992527055e-09 7.281135817609492e-09 7.2757988108535084e-09 1.671904984721422e-24 -1.7842928104490935e-25 3.706727697751384e-25"/>
-        <geom name="golf_ball" pos="0 0 0" mesh="golf_ball_mesh" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" mass="0.046" friction="0.95 0.3 0.1"  material="golf_ball" group="0" condim="4"/>
+        <geom name="golf_ball" pos="0.006526723269532214 0.03042038993595703 -0.02094888419067348" mesh="golf_ball_mesh" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" mass="0.046" friction="0.95 0.3 0.1"  material="golf_ball" group="0" condim="4"/>
       </body>
       <site rgba="1 0 0 1" size="0.005" pos="0 0 -0.02135" name="bottom_site"/>
       <site rgba="0 1 0 1" size="0.005" pos="0 0 0.02135" name="top_site"/>
