@@ -5,7 +5,7 @@
   <worldbody>
     <body>
       <body name="object">
-        <geom name="racquetball" pos="0 0 0" mesh="racquetball_mesh" type="mesh" rgba="0.8 0.8 0.8 0.3" conaffinity="0" contype="0" mass="0.041" friction="0.95 0.3 0.1" group="1" condim="4"/>
+        <geom name="racquetball" pos="0.0090678429473619 0.12223976068072318 -0.027565853975161494" mesh="racquetball_mesh" type="mesh" rgba="0.8 0.8 0.8 0.3" conaffinity="0" contype="0" mass="0.041" friction="0.95 0.3 0.1" group="1" condim="4"/>
       </body>
       <site rgba="1 0 0 1" size="0.005" pos="0 0 -0.027649999999999997" name="bottom_site"/>
       <site rgba="0 1 0 1" size="0.005" pos="0 0 0.027649999999999997" name="top_site"/>

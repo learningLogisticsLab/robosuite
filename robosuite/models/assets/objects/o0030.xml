@@ -8,7 +8,7 @@
     <body>
       <body name="object">
         <inertial pos="0.008445076147284661 -0.029092631283473027 0.005000385834128536" mass="0.001" fullinertia="8.208165528866138e-08 8.190889709718924e-08 5.818794340795607e-10 1.8772975746620642e-23 -1.2751587465994122e-24 2.7523177094884886e-26"/>
-        <geom name="knife" pos="0 0 0" mesh="knife_mesh" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" mass="0.001" friction="0.95 0.3 0.1"  material="knife" group="0" condim="4"/>
+        <geom name="knife" pos="0.019439151310524826 0.027920238863529782 -0.004499946524478532" mesh="knife_mesh" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" mass="0.001" friction="0.95 0.3 0.1"  material="knife" group="0" condim="4"/>
       </body>
       <site rgba="1 0 0 1" size="0.005" pos="0 0 -0.01" name="bottom_site"/>
       <site rgba="0 1 0 1" size="0.005" pos="0 0 0.01" name="top_site"/>

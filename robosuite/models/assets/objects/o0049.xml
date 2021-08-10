@@ -1,6 +1,6 @@
 <mujoco model="tennis_ball">
   <asset>
-    <mesh name="tennis_ball_mesh" file="./meshes/tennis_ball.msh" scale="0.6572965257477026 0.6572965257477026 0.6572965257477026"/>
+    <mesh name="tennis_ball_mesh" file="./meshes/tennis_ball.msh" scale="0.7240238197880329 0.7240238197880329 0.7240238197880329"/>
     <texture name="tex-tennis_ball" file="../textures/tennis_ball.png" type="2d"/>
     <material name="tennis_ball" reflectance="0.7" texrepeat="15 15" texture="tex-tennis_ball" texuniform="true"/>
   </asset>
@@ -8,12 +8,12 @@
     <body>
       <body name="object">
         <inertial pos="0.008233239762589124 -0.044192426304665286 0.03288662063700162" mass="0.058" fullinertia="6.980131429454366e-08 6.951004823297155e-08 6.942650877097581e-08 1.6995308950649315e-23 -6.770465303416367e-24 -1.2326749863795835e-24"/>
-        <geom name="tennis_ball" pos="0 0 0" mesh="tennis_ball_mesh" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" mass="0.058" friction="0.95 0.3 0.1"  material="tennis_ball" group="0" condim="4"/>
+        <geom name="tennis_ball" pos="-0.006015795608957429 0.032047000551241496 -0.023987995185307212" mesh="tennis_ball_mesh" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" mass="0.058" friction="0.95 0.3 0.1"  material="tennis_ball" group="0" condim="4"/>
       </body>
-      <site rgba="1 0 0 1" size="0.005" pos="0 0 -0.021263542607938182" name="bottom_site"/>
-      <site rgba="0 1 0 1" size="0.005" pos="0 0 0.021263542607938182" name="top_site"/>
-      <site rgba="0 0 1 1" size="0.005" pos="0.021263542607938182 0.021263542607938182 0" name="horizontal_radius_site"/>
-      <site rgba="0 0 0 1" size="0.005" pos="0 0 0.042527085215876365" name="vertical_radius_site"/>
+      <site rgba="1 0 0 1" size="0.005" pos="0 0 -0.023422170570142866" name="bottom_site"/>
+      <site rgba="0 1 0 1" size="0.005" pos="0 0 0.023422170570142866" name="top_site"/>
+      <site rgba="0 0 1 1" size="0.005" pos="0.023422170570142866 0.023422170570142866 0" name="horizontal_radius_site"/>
+      <site rgba="0 0 0 1" size="0.005" pos="0 0 0.04684434114028573" name="vertical_radius_site"/>
     </body>
   </worldbody>
 </mujoco>

@@ -5,7 +5,7 @@
   <worldbody>
     <body>
       <body name="object">
-        <geom name="spatula" pos="0 0 0" mesh="spatula_mesh" type="mesh" rgba="0.8 0.8 0.8 0.3" conaffinity="0" contype="0" mass="0.0515" friction="0.95 0.3 0.1" group="1" condim="4"/>
+        <geom name="spatula" pos="0.029719503252586293 0.08459763234946586 -0.015929641902500975" mesh="spatula_mesh" type="mesh" rgba="0.8 0.8 0.8 0.3" conaffinity="0" contype="0" mass="0.0515" friction="0.95 0.3 0.1" group="1" condim="4"/>
       </body>
       <site rgba="1 0 0 1" size="0.005" pos="0 0 -0.0175" name="bottom_site"/>
       <site rgba="0 1 0 1" size="0.005" pos="0 0 0.0175" name="top_site"/>

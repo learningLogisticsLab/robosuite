@@ -8,7 +8,7 @@
     <body>
       <body name="object">
         <inertial pos="-0.032840352216858736 -0.02635271439745596 0.03783085009135961" mass="0.37" fullinertia="4.287366513749583e-07 3.228086963634995e-07 2.4925393166117206e-07 -2.020309373055796e-23 -4.823406226388371e-24 -5.302497140952807e-25"/>
-        <geom name="potted_meat_can" pos="0 0 0" mesh="potted_meat_can_mesh" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" mass="0.37" friction="0.95 0.3 0.1"  material="potted_meat_can" group="0" condim="4"/>
+        <geom name="potted_meat_can" pos="0.03277451596771181 0.026538283209855247 -0.03858349999999999" mesh="potted_meat_can_mesh" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" mass="0.37" friction="0.95 0.3 0.1"  material="potted_meat_can" group="0" condim="4"/>
       </body>
       <site rgba="1 0 0 1" size="0.005" pos="0 0 -0.041" name="bottom_site"/>
       <site rgba="0 1 0 1" size="0.005" pos="0 0 0.041" name="top_site"/>

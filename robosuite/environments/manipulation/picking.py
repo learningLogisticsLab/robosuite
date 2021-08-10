@@ -1008,41 +1008,35 @@ class Picking(SingleArmEnv):
                         if HER:
                             # Rename goal object pos as eef pos, goal object quat
                             HER_pos = self._eef_xpos
-
                             HER_quat = obj_quat
                             print("Original object pos is {}".format(HER_pos))
                             print("Original obj_quat is {}".format(HER_quat))
+                            min_longitude = min(obj.x_radius * 2, obj.y_radius * 2, obj.vertical_radius)
 
                             # Gripping strategy if horizontal radius is the shorter side
-                            if min(obj.x_radius * 2, obj.horizontal_radius * 2, obj.vertical_radius) == (obj.horizontal_radius * 2) or \
-                                    min(obj.x_radius * 2, obj.horizontal_radius * 2, obj.vertical_radius) == (obj.x_radius * 2):
-
+                            if min_longitude == (obj.x_radius * 2) or min_longitude == (obj.y_radius * 2):
                                 # Check for offset
                                 if (obj.vertical_radius > offset):
-                                    HER_pos[2] -= (obj.vertical_radius - offset)
-
+                                    HER_pos[2] -= (obj.vertical_radius/2 - offset)
                                 # Rotate if current orientation is too long
                                 if(obj.x_radius * 2 >= longitude_max):
                                     # quat = (x,y,z,w)
                                     # rx 90 degrees
                                     HER_quat = [0.98, 0, 0, 0]
-                                # Otherwise keep current orientation
+                                # Otherwise revert back to obj default orientation
                                 else:
-                                    HER_quat = HER_quat
-
+                                    HER_quat = [0, 0, 0, 1]
                             # Gripping strategy if the vertical radius is the shorter side
                             else: # rz 90 degreez
                                 HER_quat = [0, 0, 0.7, -0.7]
                                 # Check for offset
-                                if(obj.horizontal_radius > offset):
-                                    HER_pos[2] -= (obj.horizontal_radius - offset)
-                                # Adjust obj position after rotation
-                                HER_pos[1] += obj.vertical_radius/2
+                                if(obj.y_radius > offset):
+                                    HER_pos[2] -= (obj.y_radius - offset)
 
                             # Update goal_object with (HER_pos, HER_quat) on the simulation
                             self.sim.data.set_joint_qpos(obj.joints[0], np.concatenate([np.array(HER_pos), np.array(HER_quat)]))
-                            print("Update HER pos for {} to {}".format(self.goal_object['name'], HER_pos))
-                            print("Update HER pose for {} to {}".format(self.goal_object['name'], HER_quat))
+                            # print("Update HER pos for {} to {}".format(self.goal_object['name'], HER_pos))
+                            # print("Update HER pose for {} to {}".format(self.goal_object['name'], HER_quat))
                         else:
                             self.sim.data.set_joint_qpos(obj.joints[0], np.concatenate([np.array(obj_pos), np.array(obj_quat)]))
                     else:
