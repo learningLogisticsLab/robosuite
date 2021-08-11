@@ -8,11 +8,11 @@
     <body>
       <body name="object">
         <inertial pos="-0.025996325377627645 -0.02214035959406331 0.012989508195911936" mass="0.171" fullinertia="1.3941298546481143e-07 7.961242909265219e-08 7.951765546408445e-08 1.7375619254255153e-23 7.058407175149014e-24 4.213046493605349e-24"/>
-        <geom name="tuna_fish_can" pos="0 0 0" mesh="tuna_fish_can_mesh" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" mass="0.171" friction="0.95 0.3 0.1"  material="tuna_fish_can" group="0" condim="4"/>
+        <geom name="tuna_fish_can" pos="0.026075314566610268 0.022134449077787686 -0.013552883038963653" mesh="tuna_fish_can_mesh" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" mass="0.171" friction="0.95 0.3 0.1"  material="tuna_fish_can" group="0" condim="4"/>
       </body>
       <site rgba="1 0 0 1" size="0.005" pos="0 0 -0.0165" name="bottom_site"/>
       <site rgba="0 1 0 1" size="0.005" pos="0 0 0.0165" name="top_site"/>
-      <site rgba="0 0 1 1" size="0.005" pos="0.026914604045431827 0.026914604045431827 0" name="horizontal_radius_site"/>
+      <site rgba="0 0 1 1" size="0.005" pos="0.0425 0.0425 0" name="horizontal_radius_site"/>
       <site rgba="0 0 0 1" size="0.005" pos="0 0 0.033" name="vertical_radius_site"/>
     </body>
   </worldbody>

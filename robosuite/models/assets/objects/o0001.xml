@@ -1,6 +1,6 @@
 <mujoco model="chips_can">
   <asset>
-    <mesh name="chips_can_mesh" file="./meshes/chips_can.msh" scale="0.6697173586381993 0.6697173586381993 0.6697173586381993"/>
+    <mesh name="chips_can_mesh" file="./meshes/chips_can.msh" scale="0.787199641759696 0.787199641759696 0.787199641759696"/>
     <texture name="tex-chips_can" file="../textures/chips_can.png" type="2d"/>
     <material name="chips_can" reflectance="0.7" texrepeat="15 15" texture="tex-chips_can" texuniform="true"/>
   </asset>
@@ -8,12 +8,12 @@
     <body>
       <body name="object">
         <inertial pos="-0.004935076789853457 0.012018813662666437 0.1233055043572925" mass="0.205" fullinertia="5.5349800451895955e-06 5.508049224129916e-06 7.848117618937134e-07 6.3834715122061815e-22 5.925324700153715e-22 1.0164283364776184e-21"/>
-        <geom name="chips_can" pos="0 0 0" mesh="chips_can_mesh" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" mass="0.205" friction="0.95 0.3 0.1"  material="chips_can" group="0" condim="4"/>
+        <geom name="chips_can" pos="0.004649815813501303 -0.010681516464678817 -0.09931185515697286" mesh="chips_can_mesh" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" mass="0.205" friction="0.95 0.3 0.1"  material="chips_can" group="0" condim="4"/>
       </body>
-      <site rgba="1 0 0 1" size="0.005" pos="0 0 -0.03425751104922592" name="bottom_site"/>
-      <site rgba="0 1 0 1" size="0.005" pos="0 0 0.03425751104922592" name="top_site"/>
-      <site rgba="0 0 1 1" size="0.005" pos="0.02820365494722387 0.02820365494722387 0" name="horizontal_radius_site"/>
-      <site rgba="0 0 0 1" size="0.005" pos="0 0 0.06851502209845184" name="vertical_radius_site"/>
+      <site rgba="1 0 0 1" size="0.005" pos="0 0 -0.098399955219962" name="bottom_site"/>
+      <site rgba="0 1 0 1" size="0.005" pos="0 0 0.098399955219962" name="top_site"/>
+      <site rgba="0 0 1 1" size="0.005" pos="0.0295199865659886 0.0295199865659886 0" name="horizontal_radius_site"/>
+      <site rgba="0 0 0 1" size="0.005" pos="0 0 0.196799910439924" name="vertical_radius_site"/>
     </body>
   </worldbody>
 </mujoco>

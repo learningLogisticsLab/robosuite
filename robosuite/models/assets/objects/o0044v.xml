@@ -5,11 +5,11 @@
   <worldbody>
     <body>
       <body name="object">
-        <geom name="large_clamp" pos="0 0 0" mesh="large_clamp_mesh" type="mesh" rgba="0.8 0.8 0.8 0.3" conaffinity="0" contype="0" mass="0.125" friction="0.95 0.3 0.1" group="1" condim="4"/>
+        <geom name="large_clamp" pos="0.005319259726841216 0.003962894205651669 -0.019233999999999998" mesh="large_clamp_mesh" type="mesh" rgba="0.8 0.8 0.8 0.3" conaffinity="0" contype="0" mass="0.125" friction="0.95 0.3 0.1" group="1" condim="4"/>
       </body>
       <site rgba="1 0 0 1" size="0.005" pos="0 0 -0.016" name="bottom_site"/>
       <site rgba="0 1 0 1" size="0.005" pos="0 0 0.016" name="top_site"/>
-      <site rgba="0 0 1 1" size="0.005" pos="0.03381211754780025 0.03381211754780025 0" name="horizontal_radius_site"/>
+      <site rgba="0 0 1 1" size="0.005" pos="0.0625 0.0825 0" name="horizontal_radius_site"/>
       <site rgba="0 0 0 1" size="0.005" pos="0 0 0.032" name="vertical_radius_site"/>
     </body>
   </worldbody>

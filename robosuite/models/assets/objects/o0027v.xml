@@ -5,11 +5,11 @@
   <worldbody>
     <body>
       <body name="object">
-        <geom name="plate" pos="0 0 0" mesh="plate_mesh" type="mesh" rgba="0.8 0.8 0.8 0.3" conaffinity="0" contype="0" mass="0.279" friction="0.95 0.3 0.1" group="1" condim="4"/>
+        <geom name="plate" pos="0.011356990553914426 -7.739882096667372e-06 -0.010252499999999996" mesh="plate_mesh" type="mesh" rgba="0.8 0.8 0.8 0.3" conaffinity="0" contype="0" mass="0.279" friction="0.95 0.3 0.1" group="1" condim="4"/>
       </body>
       <site rgba="1 0 0 1" size="0.005" pos="0 0 -0.012" name="bottom_site"/>
       <site rgba="0 1 0 1" size="0.005" pos="0 0 0.012" name="top_site"/>
-      <site rgba="0 0 1 1" size="0.005" pos="0.033347536401213386 0.033347536401213386 0" name="horizontal_radius_site"/>
+      <site rgba="0 0 1 1" size="0.005" pos="0.129 0.129 0" name="horizontal_radius_site"/>
       <site rgba="0 0 0 1" size="0.005" pos="0 0 0.024" name="vertical_radius_site"/>
     </body>
   </worldbody>

@@ -5,7 +5,7 @@
   <worldbody>
     <body>
       <body name="object">
-        <geom name="peach" pos="0 0 0" mesh="peach_mesh" type="mesh" rgba="0.8 0.8 0.8 0.3" conaffinity="0" contype="0" mass="0.033" friction="0.95 0.3 0.1" group="1" condim="4"/>
+        <geom name="peach" pos="0.014357986044289402 -0.0065703898793237825 -0.026340124918385294" mesh="peach_mesh" type="mesh" rgba="0.8 0.8 0.8 0.3" conaffinity="0" contype="0" mass="0.033" friction="0.95 0.3 0.1" group="1" condim="4"/>
       </body>
       <site rgba="1 0 0 1" size="0.005" pos="0 0 -0.0295" name="bottom_site"/>
       <site rgba="0 1 0 1" size="0.005" pos="0 0 0.0295" name="top_site"/>

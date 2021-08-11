@@ -1,6 +1,6 @@
 <mujoco model="baseball">
   <asset>
-    <mesh name="baseball_mesh" file="./meshes/baseball.msh" scale="0.8402802889235618 0.8402802889235618 0.8402802889235618"/>
+    <mesh name="baseball_mesh" file="./meshes/baseball.msh" scale="0.6415724933191497 0.6415724933191497 0.6415724933191497"/>
     <texture name="tex-baseball" file="../textures/baseball.png" type="2d"/>
     <material name="baseball" reflectance="0.7" texrepeat="15 15" texture="tex-baseball" texuniform="true"/>
   </asset>
@@ -8,12 +8,12 @@
     <body>
       <body name="object">
         <inertial pos="-0.009947985025210358 -0.04811623557140466 0.03592664752018525" mass="0.138" fullinertia="1.0826522744418533e-07 1.0766425403851136e-07 1.0729927220622785e-07 -4.198136603109624e-24 2.8724905993778676e-23 -3.349964655893214e-24"/>
-        <geom name="baseball" pos="0 0 0" mesh="baseball_mesh" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" mass="0.138" friction="0.95 0.3 0.1"  material="baseball" group="0" condim="4"/>
+        <geom name="baseball" pos="0.0065347215974585916 0.030632252881224818 -0.02317709805193185" mesh="baseball_mesh" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" mass="0.138" friction="0.95 0.3 0.1"  material="baseball" group="0" condim="4"/>
       </body>
-      <site rgba="1 0 0 1" size="0.005" pos="0 0 -0.020266369230269678" name="bottom_site"/>
-      <site rgba="0 1 0 1" size="0.005" pos="0 0 0.020266369230269678" name="top_site"/>
-      <site rgba="0 0 1 1" size="0.005" pos="0.03394246169515299 0.03394246169515299 0" name="horizontal_radius_site"/>
-      <site rgba="0 0 0 1" size="0.005" pos="0 0 0.040532738460539355" name="vertical_radius_site"/>
+      <site rgba="1 0 0 1" size="0.005" pos="0 0 -0.025662899732765986" name="bottom_site"/>
+      <site rgba="0 1 0 1" size="0.005" pos="0 0 0.025662899732765986" name="top_site"/>
+      <site rgba="0 0 1 1" size="0.005" pos="0.025662899732765986 0.025662899732765986 0" name="horizontal_radius_site"/>
+      <site rgba="0 0 0 1" size="0.005" pos="0 0 0.05132579946553197" name="vertical_radius_site"/>
     </body>
   </worldbody>
 </mujoco>
