@@ -1620,8 +1620,8 @@ class Picking(SingleArmEnv):
             # TODO: is this necessary if we have the NormalizedBoxEnv in robosuite: 
             # 02. Set (clipped) action in mujoco
             action = np.clip(action, 
-                             self.action_space.low, 
-                             self.action_space.high)
+                             self.action_spec[0],
+                             self.action_spec[1])
             
         
             # 03 Copy action to sim.data.ctrl (no mocaps)
