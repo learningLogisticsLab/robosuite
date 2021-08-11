@@ -980,6 +980,13 @@ class Picking(SingleArmEnv):
                 #             self._update_observables()
                 #     print(f"Updated eef_xpos: {self._eef_xpos}")
 
+                # Available "joint" names = ('robot0_joint1', 'robot0_joint2', 'robot0_joint3',
+                # 'robot0_joint4', 'robot0_joint5', 'robot0_joint6', 'robot0_joint7',
+                # 'gripper0_finger_joint1', 'gripper0_finger_joint2'
+                # left & right finger
+                # self.sim.data.set_joint_qpos('gripper0_finger_joint1', 0.04)
+                # self.sim.data.set_joint_qpos('gripper0_finger_joint2', -0.04)
+
                 for obj_pos, obj_quat, obj in self.object_placements.values():
                     # Set HER 50% of the time
                     HER = np.random.uniform() < 0.50
@@ -1023,15 +1030,24 @@ class Picking(SingleArmEnv):
                                     # quat = (x,y,z,w)
                                     # rx 90 degrees
                                     HER_quat = [0.98, 0, 0, 0]
+                                    # Set left & right fingers to reach the goal obj
+                                    self.sim.data.set_joint_qpos('gripper0_finger_joint1', obj.y_radius)
+                                    self.sim.data.set_joint_qpos('gripper0_finger_joint2', -obj.y_radius)
                                 # Otherwise revert back to obj default orientation
                                 else:
                                     HER_quat = [0, 0, 0, 1]
+                                    # Set left & right fingers to reach the goal obj
+                                    self.sim.data.set_joint_qpos('gripper0_finger_joint1', obj.x_radius)
+                                    self.sim.data.set_joint_qpos('gripper0_finger_joint2', -obj.x_radius)
                             # Gripping strategy if the vertical radius is the shorter side
                             else: # rz 90 degreez
                                 HER_quat = [0, 0, 0.7, -0.7]
                                 # Check for offset
                                 if(obj.y_radius > offset):
                                     HER_pos[2] -= (obj.y_radius - offset)
+                                # Set left & right fingers to reach the goal obj
+                                self.sim.data.set_joint_qpos('gripper0_finger_joint1', obj.vertical_radius/2)
+                                self.sim.data.set_joint_qpos('gripper0_finger_joint2', -obj.vertical_radius/2)
 
                             # Update goal_object with (HER_pos, HER_quat) on the simulation
                             self.sim.data.set_joint_qpos(obj.joints[0], np.concatenate([np.array(HER_pos), np.array(HER_quat)]))
