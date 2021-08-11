@@ -12,7 +12,20 @@ REGISTERED_ENVS = {}
 
 
 def register_env(target_class):
-    REGISTERED_ENVS[target_class.__name__] = target_class
+
+    # Is there a better way to register these variable environments? 
+    # if target_class.__name__ == 'Picking':
+    #     for num_blocks in range(1, 25): # use of num_blocks indicates objects. kept for historical reasons.
+    #         for num_relational_blocks in [3]: # currently only testin with 3 relational blocks (message passing)
+    #             for num_query_heads in [1]: # number of query heads (multi-head attention) currently fixed at 1
+    #                 for reward_type in ['incremental','sparse']: #could add sparse
+    #                     for obs_type in ['dictstate','dictimage','np']: #['dictimage', 'np', 'dictstate']:
+
+    #                         # Generate the class name 
+    #                         className = F"picking_blocks{num_blocks}_numrelblocks{num_relational_blocks}_nqh{num_query_heads}_reward{reward_type}_{obs_type}Obs"
+    #                         REGISTERED_ENVS[className] = target_class
+    # else:
+        REGISTERED_ENVS[target_class.__name__] = target_class
 
 
 def make(env_name, *args, **kwargs):
@@ -38,18 +51,24 @@ def make(env_name, *args, **kwargs):
                 env_name, ", ".join(REGISTERED_ENVS)
             )
         )
+
+    # Return class objected encoded by the class name:
     return REGISTERED_ENVS[env_name](*args, **kwargs) # calls registered class constructor
 
 
 class EnvMeta(type):
-    """Metaclass for registering environments"""
+    """
+    Metaclass: allows the customization to create type's. In our case, we will assign env names with our class types. For registering environments. See more: https://realpython.com/python-metaclasses/
+    - __new__ method is customized: adds _unregistered_envs and calls global registered_env to add to global dict REGISTERED_ENVS with new name/class type.
+    """
 
     def __new__(meta, name, bases, class_dict):
-        cls = super().__new__(meta, name, bases, class_dict)    # Insantiate new class
+        cls = super().__new__(meta, name, bases, class_dict)    # Same as default new method. 
 
         # List all environments that should not be registered here.
         _unregistered_envs = ["MujocoEnv", "RobotEnv", "ManipulationEnv", "SingleArmEnv", "TwoArmEnv"]
 
+        # For new classes that are not part of core classes in robosuite, add them to the REGISTERED_ENVS dictionary with the class's name as key and class instance as value
         if cls.__name__ not in _unregistered_envs:
             register_env(cls)                                   # Register the new class
         return cls

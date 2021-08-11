@@ -6,11 +6,12 @@ import numpy as np
 from collections import OrderedDict
 
 # Utilities
+import robosuite as suite
 import robosuite.utils.transform_utils as T
 from robosuite.utils.placement_samplers import SequentialCompositeSampler, UniformRandomSampler, robotUniformRandomSampler, UniformWallSampler
 
 # 01 Objects
-# Import desired|all objects (and visual objects)
+# Import desired|all objects (and visual objects). Use * to import large number of objects. 
 from robosuite.models.objects import * 
 
 # After importing we can extract objects by getting the modules via dir()
@@ -196,7 +197,6 @@ class Picking(SingleArmEnv):
 
             :Note: Specifying "default" will automatically use the default noise settings.
                 Specifying None will automatically create the required dict with "magnitude" set to 0.0.
-    
 
     Raises:
         AssertionError: [Invalid object type specified]
@@ -1603,24 +1603,56 @@ class Picking(SingleArmEnv):
         # 08 Process Reward
         reward = self.compute_reward(env_obs['achieved_goal'], env_obs['desired_goal'], info)
 
-        return env_obs, reward, done, info        
+        return env_obs, reward, done, info       
+
+    def __reduce__(self):
+        
+    # #     # Return the object’s local name relative to its module; 
+    # #     #return "picking_blocks1_numrelblocks3_nqh1_rewardsparse_dictstateObs" #self.__module__
+        return 'Picking'
+    
+    def __getnewargs_ex__(self):
+        '''
+        The arguments needed to pass in are those used in base.py to create the new meta classes, i.e.
+        def __new__(meta, name, bases, class_dict):
+
+        Where, 
+        - meta is the MujocoEnv class isntance
+        - name is the name of the class, i.e. Picking
+        - bases is a tuple with the <class 'robosuite.environments.manipulation.single_arm_env.SingleArmEnv'>
+        - classes_dict is a dict with all the class method names and associated method objects
+        '''
+        args = tuple()
+        meta, name, bases = None, None, None
+        
+        kwargs = {}
+        kwargs['meta']  = self
+        kwargs['name']  = suite.environments.base.EnvMeta
+        kwargs['bases'] = (suite.environments.manipulation.single_arm_env.SingleArmEnv,) #(<class 'robosuite.environments.manipulation.single_arm_env.SingleArmEnv'>,)
+        kwargs          = self.__dict__
+        return (args,kwargs)
 #-------------------------------------------------------------
 # Define new permutation of classes to register based on picking for relationalRL code
+# *This was my original sol. in following rlkit-relational FetchBlockConstruction. However it breaks, pickle.dumps/loads used in relationalRL. 
+# *Moved this to the base.py:MakeEnv and then added a __reduce__ method below to solve a __reduce__ related error, but could not. 
+#  For these reasons, currently giving up on registerin different classes. Will just go with 1 class Picking.
 #-------------------------------------------------------------
-for num_blocks in range(1, 25): # use of num_blocks indicates objects. kept for historical reasons.
-    for num_relational_blocks in [3]: # currently only testin with 3 relational blocks (message passing)
-        for num_query_heads in [1]: # number of query heads (multi-head attention) currently fixed at 1
-            for reward_type in ['incremental','sparse']: #could add sparse
-                for obs_type in ['dictstate','dictimage','np']: #['dictimage', 'np', 'dictstate']:
 
-                    # Generate the class name 
-                    className = F"picking_blocks{num_blocks}_numrelblocks{num_relational_blocks}_nqh{num_query_heads}_reward{reward_type}_{obs_type}Obs"
+#-------------------------------------------------------------    
+# for num_blocks in range(1, 25): # use of num_blocks indicates objects. kept for historical reasons.
+#     for num_relational_blocks in [3]: # currently only testin with 3 relational blocks (message passing)
+#         for num_query_heads in [1]: # number of query heads (multi-head attention) currently fixed at 1
+#             for reward_type in ['incremental','sparse']: #could add sparse
+#                 for obs_type in ['dictstate','dictimage','np']: #['dictimage', 'np', 'dictstate']:
 
-                    # Add necessary attributes
+#                     # Generate the class name 
+#                     className = F"picking_blocks{num_blocks}_numrelblocks{num_relational_blocks}_nqh{num_query_heads}_reward{reward_type}_{obs_type}Obs"
 
-                    # Generate the class type using type and set parent class to Picking
-                    pickingReNN = type(className, (Picking,), {}) # args: (i) class name, (ii) tuple of base class, (iii) dictionary of attributes
+#                     # Add necessary attributes
 
-                    # Customize the class name
-                    globals()[className] = pickingReNN
+#                     # Generate the class type using type and set parent class to Picking
+#                     pickingReNN = type(className, (Picking,), {}) # args: (i) class name, (ii) tuple of base class, (iii) dictionary of attributes
+
+#                     # Customize the class name
+#                     globals()[className] = pickingReNN
 
