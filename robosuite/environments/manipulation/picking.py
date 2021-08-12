@@ -59,6 +59,7 @@ import mujoco_py
 
 # Globals
 object_reset_strategy_cases = ['organized', 'jumbled', 'wall', 'random']
+_reset_internal_has_been_run = False
 
 
 class Picking(SingleArmEnv):
@@ -904,6 +905,11 @@ class Picking(SingleArmEnv):
         # TODO: need to decide when the locations of objects should be updated. if arm does not finish picking everything, do we want to move things around?
         The goal object should also not be changed for this time. Should this only happen in a hard reset?
         """
+        global _reset_internal_has_been_run
+
+        if _reset_internal_has_been_run:
+            return
+
         super()._reset_internal()
 
         # Reset all object positions using initializer sampler if we're not directly loading from an xml
@@ -1146,7 +1152,10 @@ class Picking(SingleArmEnv):
                 # Set the bins to the desired position
                 self.sim.model.body_pos[self.sim.model.body_name2id("bin1")] = self.bin1_pos
                 self.sim.model.body_pos[self.sim.model.body_name2id("bin2")] = self.bin2_pos
-        
+
+                # flag to run _reset_internal for the very first time only
+                _reset_internal_has_been_run = True
+
         return True
 
     def return_sorted_objs_to_model(self,obs):
@@ -1215,7 +1224,8 @@ class Picking(SingleArmEnv):
 
         TODO: consider modifing the definition of is_success according to QT-OPTs criteria to increase reactivity
         requires reaching a certain height... see paper for more. also connected with one parameter in observations.
-        """        
+        """
+        global _reset_internal_has_been_run
         
         # Subtract obj_pos from goal and compute that error's norm:
         target_dist_error = np.linalg.norm(achieved_goal - desdired_goal)
@@ -1229,7 +1239,9 @@ class Picking(SingleArmEnv):
             print(f"Successful placement. New object goal is {self.goal_object['name']}") 
 
             # Add the current goal object to the list ob objects in target bins
-            self.objects_in_target_bin.append(self.goal_object['name'])            
+            self.objects_in_target_bin.append(self.goal_object['name'])
+
+        _reset_internal_has_been_run = False
 
     def check_success(self):
         """
