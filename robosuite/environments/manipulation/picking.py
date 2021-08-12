@@ -1243,8 +1243,11 @@ class Picking(SingleArmEnv):
             self.objects_in_target_bin.append(self.goal_object['name'])
 
             return True
-        else:
+        elif len(self.object_names) == 0 and len(self.objects_in_target_bin) == self.num_objs_to_load:
             _reset_internal_has_been_run = False
+            print("Finished picking and placing all objects")
+            return True
+        else:
             return False
 
     def check_success(self):
