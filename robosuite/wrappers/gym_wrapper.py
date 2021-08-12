@@ -25,7 +25,7 @@ class GymWrapper(Wrapper, Env):
         AssertionError: [Object observations must be enabled if no keys]
     """
 
-    def __init__(self, env, keys=None):
+    def __init__(self, env, rlkit_relational=True, keys=None):
         # Run super method
         super().__init__(env=env)
         # Create name for gym
@@ -53,9 +53,9 @@ class GymWrapper(Wrapper, Env):
         self.metadata = None
 
         # HACK: forcing rlkit_relational settings
-        rlkit_relational = True
+        self.rlkit_relational = rlkit_relational
 
-        if not rlkit_relational:
+        if not self.rlkit_relational:
             # set up observation and action spaces
             obs                 = self.env.reset()                              # dictionary of observables
             self.modality_dims  = {key: obs[key].shape for key in self.keys}
@@ -67,7 +67,7 @@ class GymWrapper(Wrapper, Env):
             low, high           = self.env.action_spec
             self.action_space   = spaces.Box(low=low, high=high)
 
-        if rlkit_relational:
+        if self.rlkit_relational:
             # set up observation and action spaces
             obs                 = self.env.reset()                              # dictionary of observables
             self.modality_dims  = {key: obs[key].shape for key in self.keys}
@@ -120,7 +120,10 @@ class GymWrapper(Wrapper, Env):
             np.array: Flattened environment observation space after reset occurs
         """
         ob_dict = self.env.reset()
-        return self._flatten_obs(ob_dict)
+        if self.rlkit_relational:
+            return ob_dict
+        else:
+            return self._flatten_obs(ob_dict)
 
     def step(self, action):
         """
@@ -138,7 +141,11 @@ class GymWrapper(Wrapper, Env):
                 - (dict) misc information
         """
         ob_dict, reward, done, info = self.env.step(action)
-        return self._flatten_obs(ob_dict), reward, done, info
+
+        if self.rlkit_relational:
+            return ob_dict, reward, done, info
+        else:
+            return self._flatten_obs(ob_dict), reward, done, info
 
     def seed(self, seed=None):
         """
