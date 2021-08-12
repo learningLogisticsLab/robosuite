@@ -383,10 +383,11 @@ class Picking(SingleArmEnv):
 
         Assumes that (visual) object placements from _reset_internal() are available: 
         self.object_placements = self.placement_initializer.sample()
+
+        If objects are unavailable, return none
         
         Could make more sophisticated in the future
         '''
-
         assert self.num_objs_to_load >= 0, "There are no objects to load!! Success."
 
         # Select a goal obj
@@ -1230,7 +1231,7 @@ class Picking(SingleArmEnv):
         # Subtract obj_pos from goal and compute that error's norm:
         target_dist_error = np.linalg.norm(achieved_goal - desdired_goal)
 
-        if target_dist_error <= self.goal_pos_error_thresh and self.object_names!=0:
+        if target_dist_error <= self.goal_pos_error_thresh and len(self.object_names) != 0:
             # After successfully placing self.goal_object, remove this from the list of considered names for the next round
             self.object_names.remove(self.goal_object['name'])
 
@@ -1241,7 +1242,10 @@ class Picking(SingleArmEnv):
             # Add the current goal object to the list ob objects in target bins
             self.objects_in_target_bin.append(self.goal_object['name'])
 
-        _reset_internal_has_been_run = False
+            return True
+        else:
+            _reset_internal_has_been_run = False
+            return False
 
     def check_success(self):
         """
