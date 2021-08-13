@@ -63,6 +63,7 @@ from gym import spaces
 
 # Globals
 object_reset_strategy_cases = ['organized', 'jumbled', 'wall', 'random']
+_reset_internal_has_been_run = False
 
 
 class Picking(SingleArmEnv):
@@ -385,10 +386,11 @@ class Picking(SingleArmEnv):
 
         Assumes that (visual) object placements from reset_sim() are available: 
         self.object_placements = self.placement_initializer.sample()
+
+        If objects are unavailable, return none
         
         Could make more sophisticated in the future
         '''
-
         assert self.num_objs_to_load >= 0, "There are no objects to load!! Success."
 
         # Select a goal obj
@@ -907,6 +909,11 @@ class Picking(SingleArmEnv):
         # TODO: need to decide when the locations of objects should be updated. if arm does not finish picking everything, do we want to move things around?
         The goal object should also not be changed for this time. Should this only happen in a hard reset?
         """
+        global _reset_internal_has_been_run
+
+        if _reset_internal_has_been_run:
+            return
+
         super()._reset_internal()
 
         # Reset all object positions using initializer sampler if we're not directly loading from an xml
@@ -1149,7 +1156,10 @@ class Picking(SingleArmEnv):
                 # Set the bins to the desired position
                 self.sim.model.body_pos[self.sim.model.body_name2id("bin1")] = self.bin1_pos
                 self.sim.model.body_pos[self.sim.model.body_name2id("bin2")] = self.bin2_pos
-        
+
+                # flag to run _reset_internal for the very first time only
+                _reset_internal_has_been_run = True
+
         return True
 
     def return_sorted_objs_to_model(self,obs):
@@ -1219,12 +1229,13 @@ class Picking(SingleArmEnv):
 
         TODO: consider modifing the definition of is_success according to QT-OPTs criteria to increase reactivity
         requires reaching a certain height... see paper for more. also connected with one parameter in observations.
-        """        
+        """
+        global _reset_internal_has_been_run
         
         # Subtract obj_pos from goal and compute that error's norm:
         target_dist_error = np.linalg.norm(achieved_goal - desdired_goal)
 
-        if target_dist_error <= self.goal_pos_error_thresh and self.object_names!=0:
+        if target_dist_error <= self.goal_pos_error_thresh and len(self.object_names) != 0:
             # After successfully placing self.goal_object, remove this from the list of considered names for the next round
             self.object_names.remove(self.goal_object['name'])
 
@@ -1236,7 +1247,15 @@ class Picking(SingleArmEnv):
             print(f"Successful placement. New object goal is {self.goal_object['name']}") 
 
             # Add the current goal object to the list ob objects in target bins
-            self.objects_in_target_bin.append(self.goal_object['name'])            
+            self.objects_in_target_bin.append(self.goal_object['name'])
+
+            return True
+        elif len(self.object_names) == 0 and len(self.objects_in_target_bin) == self.num_objs_to_load:
+            _reset_internal_has_been_run = False
+            print("Finished picking and placing all objects")
+            return True
+        else:
+            return False
 
     def check_success(self):
         """
