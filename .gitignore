@@ -111,4 +111,4 @@ mjkey.txt
 *.jpg
 .idea
 
-.pytest_cache/
+.pytest_cache/.DS_Store
