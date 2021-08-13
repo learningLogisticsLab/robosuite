@@ -2,6 +2,8 @@
 import sys
 import random
 import os.path
+
+import math
 import numpy as np
 from collections import OrderedDict
 
@@ -949,31 +951,120 @@ class Picking(SingleArmEnv):
                 # Set goal object to pick up and sort closest objects to model
                 self.goal_object, self.other_objs_than_goals = self.get_goal_object()
 
-                # Loop through all (visual) objects and (re) set their placement positions
+                #eef_pos = self._eef_xpos
+                #print("Testing {}".format(self._observables))
+                # # Move eef
+                # if hasattr(self, 'robot_placement_initializer'):
+                #     robot_placements = self.robot_placement_initializer.sample()
+                #     # 2. set pose of robot. (data.ctrl is for joint angles not pose).
+                #     for robot in robot_placements.keys():
+                #         if self.sim.data.ctrl is not None:
+                #             print(f"Starting eef_xpos: {self._eef_xpos}. \nDesired xpos {robot_placements[robot][0][:3]}")
+                #             self.sim.data.site_xpos[self.robots[0].eef_site_id] = robot_placements[robot][0][:3]
+                #             #self.sim.data_site_
+                #             self.sim.data.site_xpos[2] = robot_placements[robot][0][:3]
+                #             self.sim.data.site_xpos[3] = robot_placements[robot][0][1]
+                #             self.sim.data.site_xpos[4] = robot_placements[robot][0][2]
+                #
+                #             self.sim.data.set_joint_qpos('robot0_joint1', robot_placements[robot][0][0])
+                #             self.sim.data.set_joint_qpos('robot0_joint2', robot_placements[robot][0][1])
+                #             self.sim.data.set_joint_qpos('robot0_joint3', robot_placements[robot][0][2])
+                #             self.sim.data.set_joint_qpos('robot0_joint4', robot_placements[robot][1][0])
+                #             self.sim.data.set_joint_qpos('robot0_joint5', robot_placements[robot][1][1])
+                #             self.sim.data.set_joint_qpos('robot0_joint6', robot_placements[robot][1][2])
+                #             self.sim.data.set_joint_qpos('robot0_joint7', robot_placements[robot][1][3])
+                #
+                #             self.sim.data.ctrl[:3]  =  np.asarray(robot_placements[robot][0])   # pos
+                #             self.sim.data.ctrl[3:7] =  np.asarray(robot_placements[robot][1])   # quat
+                #             self.sim.data.ctrl[7:9] =  np.array([0,0])                          # two fingers
+                #
+                #         for i in range(10):
+                #             self.sim.step()
+                #             self._update_observables()
+                #     print(f"Updated eef_xpos: {self._eef_xpos}")
+
+                # Available "joint" names = ('robot0_joint1', 'robot0_joint2', 'robot0_joint3',
+                # 'robot0_joint4', 'robot0_joint5', 'robot0_joint6', 'robot0_joint7',
+                # 'gripper0_finger_joint1', 'gripper0_finger_joint2'
+                # left & right finger
+                # self.sim.data.set_joint_qpos('gripper0_finger_joint1', 0.04)
+                # self.sim.data.set_joint_qpos('gripper0_finger_joint2', -0.04)
+
                 for obj_pos, obj_quat, obj in self.object_placements.values():
+                    # Set HER 50% of the time
+                    HER = np.random.uniform() < 0.50
+                    # introduce offset between grip site and gripper mount to prevent collision
+                    offset = 0.03
+                    # maximum gripping space
+                    longitude_max = 0.07
+                    # HER flag for activating HER 100% all the time
+                    HER = True
 
                     # Set the visual object body locations
-                    if "v" in obj.name.lower():                             # switched "visual" for "v"
+                    if "visualobject" in obj.name.lower():                             # switched "visual" for "v"
                         self.sim.model.body_pos[self.obj_body_id[obj.name]]  = obj_pos
                         self.sim.model.body_quat[self.obj_body_id[obj.name]] = obj_quat
-
                         ## Addition ---
                         # self.object_placements is a place holder for all objects. However:
                         # Under HER paradigm, we have a self.goal variable for the desired goal +
                         # Under our current architecture we set self.goal_object as a single goal until that object is placed. 
                         # Use this to fill self.goal which will be used in _get_obs to set the desired_goal.
-                        if obj.name.lower() == self.goal_object['name'] + 'v':
-                            self.goal_object['pos']  = obj_pos
-                            self.goal_object['quat'] = obj_quat                        
+                        if obj.name.lower() == self.goal_object['name'][:5] + 'visualobject':
+                                self.goal_object['pos'] = obj_pos
+                                self.goal_object['quat'] = obj_quat
 
                     # Set the position of 'collision' objects:
-                    else:                        
-                        self.sim.data.set_joint_qpos(obj.joints[0], np.concatenate([np.array(obj_pos), np.array(obj_quat)]))                                         
+                    elif obj.name.lower() == self.goal_object['name'].lower():
+                        if HER:
+                            # Rename goal object pos as eef pos, goal object quat
+                            HER_pos = self._eef_xpos
+                            HER_quat = obj_quat
+                            print("Original object pos is {}".format(HER_pos))
+                            print("Original obj_quat is {}".format(HER_quat))
+                            min_longitude = min(obj.x_radius * 2, obj.y_radius * 2, obj.vertical_radius)
+
+                            # Gripping strategy if horizontal radius is the shorter side
+                            if min_longitude == (obj.x_radius * 2) or min_longitude == (obj.y_radius * 2):
+                                # Check for offset
+                                if (obj.vertical_radius > offset):
+                                    HER_pos[2] -= (obj.vertical_radius/2 - offset)
+                                # Rotate if current orientation is too long
+                                if(obj.x_radius * 2 >= longitude_max):
+                                    # quat = (x,y,z,w)
+                                    # rx 90 degrees
+                                    HER_quat = [0.98, 0, 0, 0]
+                                    # Set left & right fingers to reach the goal obj
+                                    self.sim.data.set_joint_qpos('gripper0_finger_joint1', obj.y_radius)
+                                    self.sim.data.set_joint_qpos('gripper0_finger_joint2', -obj.y_radius)
+                                # Otherwise revert back to obj default orientation
+                                else:
+                                    HER_quat = [0, 0, 0, 1]
+                                    # Set left & right fingers to reach the goal obj
+                                    self.sim.data.set_joint_qpos('gripper0_finger_joint1', obj.x_radius)
+                                    self.sim.data.set_joint_qpos('gripper0_finger_joint2', -obj.x_radius)
+                            # Gripping strategy if the vertical radius is the shorter side
+                            else: # rz 90 degreez
+                                HER_quat = [0, 0, 0.7, -0.7]
+                                # Check for offset
+                                if(obj.y_radius > offset):
+                                    HER_pos[2] -= (obj.y_radius - offset)
+                                # Set left & right fingers to reach the goal obj
+                                self.sim.data.set_joint_qpos('gripper0_finger_joint1', obj.vertical_radius/2)
+                                self.sim.data.set_joint_qpos('gripper0_finger_joint2', -obj.vertical_radius/2)
+
+                            # Update goal_object with (HER_pos, HER_quat) on the simulation
+                            self.sim.data.set_joint_qpos(obj.joints[0], np.concatenate([np.array(HER_pos), np.array(HER_quat)]))
+                            # print("Update HER pos for {} to {}".format(self.goal_object['name'], HER_pos))
+                            # print("Update HER pose for {} to {}".format(self.goal_object['name'], HER_quat))
+                        else:
+                            self.sim.data.set_joint_qpos(obj.joints[0], np.concatenate([np.array(obj_pos), np.array(obj_quat)]))
+                    else:
+                        self.sim.data.set_joint_qpos(obj.joints[0], np.concatenate([np.array(obj_pos), np.array(obj_quat)]))
 
                 # Set the bins to the desired position
                 self.sim.model.body_pos[self.sim.model.body_name2id("bin1")] = self.bin1_pos
                 self.sim.model.body_pos[self.sim.model.body_name2id("bin2")] = self.bin2_pos
-           
+
             # Robot EEF: TODO not sure this is the right way to move the end-effector. Needs follow-up study.
             # 1. Call robot placement_initializer to sample eef poses above bin1. Ret's dict of robots with (pos,quat,obj)
             #----------------------
@@ -1356,7 +1447,7 @@ class Picking(SingleArmEnv):
         #--------------------------------------------------------------------------
         # 01a) EEF: pos and vel 
         #--------------------------------------------------------------------------
-        grip_pos  = obs[f'{pf}eef_pos']         
+        grip_pos  = obs[f'{pf}eef_pos']
         grip_quat = obs[f'{pf}eef_quat']        
 
         grip_velp = obs[f'{pf}eef_velp'] * dt   
