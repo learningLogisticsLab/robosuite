@@ -1316,24 +1316,28 @@ class Picking(SingleArmEnv):
 
         Method executes the following:
         1. Compute observations as np arrays [grip_xyz, f1x, f2x, grip_vxyz, f1v, f2v, obj1_pos, rel_pos_wrt_gripp_obj, obj1_theta, obj1_vxyz, obj1_dtheta obj2... ]
-        2. Achieved goal: [obj1_pos obj2_pos ... objn_pos grip_xyz]
-        3. Desired goal: goal obtained in ._sample_goal()
+        2. Achieved goal: [goal_obj.pos]                        # First iteration, testing placing only with pos and w/out orientation.
+        3. Desired goal: goal pos obtained in ._sample_goal()   # same as achieved_goal 
 
-        Achieved Goal
-        if it has the object, use robotic gripper. otherwise use the object position.     
+        Notes: 
 
-        Note:
+        Observable Modalities:
         Currently we do not consider the observable's modalities in this function. 
         The GymWrapper uses them in its constructor... So far I don't think it will be a problem but need to check. 
         
-        ## TODO: currently we are collecting quaternions in our robot and object observations as well as for achieved goals and desired goal. 
-        However, for actions, we are using the robosuite Operational Space Controller (OSC) that requests 
-        xyz rpy updates for the robot. 
+        Orientations:
+        For combined pick and place, we will collect quaternions in the robot and object observations to help with pick. 
+        However, we will not include the quat's for achieved/desired goals used in placement for now. Important to keep correct dims into account in relationalRL/graph code.
         
-        Under this format, the NN will need to learn pos+quat observations to xyzrpy actions... Will attempt this format first. If not, may change to represent observations as rpy too.
-        ...It seems that observations should match action space to facilitate the learning of the network, 
-        otherwise it needs to learn that mapping as well... but working with Euler angles is prone to singularities when pitch=90 deg
-
+        
+        Impact on Actions:
+        Action dims are set by the controller used (i.e. robosuite's Operational Space Controller (OSC)).
+        OSC uses xyz rpy updates for the robot. 
+        
+        Consideration: will the use of quat's in observations and rpy in actions make learning more difficult for the NN?
+        TODO: may need to test performance between in-quat + out-rpy and in-rpy + out-rpy or in-quat + out-quat.
+        
+        Additional Observations:
         ## TODO: Additional observations
             # (1) End-effector type: use robosuites list to provide an appropriate number to these
             # (2) QT-OPTs DONE parameter for reactivity.
@@ -1415,9 +1419,9 @@ class Picking(SingleArmEnv):
                 #--------------------------------------------------------------------------
                 # TODO: double check if this works effectively for our context + HER. Otherwise can add objects and grip pose.
                 #--------------------------------------------------------------------------                                 
-                 achieved_goal = np.concatenate([    # 7 * num objects                
-                    object_i_pos.copy(),    # 3 * num_objects
-                    object_i_quat.copy(),   # 4 * num_objects
+                 achieved_goal = np.concatenate([    # 3          # 7                
+                    object_i_pos.copy(),    # 3      # Try pos only first.           
+                    # object_i_quat.copy(), # 4
                 ])
 
             else:
@@ -1456,9 +1460,9 @@ class Picking(SingleArmEnv):
         # 03 Desired Goal
         #--------------------------------------------------------------------------
         desired_goal = []
-        desired_goal = np.concatenate([ # 7
-            self.goal_object['pos'],    # 3
-            self.goal_object['quat']    # 4
+        desired_goal = np.concatenate([ # 3             # 7
+            self.goal_object['pos'],    # 3             # Try pos only first.
+            # self.goal_object['quat']    # 4
         ])
         
         # Returns obs, ag, and also dg
