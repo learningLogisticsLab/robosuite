@@ -1,16 +1,16 @@
 <mujoco model="h_cupsv">
   <asset>
-    <mesh name="h_cups_mesh" file="./meshes/untextured_h_cups.stl" scale="0.6833010416001631 0.6833010416001631 0.6833010416001631"/>
+    <mesh name="h_cups_mesh" file="./meshes/untextured_h_cups.stl" scale="0.559720329117873 0.559720329117873 0.559720329117873"/>
   </asset>
   <worldbody>
     <body>
       <body name="object">
-        <geom name="h_cups" pos="-0.0023010284499981183 -0.009650414247263981 -0.025227132805357225" mesh="h_cups_mesh" type="mesh" rgba="0.8 0.8 0.8 0.3" conaffinity="0" contype="0" mass="0.031" friction="0.95 0.3 0.1" group="1" condim="4"/>
+        <geom name="h_cups" pos="-0.0018848681956146873 -0.007905056058385374 -0.02066459469086731" mesh="h_cups_mesh" type="mesh" rgba="0.8 0.8 0.8 0.3" conaffinity="0" contype="0" mass="0.031" friction="0.95 0.3 0.1" group="1" condim="4"/>
       </body>
-      <site rgba="1 0 0 1" size="0.005" pos="0 0 -0.025282138539206037" name="bottom_site"/>
-      <site rgba="0 1 0 1" size="0.005" pos="0 0 0.025282138539206037" name="top_site"/>
-      <site rgba="0 0 1 1" size="0.005" pos="0.03074854687200734 0.03074854687200734 0" name="horizontal_radius_site"/>
-      <site rgba="0 0 0 1" size="0.005" pos="0 0 0.05056427707841207" name="vertical_radius_site"/>
+      <site rgba="1 0 0 1" size="0.005" pos="0 0 -0.020709652177361298" name="bottom_site"/>
+      <site rgba="0 1 0 1" size="0.005" pos="0 0 0.020709652177361298" name="top_site"/>
+      <site rgba="0 0 1 1" size="0.005" pos="0.02518741481030428 0.02518741481030428 0" name="horizontal_radius_site"/>
+      <site rgba="0 0 0 1" size="0.005" pos="0 0 0.041419304354722596" name="vertical_radius_site"/>
     </body>
   </worldbody>
 </mujoco>

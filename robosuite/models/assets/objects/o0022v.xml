@@ -1,16 +1,16 @@
 <mujoco model="wine_glassv">
   <asset>
-    <mesh name="wine_glass_mesh" file="./meshes/untextured_wine_glass.stl" scale="0.5274291237452953 0.5274291237452953 0.5274291237452953"/>
+    <mesh name="wine_glass_mesh" file="./meshes/untextured_wine_glass.stl" scale="0.45213909703532257 0.45213909703532257 0.45213909703532257"/>
   </asset>
   <worldbody>
     <body>
       <body name="object">
-        <geom name="wine_glass" pos="0.0917714034599509 -0.08301464129730095 -0.031595422949129356" mesh="wine_glass_mesh" type="mesh" rgba="0.8 0.8 0.8 0.3" conaffinity="0" contype="0" mass="0.133" friction="0.95 0.3 0.1" group="1" condim="4"/>
+        <geom name="wine_glass" pos="0.07867111925750309 -0.07116437691256267 -0.027085205119554954" mesh="wine_glass_mesh" type="mesh" rgba="0.8 0.8 0.8 0.3" conaffinity="0" contype="0" mass="0.133" friction="0.95 0.3 0.1" group="1" condim="4"/>
       </body>
-      <site rgba="1 0 0 1" size="0.005" pos="0 0 -0.03612889497655273" name="bottom_site"/>
-      <site rgba="0 1 0 1" size="0.005" pos="0 0 0.03612889497655273" name="top_site"/>
-      <site rgba="0 0 1 1" size="0.005" pos="0.02347059600666564 0.02347059600666564 0" name="horizontal_radius_site"/>
-      <site rgba="0 0 0 1" size="0.005" pos="0 0 0.07225778995310546" name="vertical_radius_site"/>
+      <site rgba="1 0 0 1" size="0.005" pos="0 0 -0.0309715281469196" name="bottom_site"/>
+      <site rgba="0 1 0 1" size="0.005" pos="0 0 0.0309715281469196" name="top_site"/>
+      <site rgba="0 0 1 1" size="0.005" pos="0.020120189818071853 0.020120189818071853 0" name="horizontal_radius_site"/>
+      <site rgba="0 0 0 1" size="0.005" pos="0 0 0.0619430562938392" name="vertical_radius_site"/>
     </body>
   </worldbody>
 </mujoco>
