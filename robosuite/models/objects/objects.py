@@ -262,18 +262,18 @@ class MujocoObject(MujocoModel):
     @property
     def x_radius(self):
         """
-        Returns x in (x,y,z) format where x refers to the position in mujoco @ excel database.
+        Returns x in (x,y,z) format where x refers to the position in mujoco & excel database.
 
-        Added to encode object orientation when performing computations. if x > y, then object  is wider.
+        Added to encode object orientation when performing computations. if x > y, then object is wider.
         """
         raise NotImplementedError
 
     @property
     def y_radius(self):
         """
-        Returns y in (x,y,z) format where y refers to the position in mujoco @ excel database.
+        Returns y in (x,y,z) format where y refers to the position in mujoco & excel database.
 
-        Added to encode object orientation when performing computations. if x > y, then object  is wider.
+        Added to encode object orientation when performing computations. if x > y, then object is wider.
         """
         raise NotImplementedError
 
