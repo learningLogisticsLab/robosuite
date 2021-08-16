@@ -32,11 +32,11 @@ class ObjectPositionSampler:
     def __init__(
             self,
             name,
-            mujoco_objects                  = None,
-            ensure_object_boundary_in_range = True,
-            ensure_valid_placement          = True,
-            reference_pos                   = (0, 0, 0),
-            z_offset                        = 0.,
+            mujoco_objects=None,
+            ensure_object_boundary_in_range=True,
+            ensure_valid_placement=True,
+            reference_pos=(0, 0, 0),
+            z_offset=0.,
     ):
 
         # Setup attributes
@@ -49,10 +49,10 @@ class ObjectPositionSampler:
             # Shallow copy the list so we don't modify the inputted list but still keep the object references
             self.mujoco_objects = [mujoco_objects] if isinstance(mujoco_objects, MujocoObject) else copy(mujoco_objects)
 
-        self.ensure_object_boundary_in_range    = ensure_object_boundary_in_range
-        self.ensure_valid_placement             = ensure_valid_placement
-        self.reference_pos                      = reference_pos
-        self.z_offset                           = z_offset
+        self.ensure_object_boundary_in_range = ensure_object_boundary_in_range
+        self.ensure_valid_placement = ensure_valid_placement
+        self.reference_pos = reference_pos
+        self.z_offset = z_offset
 
     def add_objects(self, mujoco_objects):
         """
@@ -292,9 +292,9 @@ class UniformRandomSampler(ObjectPositionSampler):
 
                 # Place the object in the air with z_offset with probability z_offset_prob
                 if np.random.uniform() < self.z_offset_prob:
-                    object_z = self.z_offset + base_offset[2] + obj.vertical_radius/2
+                    object_z = self.z_offset + base_offset[2] + obj.vertical_radius / 2
                 else:
-                    object_z = base_offset[2] + obj.vertical_radius/2
+                    object_z = base_offset[2] + obj.vertical_radius / 2
 
                 if on_top:
                     object_z -= bottom_offset[-1]  # subtract the negative bottom_offset equal to adding the top offset.
@@ -305,14 +305,14 @@ class UniformRandomSampler(ObjectPositionSampler):
                 # Once an xyz is computed for the object, make sure it does not collide with other objects. 
                 # TODO: does this assume objects are always facing up vs tripped over?
                 #  It's possible the computations here will fall apart if the objects have a different orientaiton
-                location_valid, success, placed_objects = self.recheck_validity_pos(location_valid = location_valid,
-                                                                                    success = success,
-                                                                                    placed_objects = placed_objects,
-                                                                                    object_x = object_x,
-                                                                                    object_y = object_y,
-                                                                                    object_z = object_z,
-                                                                                    obj = obj)
-                if(location_valid == True):
+                location_valid, success, placed_objects = self.recheck_validity_pos(location_valid=location_valid,
+                                                                                    success=success,
+                                                                                    placed_objects=placed_objects,
+                                                                                    object_x=object_x,
+                                                                                    object_y=object_y,
+                                                                                    object_z=object_z,
+                                                                                    obj=obj)
+                if (location_valid == True):
                     break
 
             if not success:
@@ -328,7 +328,7 @@ class UniformRandomSampler(ObjectPositionSampler):
                                              object_x=object_x,
                                              object_y=object_y,
                                              object_z=object_z,
-                                             obj = obj)[0] == False:
+                                             obj=obj)[0] == False:
                     raise RandomizationError("Cannot place all objects")
                     # print("cannot place all objects")
                     # if it failes then raise RandomizationError
@@ -336,7 +336,7 @@ class UniformRandomSampler(ObjectPositionSampler):
 
         return placed_objects
 
-    def recheck_validity_pos(self,location_valid, success, placed_objects, object_x, object_y, object_z, obj):
+    def recheck_validity_pos(self, location_valid, success, placed_objects, object_x, object_y, object_z, obj):
         """
         check validity of the position
         requirements:
@@ -355,7 +355,7 @@ class UniformRandomSampler(ObjectPositionSampler):
                 if (
                         np.linalg.norm((object_x - x,
                                         object_y - y))  # Compute the norm between current object and each of the other objects
-                        <= other_obj.horizontal_radius + obj.horizontal_radius
+                        <= max(other_obj.horizontal_radius, other_obj.vertical_radius/2) + max(obj.horizontal_radius, obj.vertical_radius/2)
                         # If the norm is less than the sum of the horizontal radius of both objects it means collision
                 ) and (
                         object_z - z <= other_obj.top_offset[-1] - obj.bottom_offset[-1]  # ??
