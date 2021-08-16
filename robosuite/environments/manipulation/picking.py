@@ -63,7 +63,7 @@ from gym import spaces
 
 # Globals
 object_reset_strategy_cases = ['organized', 'jumbled', 'wall', 'random']
-_reset_internal_has_been_run = False
+_reset_internal_after_picking_all_objs = True
 
 
 class Picking(SingleArmEnv):
@@ -982,9 +982,10 @@ class Picking(SingleArmEnv):
         # TODO: need to decide when the locations of objects should be updated. if arm does not finish picking everything, do we want to move things around?
         The goal object should also not be changed for this time. Should this only happen in a hard reset?
         """
-        global _reset_internal_has_been_run
+        global _reset_internal_after_picking_all_objs
 
-        if _reset_internal_has_been_run:
+        # if we have not finished picking_all_objs, calling _reset_internal will do nothing
+        if not _reset_internal_after_picking_all_objs:
             return
 
         super()._reset_internal()
@@ -1180,7 +1181,7 @@ class Picking(SingleArmEnv):
                 self.sim.model.body_pos[self.sim.model.body_name2id("bin2")] = self.bin2_pos
 
                 # flag to run _reset_internal for the very first time only
-                _reset_internal_has_been_run = True
+                _reset_internal_after_picking_all_objs = False
 
         return True
 
@@ -1247,12 +1248,12 @@ class Picking(SingleArmEnv):
             3. select new next object_goal 
 
         Returns:
-            bool: True if object placed correctly
+            bool: True if 1 / all object(s) placed correctly
 
         TODO: consider modifing the definition of is_success according to QT-OPTs criteria to increase reactivity
         requires reaching a certain height... see paper for more. also connected with one parameter in observations.
         """
-        global _reset_internal_has_been_run
+        global _reset_internal_after_picking_all_objs
         
         # Subtract obj_pos from goal and compute that error's norm:
         target_dist_error = np.linalg.norm(achieved_goal - desdired_goal)
@@ -1270,11 +1271,11 @@ class Picking(SingleArmEnv):
 
             # Add the current goal object to the list ob objects in target bins
             self.objects_in_target_bin.append(self.goal_object['name'])
-
+            print("Picked {}". format(self.goal_object['name']))
             return True
         elif len(self.object_names) == 0 and len(self.objects_in_target_bin) == self.num_objs_to_load:
-            _reset_internal_has_been_run = False
-            print("Finished picking and placing all objects")
+            _reset_internal_after_picking_all_objs = True
+            print("Finished picking and placing all objects, can call reset internal again")
             return True
         else:
             return False
