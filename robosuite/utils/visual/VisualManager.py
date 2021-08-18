@@ -277,6 +277,9 @@ class VisualManager():
         print("Using Visual Manager")
         img, seg = np.array(vis).astype(np.uint8)
 
+        img = np.rot90(img,k=2)
+        seg = np.rot90(seg,k=2)
+
         if self.imagesaver(img, seg, env): self.image_saved += 1
 
         # return embedded vectors
