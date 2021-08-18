@@ -7,7 +7,6 @@
   <worldbody>
     <body>
       <body name="object">
-        <inertial pos="0.008499561933269988 -0.021533112701872234 0.00670927433639299" mass="0.034" fullinertia="4.7220439312838285e-08 4.692445702053864e-08 6.556117942788107e-10 1.9229895271088358e-23 -1.8779475393844756e-26 -5.699761622758414e-26"/>
         <geom name="fork" pos="0.025402417506670747 0.022335965440183993 -0.005860810243817459" mesh="fork_mesh" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" mass="0.034" friction="0.95 0.3 0.1"  material="fork" group="0" condim="4"/>
       </body>
       <site rgba="1 0 0 1" size="0.005" pos="0 0 -0.01" name="bottom_site"/>

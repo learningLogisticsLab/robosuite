@@ -7,7 +7,6 @@
   <worldbody>
     <body>
       <body name="object">
-        <inertial pos="-0.015047325763457797 0.006783997168206114 0.028259603076768534" mass="0.033" fullinertia="4.5876541133456013e-08 4.4440446186663605e-08 4.0982746223781025e-08 -6.824671211078382e-24 4.976057697768975e-24 -3.0375618849172078e-24"/>
         <geom name="peach" pos="0.014357986044289402 -0.0065703898793237825 -0.026340124918385294" mesh="peach_mesh" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" mass="0.033" friction="0.95 0.3 0.1"  material="peach" group="0" condim="4"/>
       </body>
       <site rgba="1 0 0 1" size="0.005" pos="0 0 -0.0295" name="bottom_site"/>

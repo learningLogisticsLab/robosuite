@@ -7,7 +7,6 @@
   <worldbody>
     <body>
       <body name="object">
-        <inertial pos="-0.010005972478719946 0.0012469395633811198 0.008849692580074854" mass="0.279" fullinertia="5.195351956272859e-07 2.6593460524929607e-07 2.638462025944955e-07 -4.410443421825204e-23 4.0892141094859386e-23 -1.9489066348453446e-23"/>
         <geom name="plate" pos="0.011356990553914426 -7.739882096667372e-06 -0.010252499999999996" mesh="plate_mesh" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" mass="0.279" friction="0.95 0.3 0.1"  material="plate" group="0" condim="4"/>
       </body>
       <site rgba="1 0 0 1" size="0.005" pos="0 0 -0.012" name="bottom_site"/>
