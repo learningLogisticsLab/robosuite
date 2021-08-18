@@ -312,7 +312,7 @@ class Picking(SingleArmEnv):
         print(f"The object reset strategy is: {self.object_reset_strategy} and new objects will be randomly picked after reset\n")
         #-----------
 
-        # Objects and Goals
+        # (B) Objects and Goals
         # Given the available objects, randomly pick num_objs_to_load and return names, visual names, and name_to_id
         self.object_names, self.visual_object_names, self.object_to_id = self.load_objs_to_simulate(self.num_objs_in_db,self.num_objs_to_load)
 
@@ -326,8 +326,16 @@ class Picking(SingleArmEnv):
         self.goal_object            = {}                     # holds name, pos, quat
         self.goal_pos_error_thresh  = goal_pos_error_thresh  # set threshold to determine if current pos of object is at goal.
 
+        # whether to use ground-truth object states
+        self.use_object_obs = use_object_obs
 
-        # (B) Arena: bins_arena.xml
+        # (C) reward configuration
+        self.reward_scale   = reward_scale                      # Sets a scale for final reward
+        self.reward_shaping = reward_shaping
+
+        self.distance_threshold = 0.05                          # Determine whether obj reaches goal
+
+        # (D) Arena: bins_arena.xml
 
         # Table---
         # settings for table top
@@ -337,13 +345,6 @@ class Picking(SingleArmEnv):
         # settings for bin position
         self.bin1_pos = np.array(bin1_pos)
         self.bin2_pos = np.array(bin2_pos)
-
-        # reward configuration
-        self.reward_scale   = reward_scale                      # Sets a scale for final reward
-        self.reward_shaping = reward_shaping
-
-        # whether to use ground-truth object states
-        self.use_object_obs = use_object_obs
 
         # Initialize Parent Classes: SingleArmEnv->ManipEnv->RobotEnv->MujocoEnv
         super().__init__(
@@ -375,7 +376,7 @@ class Picking(SingleArmEnv):
             initialization_noise    = initialization_noise,            
         )
 
-    def goal_distance(goal_a, goal_b):
+    def goal_distance(self, goal_a, goal_b):
         assert goal_a.shape == goal_b.shape
         return np.linalg.norm(goal_a - goal_b, axis=-1)
 
@@ -409,7 +410,9 @@ class Picking(SingleArmEnv):
     
     def compute_reward(self, achieved_goal, desired_goal, info):
         """
-        Computes discrete sparse reward, perhaps in an off-policy way during training. A negative format is used. So, if the goal is not met, you are penalized with -1. 
+        Computes discrete sparse reward, perhaps in an off-policy way during training. 
+        
+        A negative format is used: if goal is not met ==> penalized with -1. 
         The policy will be encouraged to minimize the cost. A perfect policy would have returns equal to 0.
         
         - Use achieved goal and desired goal positions to determine the reward. 
@@ -424,14 +427,15 @@ class Picking(SingleArmEnv):
         # Compute position subdistances
         ag_pos = achieved_goal[:3]
         dg_pos = desired_goal[:3]
-        dist   = self.subgoal_distances(ag_pos, dg_pos)
+        dist   = self.goal_distance(ag_pos, dg_pos)
 
         # Sparse reward calculation: negative format
         # - If you do not reach your target, a -1 will be assigned as the reward, otherwise zero.
-        # - a perfect policy would get returns equivalent to 0
-        reward = np.min([-(dist > self.distance_threshold).astype(np.float32) for d in dist], axis=0)
-        reward = np.asarray(reward)
-            
+        # - a perfect policy would get returns equivalent to 0        
+        reward = -(dist > self.distance_threshold).astype(np.float32)
+        # reward = np.min([-(dist > self.distance_threshold).astype(np.float32) for d in dist], axis=0)
+
+        reward = np.asarray(reward)            
         return reward          
 
     def reward(self, action=None):
@@ -452,6 +456,8 @@ class Picking(SingleArmEnv):
 
         Returns:
             float: reward value
+
+        TODO: given that there is a built-in scaled-reward assumption throughout the algorithms (though right now it is set to 1.0), it may be best to use positive rewards for success and 0 for failure.
         """
         # compute sparse rewards
         if self.is_success():
@@ -1211,7 +1217,7 @@ class Picking(SingleArmEnv):
     def _is_success(self, achieved_goal, desdired_goal):
         """
         HER-Specific check success method comparing achieved and desired positions 
-        TODO: current do not analyze orientation. Test good performance with position only first. 
+        TODO: currently we do not analyze orientation. Test good performance with position only first. 
         TODO: Should also add an additional check to see if the object is in fact touching the fingers. This check is done in standard robosuite and should be integrated here. 
 
         Currently the achieved_goal (current position of goal object) and desired_goal are numpy arrays with [pos|quat] shape (7,) 
@@ -1229,6 +1235,8 @@ class Picking(SingleArmEnv):
 
         TODO: consider modifing the definition of is_success according to QT-OPTs criteria to increase reactivity
         requires reaching a certain height... see paper for more. also connected with one parameter in observations.
+
+        TODO: after succeeding, in any occurrence, move the end-effector to a starting position
         """
         global _reset_internal_has_been_run
         
@@ -1259,6 +1267,8 @@ class Picking(SingleArmEnv):
 
     def check_success(self):
         """
+        **Standard robosuite method. Not used with HER. **
+
         General check success method based on where the goal object is placed. 
 
         Check if self.goal_object is placed at target position. 
@@ -1598,7 +1608,8 @@ class Picking(SingleArmEnv):
 
         Takes a step in simulation with control command @action:
 
-        01 Move simulation sim.forward() steps 2-21 (http://mujoco.org/book/computation.html#piForward)
+        01 Call sim.forward() 
+            sim.forwrad() performs steps 2-21 (http://mujoco.org/book/computation.html#piForward) of a regular sim.step() call. Step 2-21 summarized below.
             fk->poses bodies/geoms/sites/cams
             body inertias+joint axes in global frames centered at CoM
             tendon lengths/moment arms
@@ -1617,13 +1628,16 @@ class Picking(SingleArmEnv):
             compute constraint forces with selected solver. update joint acceleration in mjData.aqcc main out of FwdDyns
             compute sensor data that dpeends on force/acceleration
             
-        02 Clip action
+        02 Clip action 
+            Note: not necessary when we wrap the env with the NormalizedBoxEnv class)
+
         03 Set data to mujoco sim.data.ctrl
+
         04 Step (steps 1-24)
             
             check pos/vels for unacceptably large vals indicating divergence.
             ...
-            ... those from above
+            ... steps from sim.forward() above
             ... 
             check for unacceptably lare values, if so reset
             compare FwdDyn | InvDyn to diagnose poor solver conv
@@ -1669,14 +1683,14 @@ class Picking(SingleArmEnv):
             # 01. sim.forward()
             self.sim.forward()
 
-            # TODO: is this necessary if we have the NormalizedBoxEnv in robosuite: 
-            # 02. Set (clipped) action in mujoco
-            action = np.clip(action, 
-                             self.action_spec[0],
-                             self.action_spec[1])
+            # Not necessary to clip actions within robosuite as we wrap with the NormalizedBoxEnv. 
+            # -->Set (clipped) action in mujoco
+            # action = np.clip(action, 
+            #                  self.action_spec[0],
+            #                  self.action_spec[1])
             
         
-            # 03 Copy action to sim.data.ctrl (no mocaps)
+            # 03 Copy action to sim.data.ctrl (no mocaps used currently. differs from FetchEnv step approach)
             self._pre_action(action, policy_step)
 
             # 04 sim.step
@@ -1696,24 +1710,25 @@ class Picking(SingleArmEnv):
         # Note: this is done all at once to avoid floating point inaccuracies
         self.cur_time += self.control_timestep        
 
-        # 06 Process Done
-        done = (self.timestep >= self.horizon) and not self.ignore_done
+        # 06 Process info
+        info = { 'is_success': self._is_success(env_obs['achieved_goal'], env_obs['desired_goal']) }
 
-        # 05 Process Reward * Info
-        # TODO: design a manner to describe observations in our graph node setting. currently just 'state', but later will use images in nodes, and can extend beyond.
-        # if "image" in self.obs_type:
-        #     reward = self.compute_reward_image()
-        #     if reward < .05:
-        #         info = { 'is_success': True }
-        #     else:
-        #         info = { 'is_success': False }
-        # elif "state" in self.obs_type: ...
-        # else:
-        #     raise ("Obs_type not recognized")        
+        # 06b Process Reward * Info
+            # TODO: design a manner to describe observations in our graph node setting. currently just 'state', but later will use images in nodes, and can extend beyond.
+            # if "image" in self.obs_type:
+            #     reward = self.compute_reward_image()
+            #     if reward < .05:
+            #         info = { 'is_success': True }
+            #     else:
+            #         info = { 'is_success': False }
+            # elif "state" in self.obs_type: ...
+            # else:
+            #     raise ("Obs_type not recognized") 
 
-        # 07 Process info
-        info   = { 'is_success': self._is_success(env_obs['achieved_goal'], env_obs['desired_goal']) }
-
+        # 07 Process Done: 
+        # If (i) time_step is past horizon OR (ii) we have succeeded, set to true.
+        done = (self.timestep >= self.horizon) and not self.ignore_done or info['is_success']       
+    
         # 08 Process Reward
         reward = self.compute_reward(env_obs['achieved_goal'], env_obs['desired_goal'], info)
 
@@ -1743,7 +1758,7 @@ class Picking(SingleArmEnv):
         kwargs['meta']  = self
         kwargs['name']  = suite.environments.base.EnvMeta
         kwargs['bases'] = (suite.environments.manipulation.single_arm_env.SingleArmEnv,) #(<class 'robosuite.environments.manipulation.single_arm_env.SingleArmEnv'>,)
-        kwargs          = self.__dict__
+        kwargs          =  picking_dict['picking_dict'] # self.__dict__
         return (args,kwargs)
 #-------------------------------------------------------------
 # Define new permutation of classes to register based on picking for relationalRL code

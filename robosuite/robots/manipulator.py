@@ -22,12 +22,16 @@ class Manipulator(Robot):
             gripper_action (float): Value between [-1,1] to send to gripper
         """
         actuator_idxs = [self.sim.model.actuator_name2id(actuator) for actuator in gripper.actuators]
-        gripper_action_actual = gripper.format_action(gripper_action)
-        # rescale normalized gripper action to control ranges
-        ctrl_range = self.sim.model.actuator_ctrlrange[actuator_idxs]
+
+        # Formats actions to be binary. TODO: Seems behaving differently?
+        gripper_action_actual = gripper.format_action(gripper_action)   # TODO: Juan: not so sure about the efficacy of this call. Supposed to yield a binary output, it is not doing that....
+       
+        # Rescale normalized gripper action to control ranges
+        ctrl_range = self.sim.model.actuator_ctrlrange[actuator_idxs]   
         bias = 0.5 * (ctrl_range[:, 1] + ctrl_range[:, 0])
         weight = 0.5 * (ctrl_range[:, 1] - ctrl_range[:, 0])
-        applied_gripper_action = bias + weight * gripper_action_actual
+        applied_gripper_action = bias + weight * gripper_action_actual  # TODO: juan: not quite sure about bias + weight calcs...
+        
         self.sim.data.ctrl[actuator_idxs] = applied_gripper_action
 
     def visualize(self, vis_settings):

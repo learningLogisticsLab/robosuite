@@ -127,7 +127,9 @@ class GymWrapper(Wrapper, Env):
 
     def step(self, action):
         """
-        Extends vanilla step() function call to return flattened observation instead of normal OrderedDict.
+        Extends vanilla step() function. 
+        - Normally returns flattened observation instead of normal OrderedDict.
+        - For relationalRL, we do not flatten. 
 
         Args:
             action (np.array): Action to take in environment
@@ -135,7 +137,7 @@ class GymWrapper(Wrapper, Env):
         Returns:
             4-tuple:
 
-                - (np.array) flattened observations from the environment
+                - (np.array) <flattened> observations from the environment
                 - (float) reward from the environment
                 - (bool) whether the current episode is completed or not
                 - (dict) misc information
@@ -169,12 +171,15 @@ class GymWrapper(Wrapper, Env):
         Dummy function to be compatible with gym interface that simply returns environment reward
 
         Args:
-            achieved_goal: [NOT USED]
-            desired_goal: [NOT USED]
+            achieved_goal:
+            desired_goal: 
             info: [NOT USED]
 
         Returns:
             float: environment reward
         """
         # Dummy args used to mimic Wrapper interface
-        return self.env.reward()
+        if self.rlkit_relational:
+            return self.env.compute_reward(achieved_goal, desired_goal, info)
+        else:
+            return self.env.reward()
