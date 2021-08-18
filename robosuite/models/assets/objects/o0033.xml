@@ -1,19 +1,18 @@
 <mujoco model="wood_block">
   <asset>
-    <mesh name="wood_block_mesh" file="./meshes/wood_block.msh" scale="0.6510025032985499 0.6510025032985499 0.6510025032985499"/>
+    <mesh name="wood_block_mesh" file="./meshes/wood_block.msh" scale="0.5368633329527416 0.5368633329527416 0.5368633329527416"/>
     <texture name="tex-wood_block" file="../textures/wood_block.png" type="2d"/>
     <material name="wood_block" reflectance="0.7" texrepeat="15 15" texture="tex-wood_block" texuniform="true"/>
   </asset>
   <worldbody>
     <body>
       <body name="object">
-        <inertial pos="0.0233730518561954 -0.010273626224740963 0.10276919233489218" mass="0.729" fullinertia="6.531830066020671e-06 6.496788321917068e-06 2.0235216718785673e-06 -9.289556032355845e-22 -6.382039770510119e-22 -1.1996538048028797e-21"/>
-        <geom name="wood_block" pos="-0.015399076768813974 0.006497878795868301 -0.06701712720081757" mesh="wood_block_mesh" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" mass="0.729" friction="0.95 0.3 0.1"  material="wood_block" group="0" condim="4"/>
+        <geom name="wood_block" pos="-0.012699182624662297 0.005358616671667373 -0.0552671273791535" mesh="wood_block_mesh" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" mass="0.729" friction="0.95 0.3 0.1"  material="wood_block" group="0" condim="4"/>
       </body>
-      <site rgba="1 0 0 1" size="0.005" pos="0 0 -0.06510025032985499" name="bottom_site"/>
-      <site rgba="0 1 0 1" size="0.005" pos="0 0 0.06510025032985499" name="top_site"/>
-      <site rgba="0 0 1 1" size="0.005" pos="0.027667606390188372 0.027667606390188372 0" name="horizontal_radius_site"/>
-      <site rgba="0 0 0 1" size="0.005" pos="0 0 0.13020050065970998" name="vertical_radius_site"/>
+      <site rgba="1 0 0 1" size="0.005" pos="0 0 -0.05368633329527416" name="bottom_site"/>
+      <site rgba="0 1 0 1" size="0.005" pos="0 0 0.05368633329527416" name="top_site"/>
+      <site rgba="0 0 1 1" size="0.005" pos="0.02281669165049152 0.02281669165049152 0" name="horizontal_radius_site"/>
+      <site rgba="0 0 0 1" size="0.005" pos="0 0 0.10737266659054832" name="vertical_radius_site"/>
     </body>
   </worldbody>
 </mujoco>

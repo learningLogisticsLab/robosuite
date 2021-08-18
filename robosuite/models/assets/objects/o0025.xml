@@ -7,7 +7,6 @@
   <worldbody>
     <body>
       <body name="object">
-        <inertial pos="-0.015842356573766914 0.011520562220217976 0.00937252508059704" mass="0.0062" fullinertia="1.4790695935686624e-07 1.0220649167865078e-07 5.040066218025438e-08 -6.546512016924604e-26 1.352044653776286e-23 -9.375642998693167e-26"/>
         <geom name="sponge" pos="0.01568264330022165 -0.013962546737472553 -0.009619500000000001" mesh="sponge_mesh" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" mass="0.0062" friction="0.95 0.3 0.1"  material="sponge" group="0" condim="4"/>
       </body>
       <site rgba="1 0 0 1" size="0.005" pos="0 0 -0.007" name="bottom_site"/>

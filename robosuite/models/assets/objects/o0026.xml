@@ -7,7 +7,6 @@
   <worldbody>
     <body>
       <body name="object">
-        <inertial pos="0.0046148964588229565 0.028319651848624068 0.02009889767674283" mass="0.652" fullinertia="1.1814390050589973e-06 6.85962774766407e-07 6.091910622917369e-07 1.7451128295335313e-24 -1.10489788682628e-24 -3.329067948738715e-23"/>
         <geom name="skillet_lid" pos="-0.008796862316296065 -0.02440074751286256 -0.03304950000000001" mesh="skillet_lid_mesh" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" mass="0.652" friction="0.95 0.3 0.1"  material="skillet_lid" group="0" condim="4"/>
       </body>
       <site rgba="1 0 0 1" size="0.005" pos="0 0 -0.011" name="bottom_site"/>

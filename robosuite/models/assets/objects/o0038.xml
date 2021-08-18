@@ -7,7 +7,6 @@
   <worldbody>
     <body>
       <body name="object">
-        <inertial pos="0.01450146241685899 -0.049664842094331994 0.004250780997626007" mass="0.252" fullinertia="4.68812164277712e-08 4.282249507787249e-08 4.257478965991318e-09 -8.011925726705155e-25 -3.0180646055664565e-24 8.215550244094782e-24"/>
         <geom name="adjustable_wrench" pos="0.010096908574654971 0.01183691167118732 -0.004346000000000005" mesh="adjustable_wrench_mesh" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" mass="0.252" friction="0.95 0.3 0.1"  material="adjustable_wrench" group="0" condim="4"/>
       </body>
       <site rgba="1 0 0 1" size="0.005" pos="0 0 -0.0025" name="bottom_site"/>

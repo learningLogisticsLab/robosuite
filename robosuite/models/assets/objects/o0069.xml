@@ -7,7 +7,6 @@
   <worldbody>
     <body>
       <body name="object">
-        <inertial pos="-0.016219049878342388 -0.00048529056442859776 0.028589928178413302" mass="0.094" fullinertia="9.85204038073643e-08 9.833577391876143e-08 9.818197457535545e-08 -8.061824208102976e-24 2.097640522420731e-24 -2.1321925661475815e-23"/>
         <geom name="rubiks_cube" pos="0.016271121314079703 0.0003918385744260396 -0.028654500000000003" mesh="rubiks_cube_mesh" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" mass="0.094" friction="0.95 0.3 0.1"  material="rubiks_cube" group="0" condim="4"/>
       </body>
       <site rgba="1 0 0 1" size="0.005" pos="0 0 -0.0285" name="bottom_site"/>
