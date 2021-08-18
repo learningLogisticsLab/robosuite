@@ -9,6 +9,7 @@ from robosuite.models.base import MujocoModel
 import numpy as np
 
 REGISTERED_ENVS = {}
+picking_dict = {}
 
 
 def register_env(target_class):
@@ -67,6 +68,12 @@ class EnvMeta(type):
 
         # List all environments that should not be registered here.
         _unregistered_envs = ["MujocoEnv", "RobotEnv", "ManipulationEnv", "SingleArmEnv", "TwoArmEnv"]
+
+        # Enable Pickling:
+        # Try to save this class_dict to enable pickling by using it during the setting of picking.Picking.def __getnewargs_ex__(self):
+        # TOOD: or should we do something like setattr to make it an attribute of the class and access it in a child class?
+        if name == 'Picking':            
+            picking_dict['picking_dict'] = class_dict
 
         # For new classes that are not part of core classes in robosuite, add them to the REGISTERED_ENVS dictionary with the class's name as key and class instance as value
         if cls.__name__ not in _unregistered_envs:

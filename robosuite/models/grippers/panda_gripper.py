@@ -37,6 +37,13 @@ class PandaGripperBase(GripperModel):
 class PandaGripper(PandaGripperBase):
     """
     Modifies PandaGripperBase to only take one action.
+    
+    Properties:
+        - Fixes speed at 0.01
+        - Sets dof to 1
+
+    Methods:
+        - format_action: mapms continuous actions into binary outputs
     """
 
     def format_action(self, action):
