@@ -930,8 +930,8 @@ class Picking(SingleArmEnv):
             # Rename goal object pos as eef pos, goal object quat
             HER_pos = self._eef_xpos
             HER_quat = obj_quat
-            print("Original object pos is {}".format(HER_pos))
-            print("Original obj_quat is {}".format(HER_quat))
+            # print("Original object pos is {}".format(HER_pos))
+            # print("Original obj_quat is {}".format(HER_quat))
             min_longitude = min(obj.x_radius * 2, obj.y_radius * 2, obj.vertical_radius)
 
             # Gripping strategy if horizontal radius is the shorter side
@@ -1190,9 +1190,8 @@ class Picking(SingleArmEnv):
                 self.sim.model.body_pos[self.sim.model.body_name2id("bin1")] = self.bin1_pos
                 self.sim.model.body_pos[self.sim.model.body_name2id("bin2")] = self.bin2_pos
 
-        # flag to run _reset_internal for the very first time only
-        _reset_internal_after_picking_all_objs = False
-
+                # flag to run _reset_internal for the very first time only
+                _reset_internal_after_picking_all_objs = False
         return True
 
     def return_sorted_objs_to_model(self,obs):
@@ -1240,6 +1239,19 @@ class Picking(SingleArmEnv):
         sorted_obj_dist.move_to_end( self.goal_object['name'], last=False) # move to front
 
         return sorted_obj_dist
+    
+    def return_fallen_objs(self, obs):
+        """
+        return list of fallen objs names if lower than table height
+        """
+        fallen_objs = []
+
+        for obj_pos, obj_quat, obj in self.object_placements.values():
+            # Get real-time pos from observables
+            if obs[obj.name + '_pos'][2] > self.bin1_pos[2]:
+                fallen_objs.append(obj.name)
+
+        return fallen_objs
 
     def _is_success(self, achieved_goal, desdired_goal):
         """
