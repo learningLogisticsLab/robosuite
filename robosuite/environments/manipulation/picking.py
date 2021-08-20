@@ -1190,8 +1190,8 @@ class Picking(SingleArmEnv):
                 self.sim.model.body_pos[self.sim.model.body_name2id("bin1")] = self.bin1_pos
                 self.sim.model.body_pos[self.sim.model.body_name2id("bin2")] = self.bin2_pos
 
-                # flag to run _reset_internal for the very first time only
-                _reset_internal_after_picking_all_objs = False
+        # flag to run _reset_internal for the very first time only
+        _reset_internal_after_picking_all_objs = False
 
         return True
 
