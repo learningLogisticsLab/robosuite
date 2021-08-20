@@ -222,8 +222,12 @@ class Picking(SingleArmEnv):
         table_full_size = (0.39, 0.49, 0.82), # these dims are table*2 -0.01 in (x,y). z would have been 0.02*2 -1 = 0.03 but it is 0.82 ??
         table_friction  = (1, 0.005, 0.0001), # (sliding, torsional, rolling) rations across surfaces. 
 
-        bin1_pos = (0.1, -0.25, 0.8),           # Follows xml
-        bin2_pos = (0.1, 0.28, 0.8),
+        # bin1_pos = (0.1, -0.25, 0.8),           # Follows xml
+        # bin2_pos = (0.1, 0.28, 0.8),
+
+        # move bins
+        bin1_pos=(-0.1, -0.25, 0.8),  # Follows xml
+        bin2_pos=(-0.1, 0.28, 0.8),
         
         # Observations
         use_camera_obs = True,                  # TODO: Currently these two options are setup to work in oposition it seems. Can we have both to True?
