@@ -1192,7 +1192,6 @@ class Picking(SingleArmEnv):
 
                 # flag to run _reset_internal for the very first time only
                 _reset_internal_after_picking_all_objs = False
-
         return True
 
     def return_sorted_objs_to_model(self,obs):
@@ -1240,6 +1239,37 @@ class Picking(SingleArmEnv):
         sorted_obj_dist.move_to_end( self.goal_object['name'], last=False) # move to front
 
         return sorted_obj_dist
+    
+    def return_fallen_objs(self, obs):
+        """
+        return list of fallen objs names if lower than table height
+        """
+        fallen_objs = []
+
+        # for obj_pos, obj_quat, obj in self.object_placements.values():
+        for placed_pos , placed_quat, obj in self.object_placements.values():
+            # Get real-time pos from observables
+            
+            # print(obs[obj.name + '_pos'][2])
+            obj_pos = self.sim.data.body_xpos[self.obj_body_id[obj.name]]
+            print("can we read obj observations? {}".format(obj_pos))
+            # check if obj has fallen below bin
+            if obj_pos[2] < self.bin1_pos[2] and obj.name in self.object_names:
+                print("new fallen obj !!! {}, pos is {}".format(obj.name, obj_pos))
+                fallen_objs.append(obj.name)
+                # if fallen obj, remove from list
+                print("initially we have {} in object names list".format(self.object_names))
+                self.object_names.remove(obj.name)
+                print("removed {} now we have {}".format(obj.name, self.object_names))
+
+                # Check whether this is necessary.
+                # Also remove from sorted_object list so that it is no longer considered in computing
+                # the observations in the next iteration
+                if obj.name in self.sorted_objects_to_model:
+                    print("initially we have {} in sorted object to model list")
+                    self.sorted_objects_to_model.__delitem__(obj.name)
+
+        return fallen_objs
 
     def _is_success(self, achieved_goal, desdired_goal):
         """
@@ -1750,11 +1780,15 @@ class Picking(SingleArmEnv):
             #         info = { 'is_success': False }
             # elif "state" in self.obs_type: ...
             # else:
-            #     raise ("Obs_type not recognized") 
+            #     raise ("Obs_type not recognized")
+
+        # 06c Check & remove fallen objs
+
+        fallen_objs = self.return_fallen_objs(obs=env_obs)
 
         # 07 Process Done: 
         # If (i) time_step is past horizon OR (ii) we have succeeded, set to true.
-        done = (self.timestep >= self.horizon) and not self.ignore_done or info['is_success']       
+        done = (self.timestep >= self.horizon) and not self.ignore_done or info['is_success']
     
         # 08 Process Reward
         reward = self.compute_reward(env_obs['achieved_goal'], env_obs['desired_goal'], info)
