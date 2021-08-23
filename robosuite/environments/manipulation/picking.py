@@ -930,8 +930,8 @@ class Picking(SingleArmEnv):
             # Rename goal object pos as eef pos, goal object quat
             HER_pos = self._eef_xpos
             HER_quat = obj_quat
-            print("Original object pos is {}".format(HER_pos))
-            print("Original obj_quat is {}".format(HER_quat))
+            # print("Original object pos is {}".format(HER_pos))
+            # print("Original obj_quat is {}".format(HER_quat))
             min_longitude = min(obj.x_radius * 2, obj.y_radius * 2, obj.vertical_radius)
 
             # Gripping strategy if horizontal radius is the shorter side
