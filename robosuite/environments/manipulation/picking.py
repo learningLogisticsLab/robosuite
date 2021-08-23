@@ -1783,7 +1783,7 @@ class Picking(SingleArmEnv):
             #     raise ("Obs_type not recognized")
 
         # 06c Check & remove fallen objs
-
+        
         fallen_objs = self.return_fallen_objs(obs=env_obs)
 
         # 07 Process Done: 
