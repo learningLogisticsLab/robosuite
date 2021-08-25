@@ -9,15 +9,13 @@ import numpy as np
 import os, json, pickle
 
 #import some common detectron2 utilities
-from detectron2 import model_zoo
-from detectron2.config import get_cfg
 from detectron2.data.datasets import register_coco_instances
 from detectron2.engine import DefaultTrainer
 
 class Trainer():
     def __init__(
         self,
-        NUM_CLASSES,
+        NUM_CLASSES    = 20,
         DATA_ROOT      = None,
         MODEL_ROOT     = None,
         NEW_MODEL_ROOT = None   

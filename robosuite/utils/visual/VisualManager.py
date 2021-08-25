@@ -9,7 +9,7 @@ import torch.nn as nn
 
 from detectron2.engine import DefaultPredictor
 
-from Trainer import Trainer
+from robosuite.utils.visual.Trainer import Trainer
 
 ################################################################
 '''
@@ -210,9 +210,9 @@ class Preprocessor(nn.Module):
 class ImageSaver():
     def __init__(
         self,
-        save_mode          = False,
-        save_freq          = None,
-        IMAGE_DIR          = None,
+        save_mode = False,
+        save_freq = None,
+        IMAGE_DIR = None,
         ):
         self.save_mode = save_mode
         if self.save_mode is True:
@@ -246,7 +246,7 @@ class ImageSaver():
             pickle.dump( self.seg2anno(seg, env) ,f)
         Image.fromarray(img).save(os.path.join(self.IMAGE_DIR,f'{id}.png'))
         
-        raise Exception("This function is not finish yet")
+        #raise Exception("This function is not finish yet")
         
     def seg2anno(self, seg, env):
         # TODO 
@@ -282,15 +282,13 @@ class VisualManager():
     def __init__(
         self,
         _preprocessor      = Preprocessor,
-        preprocessor_kwarg = None,
+        preprocessor_kwarg = dict(),
         _imagesaver        = ImageSaver,
-        imagesaver_kwarg   = None,
+        imagesaver_kwarg   = dict(),
         _trainer           = Trainer,
-        trainer_kwarg      = None,
+        trainer_kwarg      = dict(),
         train_schedule     = (10_000,),
         ):
-        # not sure if it sure inherit from nn.module
-        #super(VisualManager, self).__init__()
         self.preprocessor   = _preprocessor(**preprocessor_kwarg) 
         self.imagesaver     = _imagesaver(**imagesaver_kwarg)
         self.trainer        = _trainer(**trainer_kwarg)
