@@ -1192,6 +1192,9 @@ class Picking(SingleArmEnv):
 
                 # flag to run _reset_internal for the very first time only
                 _reset_internal_after_picking_all_objs = False
+
+        # print("reset internal ending")
+        # input()
         return True
 
     def return_sorted_objs_to_model(self,obs):
@@ -1240,34 +1243,23 @@ class Picking(SingleArmEnv):
 
         return sorted_obj_dist
     
-    def return_fallen_objs(self, obs):
+    def return_fallen_objs(self):
         """
         return list of fallen objs names if lower than table height
         """
         fallen_objs = []
-
         # for obj_pos, obj_quat, obj in self.object_placements.values():
-        for placed_pos , placed_quat, obj in self.object_placements.values():
+        for name in self.object_names:
             # Get real-time pos from observables
-            
-            # print(obs[obj.name + '_pos'][2])
-            obj_pos = self.sim.data.body_xpos[self.obj_body_id[obj.name]]
-            print("can we read obj observations? {}".format(obj_pos))
+            obj_pos = self._observables[name+'_pos'].obs
             # check if obj has fallen below bin
-            if obj_pos[2] < self.bin1_pos[2] and obj.name in self.object_names:
-                print("new fallen obj !!! {}, pos is {}".format(obj.name, obj_pos))
-                fallen_objs.append(obj.name)
+            if obj_pos[2] < self.bin1_pos[2] and name in self.object_names:
+                print("new fallen obj !!! {}, pos is {}".format(name, obj_pos))
+                fallen_objs.append(name)
                 # if fallen obj, remove from list
                 print("initially we have {} in object names list".format(self.object_names))
-                self.object_names.remove(obj.name)
-                print("removed {} now we have {}".format(obj.name, self.object_names))
-
-                # Check whether this is necessary.
-                # Also remove from sorted_object list so that it is no longer considered in computing
-                # the observations in the next iteration
-                if obj.name in self.sorted_objects_to_model:
-                    print("initially we have {} in sorted object to model list")
-                    self.sorted_objects_to_model.__delitem__(obj.name)
+                self.object_names.remove(name)
+                print("removed {} now we have {}".format(name, self.object_names))
 
         return fallen_objs
 
@@ -1563,10 +1555,15 @@ class Picking(SingleArmEnv):
         # *Note: there are three quantities of interest: (i) (total) num_objs_to_load, (ii) num_objs (to_model), and (iii) goal object. 
         # We report data for num_objs that are closest to goal_object and ignore the rest. This list is updated when is_success is True.
         # We only consider the relative position between the goal object and end-effector, all the rest are set to 0.
-        self.sorted_objects_to_model = self.return_sorted_objs_to_model(obs)
+
+        # Check & remove fallen objs
+        self.fallen_objs = self.return_fallen_objs()
+
+        # get new goal, other_objs than goals after removing fallen obj
+        self.goal_object, self.other_objs_than_goals = self.get_goal_object()
 
         # Place goal object at the front
-        self.sorted_objects_to_model
+        self.sorted_objects_to_model = self.return_sorted_objs_to_model(obs)
 
         # TODO: sorted_objects should be updated when an object is successfully picked. Such that when there is one object less, 
         # the new dimensionality is reflected in these observations as well.
@@ -1782,9 +1779,8 @@ class Picking(SingleArmEnv):
             # else:
             #     raise ("Obs_type not recognized")
 
-        # 06c Check & remove fallen objs
-        
-        fallen_objs = self.return_fallen_objs(obs=env_obs)
+        # # 06c Check & remove fallen objs
+        # self.fallen_objs = self.return_fallen_objs()
 
         # 07 Process Done: 
         # If (i) time_step is past horizon OR (ii) we have succeeded, set to true.
