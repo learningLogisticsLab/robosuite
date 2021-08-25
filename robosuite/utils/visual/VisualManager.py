@@ -4,10 +4,12 @@ from PIL import Image
 import time
 
 import numpy as np
-import torch 
+import torch
 import torch.nn as nn
 
 from detectron2.engine import DefaultPredictor
+
+from Trainer import Trainer
 
 ################################################################
 '''
@@ -70,14 +72,15 @@ class Preprocessor(nn.Module):
         threshold       = 0.5,
         backbone        = None,
         getVec          = None, 
-        TEST_IMAGE_FILE = './image.png',
+        norm            = None,
+        acti            = None
         ):
         super(Preprocessor, self).__init__()
         assert MODEL_ROOT is not None
         self.MODEL_ROOT = MODEL_ROOT
         # Load the config and weight of model and construct the predictor 
-        
-        self.load_model(threshold = threshold)
+        self.threshold = threshold
+        self.load_model()
 
         self.mask_size = mask_size
         self.format = 'L' if grayscale else "1"
@@ -86,7 +89,7 @@ class Preprocessor(nn.Module):
         #  Learnable Network
         ##############################################################################
         self.backbone = nn.Sequential(
-            nn.Conv2d(1, 16, 3, 1, 1),
+            nn.Conv2d(4, 16, 3, 1, 1),
             nn.Conv2d(16, 16, 3, 1, 1),
             nn.MaxPool2d(2, stride = 2),  # size shrink half
             nn.ReLU(),
@@ -107,8 +110,11 @@ class Preprocessor(nn.Module):
             nn.Linear( 128, 128),
             nn.Linear( 128, 64),
         ) if getVec is None else getVec
+
+        self.norm = nn.BatchNorm2d(3) if norm is None else norm
+        self.acti = nn.Tanh() if acti is None else acti
         ##############################################################################
-        self.testdrive(TEST_IMAGE_FILE=TEST_IMAGE_FILE)
+        self.testdrive()
 
         
     def forward(self, img):
@@ -131,6 +137,8 @@ class Preprocessor(nn.Module):
         instances.pred_classes shape: (N)
         instnaces.pred_mask    shape: (N, H, W)
         instances.score        shape: (N)
+        
+        img                    shape: (H, W, C)
         '''
         info = torch.cat( 
         (
@@ -148,14 +156,28 @@ class Preprocessor(nn.Module):
             for m in instances.pred_masks
         ]
         masks = torch.tensor( np.asarray(masks) , dtype = torch.float).unsqueeze(1)
-        '''
-        N      : number of instances idenify in the image
-        HS, WS :pre-defined number of the resized mask, default (128, 128)
-        info   :tensor shape: (N, 6) <- the six dim are : (x1, y1, x2, y2, classes_id, score)
-        masks  :tensor shape: (N, 1, HS, WS)
-        '''
+        masks = self.acti(masks)
 
-        feature_maps = self.backbone(masks).reshape((N,-1))
+        image = torch.tensor(
+            np.asarray(Image.fromarray(img).resize( self.mask_size )),
+            dtype=torch.float32
+        ).permute((2,0,1))
+        image = self.norm(image.repeat(N,1,1,1))
+        '''
+        N       : number of instances idenify in the image
+        HS, WS  : pre-defined number of the resized mask, default (128, 128)
+        info    : tensor shape: (N, 6) <- the six dim are : (x1, y1, x2, y2, classes_id, score)
+        masks   : tensor shape: (N, 1, HS, WS)
+        image   : tensor shape: (N, 3, HS, WS)
+        imgnseg : tensor shape: (N, 4, HS, WS)
+        '''
+        
+        imgnseg = torch.cat((masks,image),dim = 1)
+
+        assert imgnseg.shape == (N, 4, *self.mask_size)
+        assert info.shape    == (N, 6)
+
+        feature_maps = self.backbone(imgnseg).reshape((N,-1))
         '''
         feature_map
             tensor shape: (N, HS/8 * WS/8)
@@ -165,10 +187,10 @@ class Preprocessor(nn.Module):
 
         return self.getVec(vector)
 
-    def testdrive(self, TEST_IMAGE_FILE):
+    def testdrive(self):
         N   = 12
         H,W = self.mask_size
-        test_masks = torch.rand(N, 1, H, W)
+        test_masks = torch.rand(N, 4, H, W)
         test_info  = torch.rand(N, 6)
         with torch.no_grad():
             test_map = self.backbone( test_masks ).reshape((N,-1))
@@ -176,12 +198,12 @@ class Preprocessor(nn.Module):
             vec      = self.getVec( vector )
             assert len(vec.shape) == 2
 
-    def load_model(self, threshold):
+    def load_model(self):
         with open(os.path.join(self.MODEL_ROOT, 'model_cfg.pickle'), 'rb') as f:
             cfg = pickle.load(f)
 
         cfg.MODEL.WEIGHTS = os.path.join(self.MODEL_ROOT, "model_final.pth")  # path to the model we just trained
-        cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST =  threshold # set a custom testing threshold
+        cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = self.threshold # set a custom testing threshold
 
         self.predictor = DefaultPredictor(cfg)
 
@@ -194,7 +216,7 @@ class ImageSaver():
         ):
         self.save_mode = save_mode
         if self.save_mode is True:
-            assert save_freq is not None, "save mode is on but save frequency is not provide, try save_mode = False, or save_freq = 1_000"
+            assert save_freq is not None, "save mode is on but saves frequency is not provide, try save_mode = False, or save_freq = 1_000"
             assert IMAGE_DIR is not None, "save mode is on but Image directory is not provide, try save_mode = False, or provide directory to save the data"
             self.IMAGE_DIR = IMAGE_DIR
             self.save_freq = save_freq
@@ -224,15 +246,15 @@ class ImageSaver():
             pickle.dump( self.seg2anno(seg, env) ,f)
         Image.fromarray(img).save(os.path.join(self.IMAGE_DIR,f'{id}.png'))
         
-        print("save the image here")
-    
+        raise Exception("This function is not finish yet")
+        
     def seg2anno(self, seg, env):
         # TODO 
         #   figure out how to programmatically annotation mask
         #   maybe save in coco format
 
-        # objects [id] => name
-        # ids list of M id 
+        # objects: a dictionary [id] => name
+        # ids: list of M id 
         objects = {}
         ids = []
         for i in seg.reshape(-1,3):
@@ -254,7 +276,6 @@ class ImageSaver():
         masks = ( mask[np.newaxis] == ids[:, np.newaxis, np.newaxis, np.newaxis]).squeeze()#.astype(np.uint8)
         #masks = np.array(list( filter( lambda m: m.sum() > 100, masks ) )) outdated
         #masks = masks * 255
-
         return masks
 
 class VisualManager():
@@ -264,12 +285,19 @@ class VisualManager():
         preprocessor_kwarg = None,
         _imagesaver        = ImageSaver,
         imagesaver_kwarg   = None,
+        _trainer           = Trainer,
+        trainer_kwarg      = None,
+        train_schedule     = (10_000,),
         ):
         # not sure if it sure inherit from nn.module
         #super(VisualManager, self).__init__()
-        self.preprocessor  = _preprocessor(**preprocessor_kwarg) 
-        self.imagesaver    = _imagesaver(**imagesaver_kwarg)
-        self.image_saved   = 0
+        self.preprocessor   = _preprocessor(**preprocessor_kwarg) 
+        self.imagesaver     = _imagesaver(**imagesaver_kwarg)
+        self.trainer        = _trainer(**trainer_kwarg)
+        self.image_saved    = 0
+        self.train_schedule = train_schedule
+
+
         print("Finished Init VisualManage")
 
 
@@ -280,7 +308,14 @@ class VisualManager():
         img = np.rot90(img,k=2)
         seg = np.rot90(seg,k=2)
 
-        if self.imagesaver(img, seg, env): self.image_saved += 1
+        if self.imagesaver(img, seg, env): 
+
+            self.image_saved += 1
+
+            if self.image_saved in self.train_schedule: 
+                self.preprocessor.MODEL_ROOT = self.trainer.train()
+                self.preprocessor.load_model()
+
 
         # return embedded vectors
         return self.preprocessor(img)
