@@ -208,8 +208,12 @@ class Picking(SingleArmEnv):
         table_full_size = (0.39, 0.49, 0.82), # these dims are table*2 -0.01 in (x,y). z would have been 0.02*2 -1 = 0.03 but it is 0.82 ??
         table_friction  = (1, 0.005, 0.0001), # (sliding, torsional, rolling) rations across surfaces. 
 
-        bin1_pos = (0.1, -0.25, 0.8),           # Follows xml
-        bin2_pos = (0.1, 0.28, 0.8),
+        # bin1_pos = (0.1, -0.25, 0.8),           # Follows xml
+        # bin2_pos = (0.1, 0.28, 0.8),
+
+        # move bins
+        bin1_pos=(-0.1, -0.25, 0.8),  # Follows xml
+        bin2_pos=(-0.1, 0.28, 0.8),
         
         # Observations
         use_camera_obs = True,                  # TODO: Currently these two options are setup to work in oposition it seems. Can we have both to True?
@@ -247,7 +251,7 @@ class Picking(SingleArmEnv):
         has_renderer            = False,
         has_offscreen_renderer  = True,
         
-        render_camera           = "agentview", #TODO: may need to adjust here for better angle for our work
+        render_camera           = "birdview", #TODO: may need to adjust here for better angle for our work
         render_collision_mesh   = False,
         render_visual_mesh      = True,
         render_gpu_device_id    = 0,            # was -1 
@@ -719,7 +723,7 @@ class Picking(SingleArmEnv):
                 name                            = "placeObjectSampler",             # name for object sampler for each object
                 mujoco_objects                  = self.visual_objects,
                 x_range                         = [-bin_x_half, bin_x_half],        # This (+ve,-ve) range goes from center to the walls on each side of the bin
-                y_range                         = [-bin_y_half, bin_y_half],
+                y_range                         = [-bin_y_half, -bin_y_half * 0.8],
                 rotation                        = None,                             # Add uniform random rotation
                 rotation_axis                   = 'z',                              # Currently only accepts one axis. TODO: extend to multiple axes.
                 ensure_object_boundary_in_range = True,
@@ -970,10 +974,8 @@ class Picking(SingleArmEnv):
             # Rename goal object pos as eef pos, goal object quat
             HER_pos = self._eef_xpos
             HER_quat = obj_quat
-
             # print("Original object pos is {}".format(HER_pos))
             # print("Original obj_quat is {}".format(HER_quat))
-            
             min_longitude = min(obj.x_radius * 2, obj.y_radius * 2, obj.vertical_radius)
 
             # Gripping strategy if horizontal radius is the shorter side
@@ -1320,6 +1322,37 @@ class Picking(SingleArmEnv):
         sorted_obj_dist.move_to_end( self.goal_object['name'], last=False) # move to FRONT
 
         return sorted_obj_dist
+    
+    def return_fallen_objs(self, obs):
+        """
+        return list of fallen objs names if lower than table height
+        """
+        fallen_objs = []
+
+        # for obj_pos, obj_quat, obj in self.object_placements.values():
+        for placed_pos , placed_quat, obj in self.object_placements.values():
+            # Get real-time pos from observables
+            
+            # print(obs[obj.name + '_pos'][2])
+            obj_pos = self.sim.data.body_xpos[self.obj_body_id[obj.name]]
+            print("can we read obj observations? {}".format(obj_pos))
+            # check if obj has fallen below bin
+            if obj_pos[2] < self.bin1_pos[2] and obj.name in self.object_names:
+                print("new fallen obj !!! {}, pos is {}".format(obj.name, obj_pos))
+                fallen_objs.append(obj.name)
+                # if fallen obj, remove from list
+                print("initially we have {} in object names list".format(self.object_names))
+                self.object_names.remove(obj.name)
+                print("removed {} now we have {}".format(obj.name, self.object_names))
+
+                # Check whether this is necessary.
+                # Also remove from sorted_object list so that it is no longer considered in computing
+                # the observations in the next iteration
+                if obj.name in self.sorted_objects_to_model:
+                    print("initially we have {} in sorted object to model list")
+                    self.sorted_objects_to_model.__delitem__(obj.name)
+
+        return fallen_objs
 
     def _is_success(self, achieved_goal, desired_goal):
         """
@@ -1897,11 +1930,15 @@ class Picking(SingleArmEnv):
             #         info = { 'is_success': False }
             # elif "state" in self.obs_type: ...
             # else:
-            #     raise ("Obs_type not recognized") 
+            #     raise ("Obs_type not recognized")
+
+        # 06c Check & remove fallen objs
+
+        fallen_objs = self.return_fallen_objs(obs=env_obs)
 
         # 07 Process Done: 
         # If (i) time_step is past horizon OR (ii) we have succeeded, set to true.
-        done = (self.timestep >= self.horizon) and not self.ignore_done or info['is_success']       
+        done = (self.timestep >= self.horizon) and not self.ignore_done or info['is_success']
     
         # 08 Process Reward
         reward = self.compute_reward(env_obs['achieved_goal'], env_obs['desired_goal'], info)

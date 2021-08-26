@@ -300,11 +300,6 @@ class MujocoEnv(metaclass=EnvMeta):
         # Make sure that all sites are toggled OFF by default
         self.visualize(vis_settings={vis: set_site_visualization for vis in self._visualizations})
         
-        # Return new observations 
-        # Core robosuite returns (proprio (32,), objects: (#obj*14))
-        # We modify observables in picking.py but also create a new method _get_obs() to replicated rlkit_relational and update observables from within
-        # Current observables: robot0_jointpos_cos/sin; robot0_joint_vel, robot0_eef_pos/quat/vel; robot0_gripper_qpos/qvel obj_pos/quat,to_robot_eef_pos/quat
-        #return self._get_observations(force_update=True)
         return self._get_obs(force_update=True)
 
     def _reset_internal(self):
