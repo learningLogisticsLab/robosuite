@@ -308,7 +308,10 @@ class MujocoEnv(metaclass=EnvMeta):
         return self._get_obs(force_update=True)
 
     def _reset_internal(self):
-        """Resets simulation internal configurations."""
+        """Resets simulation internal configurations. 
+        01 Reset Viewer|renderer 
+        02 Setup References (indices for robot/gripper/object 
+        03 Reset observables"""
 
         # create visualization screen or renderer
         if self.has_renderer and self.viewer is None:
@@ -336,7 +339,7 @@ class MujocoEnv(metaclass=EnvMeta):
 
         # additional housekeeping
         self.sim_state_initial = self.sim.get_state()
-        self._setup_references() # creates indeces for robot, gripper, object, also target_bin_placements 
+        self._setup_references() # creates indeces for robot, gripper, object including bin placements
         self.cur_time = 0
         self.timestep = 0
         self.done = False

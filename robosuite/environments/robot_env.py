@@ -279,6 +279,8 @@ class RobotEnv(MujocoEnv):
         Sets up references to important components. A reference is typically an
         index or a list of indices that point to the corresponding elements
         in a flatten array, which is how MuJoCo stores physical simulation data.
+
+        Parent: calls single_arm setup references. Sets up robot arm indices, finger indices, and special site indices.
         """
         super()._setup_references()
 
@@ -384,7 +386,10 @@ class RobotEnv(MujocoEnv):
 
     def _reset_internal(self):
         """
-        Resets simulation internal configurations.
+        Resets simulation internal configurations:
+        01 Reset Controllers
+        02 Reset number of action dimensions according to controller
+        03 Camera related info
         """
         # Run superclass reset functionality
         super()._reset_internal()
