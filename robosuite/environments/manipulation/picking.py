@@ -1070,17 +1070,33 @@ class Picking(SingleArmEnv):
                     # C. Update the model's mujoco objects
                     self.model.mujoco_objects  = self.visual_objects + self.objects + self.not_yet_considered_objects + self.not_yet_considered_visual_objects
 
-                    # D. Create placement initializer objects for each existing object (self.placement_initializer): will place according to strategy
-                    # Do th eequivalent of a hard reset to recreate the world with the new objects. Based on the reset() in base.py
-                    self._load_model() # loads robot/gripper/objects/bins            
+                    # D. Do th eequivalent of a hard reset to recreate the world with the new objects. Based on the reset() in base.py
+
+
+                    # self._load_model() # loads robot/gripper/objects/bins            
+                    # self._postprocess_model()
+                    # self._initialize_sim()      # creates self.sim and self.cmodel
+                    # self.sim.forward()          # update the simulation 
+
+                    # # E. Observables
+                    # _observables = self._setup_observables()
+                    # for obs_name, obs in _observables.items():
+                    #     self.modify_observable(observable_name=obs_name, attribute="sensor", modifier=obs._sensor)
+
+                    # Try to update the self.model = manipulatioTask directly.
+                    self.model = ManipulationTask(
+                        mujoco_arena=self.model.mujoco_arena,
+                        mujoco_robots = self.model.mujoco_robots,
+                        mujoco_objects = self.model.mujoco_objects                    
+                    )
+
                     self._postprocess_model()
                     self._initialize_sim()      # creates self.sim and self.cmodel
                     self.sim.forward()          # update the simulation 
 
-                    # E. Observables
-                    _observables = self._setup_observables()
-                    for obs_name, obs in _observables.items():
-                        self.modify_observable(observable_name=obs_name, attribute="sensor", modifier=obs._sensor)
+                    super()._reset_internal() # to setup references like obj_body_id.
+
+                    self._observables = self._setup_observables()
 
                     # F. Create placement initializer objects for each existing object (self.placement_initializer): will place according to strategy
                     self._get_placement_initializer()   
