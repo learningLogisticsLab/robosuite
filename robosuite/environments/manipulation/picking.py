@@ -268,12 +268,18 @@ class Picking(SingleArmEnv):
         # 3. set num_objects to represent in graph
         # 4. generate random list of objects to load: more involved as several checks required. 
 
-        # Init structs for object names, visual object names, object_to_ids, sorted_objects, objs _in_target_bing...
+        # Init structs for object names, visual object names, object_to_ids, sorted_objects, objs _in_target_bing...        
         self.object_names           = []                        # list of names currently modeled objects
         self.visual_object_names    = []                        # same for visual
 
         self.not_yet_considered_object_names        = []        # list of names of loaded objs that are not currently being modeled
         self.not_yet_considered_visual_object_names = []        # same for visual
+
+        self.objects                                = []        # list of modeled instantiated objects
+        self.visual_objects                         = []        
+
+        self.not_yet_considered_objects             = []        # list of unmodeled instantiated objects
+        self.not_yet_considered_visual_objects      = []        # same for visual        
 
         self.object_to_id            = {}                       # dict with mappings between object and id
         self.object_id_to_sensors    = {}                       # Maps object id to sensor names for that object         
@@ -378,6 +384,9 @@ class Picking(SingleArmEnv):
         self.objects.clear()
         self.visual_objects.clear()
 
+        self.not_yet_considered_visual_objects.clear()
+        self.not_yet_considered_objects.clear()
+
         self.object_names.clear()
         self.visual_object_names.clear()
 
@@ -422,7 +431,7 @@ class Picking(SingleArmEnv):
             goal_obj['pos']  = self.object_placements[goal_obj['name']][0]
             goal_obj['quat'] = self.object_placements[goal_obj['name']][1]
             
-            # Prepare a list of other objs not containing goal
+            # Prepare a list of other objs not containing goal. Note: it does not include the 'not_yet_considered_objects' that are not being modelled.
             other_objs_to_consider = self.object_names.copy()
             other_objs_to_consider.remove(goal_obj['name'])     
 
@@ -744,7 +753,7 @@ class Picking(SingleArmEnv):
     def _load_model(self):
         """
         Create a manipulation task object. 
-        Requires a (i) mujoco arena, (ii) robot (+gripper), and (iii) object + visual objects. 
+        Requires a (i) mujoco arena, (ii) robot (+gripper), and (iii) object + visual objects + not_yet_considered_objects (and visual objects)
         
         Return an xml model under self.model
         """
@@ -768,18 +777,15 @@ class Picking(SingleArmEnv):
         # store some arena attributes
         self.bin_size = mujoco_arena.table_full_size # bin_size is really the area covered by the two bins
 
-        # Create class names (must match those in ./robosuite/models/objects/xml_objects.py ) and call them with the name of the MujocoXMLObject
-        self.objects        = []
-        self.visual_objects = []
-
         # Given that self.object_names and self.visual_object_names are available from load, return classes
-        self.visual_objects, self.objects = self.extract_obj_classes()
+        (self.visual_objects, self.objects,
+        self.not_yet_considered_visual_objects, self.not_yet_considered_objects) = self.extract_obj_classes()
 
         # insantiate object model: includes arena, robot, and objects of interest. merges them to return a single model. 
         self.model = ManipulationTask(
             mujoco_arena    = mujoco_arena,
             mujoco_robots   = [robot.robot_model for robot in self.robots], 
-            mujoco_objects  = self.visual_objects + self.objects,
+            mujoco_objects  = self.visual_objects + self.objects + self.not_yet_considered_visual_objects + self.not_yet_considered_objects,
         )
 
         # Create placement initializers for each existing object (self.placement_initializer): will place according to strategy
@@ -1056,15 +1062,26 @@ class Picking(SingleArmEnv):
                     self.object_to_id) = self.load_objs_to_simulate(self.num_objs_in_db,self.num_objs_to_load)
 
                     # B. Extract class names (must match those in ./robosuite/models/objects/xml_objects.py ) and call them with the name of the MujocoXMLObject
-                    self.visual_objects, self.objects = self.extract_obj_classes()
+                    (self.visual_objects, self.objects, 
+                    self.not_yet_considered_visual_objects, self.not_yet_considered_objects)  = self.extract_obj_classes()
 
                     # C. Update the model's mujoco objects
-                    self.model.mujoco_objects  = self.visual_objects + self.objects
+                    self.model.mujoco_objects  = self.visual_objects + self.objects + self.not_yet_considered_objects + self.not_yet_considered_visual_objects
 
                     # D. Create placement initializer objects for each existing object (self.placement_initializer): will place according to strategy
-                    #self._get_placement_initializer()   
-                    # new objects. need to crecreate mujoco model.
-                    self._load_model() # check how to improve this. eef_xpos is now larger. just loading this is not correct. may need to do a hard reset.
+                    # Do th eequivalent of a hard reset to recreate the world with the new objects. Based on the reset() in base.py
+                    self._load_model() # loads robot/gripper/objects/bins            
+                    self._postprocess_model()
+                    self._initialize_sim()      # creates self.sim and self.cmodel
+                    self.sim.forward()          # update the simulation 
+
+                    # E. Observables
+                    _observables = self._setup_observables()
+                    for obs_name, obs in _observables.items():
+                        self.modify_observable(observable_name=obs_name, attribute="sensor", modifier=obs._sensor)
+
+                    # F. Create placement initializer objects for each existing object (self.placement_initializer): will place according to strategy
+                    self._get_placement_initializer()   
 
                 # B. Not Object Randomizations. 
                 # Two possibilities: (i) First Reset (ii) Continuing Reset. 
@@ -1079,10 +1096,11 @@ class Picking(SingleArmEnv):
                     # self.object_to_id) = self.load_objs_to_simulate(self.num_objs_in_db,self.num_objs_to_load)
 
                     # B. Extract class names (must match those in ./robosuite/models/objects/xml_objects.py ) and call them with the name of the MujocoXMLObject
-                    self.visual_objects, self.objects = self.extract_obj_classes()
+                    (self.visual_objects, self.objects, 
+                    self.not_yet_considered_visual_objects, self.not_yet_considered_objects)  = self.extract_obj_classes()
 
                     # C. Update the model's mujoco objects
-                    self.model.mujoco_objects  = self.visual_objects + self.objects
+                    self.model.mujoco_objects  = self.visual_objects + self.objects + self.not_yet_considered_objects + self.not_yet_considered_visual_objects
 
                     # D. Create placement initializer objects for each existing object (self.placement_initializer): will place according to strategy
                     self._get_placement_initializer()                           
@@ -1091,6 +1109,9 @@ class Picking(SingleArmEnv):
                 else:
                     self.object_names = self.objects_in_target_bin.copy()
                     self.objects_in_target_bin.clear()
+
+                    # can keep the same placement initializer object. no need to create a new one.. In the next step, we will sample new locations. 
+
 
                 # Sample from the "placement initializer" for all objects (regular and visual objects)
                 self.object_placements = self.placement_initializer.sample()
@@ -1521,7 +1542,7 @@ class Picking(SingleArmEnv):
             object_names.append(digit)                                      # o0001Object, o0002Object,...,o0010Object...
             visual_object_names.append(digit[:5]+'VisualObject')            # o0001VisualObject
 
-        # 02. Keep only self.num_objs in objenct_names. The rest go to the objs_not_yet_considered
+        # 02. Keep only self.num_objs in objent_names. The rest go to the objs_not_yet_considered
         obj_idx_not_yet_modelled            = num_objs_to_load - self.num_objects
         
         if obj_idx_not_yet_modelled != 0:
@@ -1547,6 +1568,9 @@ class Picking(SingleArmEnv):
         objects         = []
         visual_objects  = []
 
+        not_considered_objs     = []
+        not_considered_vis_objs = []  
+
         # Extract visual classes and objects 
         for cls in self.visual_object_names:
 
@@ -1560,7 +1584,20 @@ class Picking(SingleArmEnv):
             obj = obj(name=cls)
             objects.append(obj)  
 
-        return visual_objects, objects   
+        # Extract not yet considered visual classes and objects 
+        for cls in self.not_yet_considered_visual_object_names:
+
+            vis_obj = getattr(sys.modules[__name__], cls)           # extract class
+            vis_obj = vis_obj(name=cls)                             # Now instantiate class by passing needed constructor argument: name of class
+            not_considered_vis_objs.append(vis_obj)                     
+
+        # Repeat for non-visual not considered objectsobjects
+        for cls in self.not_yet_considered_object_names:
+            obj = getattr(sys.modules[__name__], cls)          
+            obj = obj(name=cls)
+            not_considered_objs.append(obj)              
+
+        return visual_objects, objects, not_considered_vis_objs, not_considered_objs
         
     def _get_obs(self, force_update=False):
         '''
