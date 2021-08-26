@@ -265,7 +265,7 @@ class Picking(SingleArmEnv):
         has_renderer            = False,
         has_offscreen_renderer  = True,
         
-        render_camera           = "agentview", #TODO: may need to adjust here for better angle for our work
+        render_camera           = "birdview", #TODO: may need to adjust here for better angle for our work
         render_collision_mesh   = False,
         render_visual_mesh      = True,
         render_gpu_device_id    = 0,            # was -1 
@@ -679,7 +679,7 @@ class Picking(SingleArmEnv):
                 name                            = "placeObjectSampler",             # name for object sampler for each object
                 mujoco_objects                  = self.visual_objects,
                 x_range                         = [-bin_x_half, bin_x_half],        # This (+ve,-ve) range goes from center to the walls on each side of the bin
-                y_range                         = [-bin_y_half, bin_y_half],
+                y_range                         = [-bin_y_half, -bin_y_half * 0.8],
                 rotation                        = None,                             # Add uniform random rotation
                 rotation_axis                   = 'z',                              # Currently only accepts one axis. TODO: extend to multiple axes.
                 ensure_object_boundary_in_range = True,
