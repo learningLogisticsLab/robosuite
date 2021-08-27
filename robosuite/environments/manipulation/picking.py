@@ -1341,24 +1341,21 @@ class Picking(SingleArmEnv):
         sorted_obj_dist.move_to_end( self.goal_object['name'], last=False) # move to FRONT
 
         return sorted_obj_dist
-    
-    def return_fallen_objs(self):
+
+    def return_fallen_objs(self, obs):
         """
         return list of fallen objs names if lower than table height
         """
         fallen_objs = []
-        # for obj_pos, obj_quat, obj in self.object_placements.values():
         for name in self.object_names:
             # Get real-time pos from observables
-            obj_pos = self._observables[name+'_pos'].obs
+            obj_pos = self._observables[name + '_pos'].obs
             # check if obj has fallen below bin
             if obj_pos[2] < self.bin1_pos[2] + self.bin_thickness[2] and name in self.object_names:
                 print("new fallen obj !!! {}, pos is {}".format(name, obj_pos))
                 fallen_objs.append(name)
                 # if fallen obj, remove from list
-                print("initially we have {} in object names list".format(self.object_names))
                 self.object_names.remove(name)
-                print("removed {} now we have {}".format(name, self.object_names))
 
         return fallen_objs
 
