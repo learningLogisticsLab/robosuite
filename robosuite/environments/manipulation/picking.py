@@ -8,11 +8,12 @@ import numpy as np
 from collections import OrderedDict
 
 # Utilities
+import robosuite as suite
 import robosuite.utils.transform_utils as T
 from robosuite.utils.placement_samplers import SequentialCompositeSampler, UniformRandomSampler, robotUniformRandomSampler, UniformWallSampler
 
 # 01 Objects
-# Import desired|all objects (and visual objects)
+# Import desired|all objects (and visual objects). Use * to import large number of objects. 
 from robosuite.models.objects import * 
 
 # After importing we can extract objects by getting the modules via dir()
@@ -57,9 +58,12 @@ from robosuite.utils.observables import Observable, sensor
 # 06 Mujoco
 import mujoco_py
 
+# 07 Gym Spaces
+from gym import spaces
+
 # Globals
 object_reset_strategy_cases = ['organized', 'jumbled', 'wall', 'random']
-_reset_internal_has_been_run = False
+_reset_internal_after_picking_all_objs = True
 
 
 class Picking(SingleArmEnv):
@@ -196,7 +200,6 @@ class Picking(SingleArmEnv):
 
             :Note: Specifying "default" will automatically use the default noise settings.
                 Specifying None will automatically create the required dict with "magnitude" set to 0.0.
-    
 
     Raises:
         AssertionError: [Invalid object type specified]
@@ -219,8 +222,13 @@ class Picking(SingleArmEnv):
         table_full_size = (0.39, 0.49, 0.82), # these dims are table*2 -0.01 in (x,y). z would have been 0.02*2 -1 = 0.03 but it is 0.82 ??
         table_friction  = (1, 0.005, 0.0001), # (sliding, torsional, rolling) rations across surfaces. 
 
-        bin1_pos = (0.1, -0.25, 0.8),           # Follows xml
-        bin2_pos = (0.1, 0.28, 0.8),
+        # bin1_pos = (0.1, -0.25, 0.8),           # Follows xml
+        # bin2_pos = (0.1, 0.28, 0.8),
+
+        # move bins
+        bin1_pos=(-0.1, -0.25, 0.8),  # Follows xml
+        bin2_pos=(-0.1, 0.28, 0.8),
+        bin_thickness=(0, 0, 0.02),
         
         # Observations
         use_camera_obs = True,                  # TODO: Currently these two options are setup to work in oposition it seems. Can we have both to True?
@@ -258,7 +266,7 @@ class Picking(SingleArmEnv):
         has_renderer            = False,
         has_offscreen_renderer  = True,
         
-        render_camera           = "agentview", #TODO: may need to adjust here for better angle for our work
+        render_camera           = "birdview", #TODO: may need to adjust here for better angle for our work
         render_collision_mesh   = False,
         render_visual_mesh      = True,
         render_gpu_device_id    = 0,            # was -1 
@@ -309,7 +317,7 @@ class Picking(SingleArmEnv):
         print(f"The object reset strategy is: {self.object_reset_strategy} and new objects will be randomly picked after reset\n")
         #-----------
 
-        # Objects and Goals
+        # (B) Objects and Goals
         # Given the available objects, randomly pick num_objs_to_load and return names, visual names, and name_to_id
         self.object_names, self.visual_object_names, self.object_to_id = self.load_objs_to_simulate(self.num_objs_in_db,self.num_objs_to_load)
 
@@ -323,8 +331,16 @@ class Picking(SingleArmEnv):
         self.goal_object            = {}                     # holds name, pos, quat
         self.goal_pos_error_thresh  = goal_pos_error_thresh  # set threshold to determine if current pos of object is at goal.
 
+        # whether to use ground-truth object states
+        self.use_object_obs = use_object_obs
 
-        # (B) Arena: bins_arena.xml
+        # (C) reward configuration
+        self.reward_scale   = reward_scale                      # Sets a scale for final reward
+        self.reward_shaping = reward_shaping
+
+        self.distance_threshold = 0.05                          # Determine whether obj reaches goal
+
+        # (D) Arena: bins_arena.xml
 
         # Table---
         # settings for table top
@@ -334,13 +350,7 @@ class Picking(SingleArmEnv):
         # settings for bin position
         self.bin1_pos = np.array(bin1_pos)
         self.bin2_pos = np.array(bin2_pos)
-
-        # reward configuration
-        self.reward_scale   = reward_scale                      # Sets a scale for final reward
-        self.reward_shaping = reward_shaping
-
-        # whether to use ground-truth object states
-        self.use_object_obs = use_object_obs
+        self.bin_thickness = np.array(bin_thickness)
 
         # Initialize Parent Classes: SingleArmEnv->ManipEnv->RobotEnv->MujocoEnv
         super().__init__(
@@ -372,7 +382,7 @@ class Picking(SingleArmEnv):
             initialization_noise    = initialization_noise,            
         )
 
-    def goal_distance(goal_a, goal_b):
+    def goal_distance(self, goal_a, goal_b):
         assert goal_a.shape == goal_b.shape
         return np.linalg.norm(goal_a - goal_b, axis=-1)
 
@@ -381,7 +391,7 @@ class Picking(SingleArmEnv):
         Plays the role of selecting a desired object for order fulfillment (name,pose)
         Currently, randomly choose an object from the list of self.object_names which has num_objs_to_load.
 
-        Assumes that (visual) object placements from _reset_internal() are available: 
+        Assumes that (visual) object placements from reset_sim() are available: 
         self.object_placements = self.placement_initializer.sample()
 
         If objects are unavailable, return none
@@ -406,7 +416,9 @@ class Picking(SingleArmEnv):
     
     def compute_reward(self, achieved_goal, desired_goal, info):
         """
-        Computes discrete sparse reward, perhaps in an off-policy way during training. A negative format is used. So, if the goal is not met, you are penalized with -1. 
+        Computes discrete sparse reward, perhaps in an off-policy way during training. 
+        
+        A negative format is used: if goal is not met ==> penalized with -1. 
         The policy will be encouraged to minimize the cost. A perfect policy would have returns equal to 0.
         
         - Use achieved goal and desired goal positions to determine the reward. 
@@ -421,14 +433,15 @@ class Picking(SingleArmEnv):
         # Compute position subdistances
         ag_pos = achieved_goal[:3]
         dg_pos = desired_goal[:3]
-        dist   = self.subgoal_distances(ag_pos, dg_pos)
+        dist   = self.goal_distance(ag_pos, dg_pos)
 
         # Sparse reward calculation: negative format
         # - If you do not reach your target, a -1 will be assigned as the reward, otherwise zero.
-        # - a perfect policy would get returns equivalent to 0
-        reward = np.min([-(dist > self.distance_threshold).astype(np.float32) for d in dist], axis=0)
-        reward = np.asarray(reward)
-            
+        # - a perfect policy would get returns equivalent to 0        
+        reward = -(dist > self.distance_threshold).astype(np.float32)
+        # reward = np.min([-(dist > self.distance_threshold).astype(np.float32) for d in dist], axis=0)
+
+        reward = np.asarray(reward)            
         return reward          
 
     def reward(self, action=None):
@@ -449,6 +462,8 @@ class Picking(SingleArmEnv):
 
         Returns:
             float: reward value
+
+        TODO: given that there is a built-in scaled-reward assumption throughout the algorithms (though right now it is set to 1.0), it may be best to use positive rewards for success and 0 for failure.
         """
         # compute sparse rewards
         if self.is_success():
@@ -608,7 +623,7 @@ class Picking(SingleArmEnv):
                     rotation_axis                   = 'z',                          # Currently only accepts one axis. TODO: extend to multiple axes.
                     ensure_object_boundary_in_range = True,
                     ensure_valid_placement          = True,
-                    reference_pos                   = self.bin1_pos,
+                    reference_pos                   = self.bin1_pos+self.bin_thickness,
                     z_offset                        = 0.,
                 )
             )
@@ -631,7 +646,7 @@ class Picking(SingleArmEnv):
                     rotation_axis                   = 'z',                              # Currently only accepts one axis. TODO: extend to multiple axes.
                     ensure_object_boundary_in_range = True,
                     ensure_valid_placement          = True,
-                    reference_pos                   = self.bin1_pos,
+                    reference_pos                   = self.bin1_pos+self.bin_thickness,
                     z_offset                        = 0.,
                 )
             )
@@ -655,7 +670,7 @@ class Picking(SingleArmEnv):
                     rotation_axis                   = 'z',                              # Currently only accepts one axis. TODO: extend to multiple axes.
                     ensure_object_boundary_in_range = True,
                     ensure_valid_placement          = True,
-                    reference_pos                   = self.bin1_pos,
+                    reference_pos                   = self.bin1_pos+self.bin_thickness,
                     z_offset                        = 0.,
                 )
             )
@@ -666,7 +681,7 @@ class Picking(SingleArmEnv):
                 name                            = "placeObjectSampler",             # name for object sampler for each object
                 mujoco_objects                  = self.visual_objects,
                 x_range                         = [-bin_x_half, bin_x_half],        # This (+ve,-ve) range goes from center to the walls on each side of the bin
-                y_range                         = [-bin_y_half, bin_y_half],
+                y_range                         = [-bin_y_half, -bin_y_half * 0.8],
                 rotation                        = None,                             # Add uniform random rotation
                 rotation_axis                   = 'z',                              # Currently only accepts one axis. TODO: extend to multiple axes.
                 ensure_object_boundary_in_range = True,
@@ -694,7 +709,7 @@ class Picking(SingleArmEnv):
             z_range=[min_z, max_z],
             rotation=None,
             rotation_axis='z',
-            reference_pos=self.bin1_pos,
+            reference_pos=self.bin1_pos+self.bin_thickness,
             )
 
     def _load_model(self):
@@ -886,6 +901,79 @@ class Picking(SingleArmEnv):
 
         return sensors, names
 
+    def _activate_her(self, obj_pos, obj_quat, obj):
+        """
+        Place objects inside the gripper site 50% of the time.
+        - offset: Approx offset between gripper site and gripper base
+        - longitude_max: Max length of objects that the gripper can manage to grip
+        Gripping strategies divided into 3 cases by checking min (x_radius, y_radius, vertical_radius/2):
+        - x_radius grip
+            1. lower obj height by subtracting offset from half of obj.vertical_radius/2 to prevent obj & grip base collision
+            2. reset obj_quat to default quat
+            3. move gripper fingers and update gripper sim according to obj.x_radius
+        - y_radius grip if x_radius * 2 > long_max
+            1. lower obj height by subtracting offset from half of obj.vertical_radius/2 to prevent obj & grip base collision
+            2. rotate obj_quat 90 deg in x-axis
+            3. move gripper fingers and update gripper sim according to obj.y_radius
+        - vertical_radius grip
+            1. rotate obj_quat 90 deg in z-axis
+            2. lower obj height by subtracting offset from of obj.y_radius to prevent obj & grip base collision
+            3. move gripper fingers and update gripper sim according to obj.y_radius
+        """
+        # Set HER 50% of the time
+        HER = np.random.uniform() < 0.50
+        # introduce offset between grip site and gripper mount to prevent collision
+        offset = 0.03
+        # maximum gripping space
+        longitude_max = 0.07
+        # HER flag for activating HER 100% all the time
+        HER = True
+        if HER:
+            # Rename goal object pos as eef pos, goal object quat
+            HER_pos = self._eef_xpos
+            HER_quat = obj_quat
+            # print("Original object pos is {}".format(HER_pos))
+            # print("Original obj_quat is {}".format(HER_quat))
+            min_longitude = min(obj.x_radius * 2, obj.y_radius * 2, obj.vertical_radius)
+
+            # Gripping strategy if horizontal radius is the shorter side
+            if min_longitude == (obj.x_radius * 2) or min_longitude == (obj.y_radius * 2):
+                # Check for offset
+                if (obj.vertical_radius > offset):
+                    HER_pos[2] -= (obj.vertical_radius / 2 - offset)
+                # Rotate if current orientation is too long
+                if (obj.x_radius * 2 >= longitude_max):
+                    # y_radius gripping strategy
+                    # quat = (x,y,z,w)
+                    # rx 90 degrees
+                    HER_quat = [0.98, 0, 0, 0]
+                    # Set left & right fingers to reach the goal obj
+                    self.sim.data.set_joint_qpos('gripper0_finger_joint1', obj.y_radius)
+                    self.sim.data.set_joint_qpos('gripper0_finger_joint2', -obj.y_radius)
+                # Otherwise revert back to obj default orientation
+                else:
+                    # x_radius gripping strategy
+                    HER_quat = [0, 0, 0, 1]
+                    # Set left & right fingers to reach the goal obj
+                    self.sim.data.set_joint_qpos('gripper0_finger_joint1', obj.x_radius)
+                    self.sim.data.set_joint_qpos('gripper0_finger_joint2', -obj.x_radius)
+            # Gripping strategy if the vertical radius is the shorter side
+            else:  # rz 90 degreez
+                HER_quat = [0, 0, 0.7, -0.7]
+                # Check for offset
+                if obj.y_radius > offset:
+                    HER_pos[2] -= (obj.y_radius - offset)
+                # Set left & right fingers to reach the goal obj
+                self.sim.data.set_joint_qpos('gripper0_finger_joint1', obj.vertical_radius / 2)
+                self.sim.data.set_joint_qpos('gripper0_finger_joint2', -obj.vertical_radius / 2)
+
+            # Update goal_object with (HER_pos, HER_quat) on the simulation
+            self.sim.data.set_joint_qpos(obj.joints[0], np.concatenate([np.array(HER_pos), np.array(HER_quat)]))
+            # print("Update HER pos for {} to {}".format(self.goal_object['name'], HER_pos))
+            # print("Update HER pose for {} to {}".format(self.goal_object['name'], HER_quat))
+        else:
+            self.sim.data.set_joint_qpos(obj.joints[0], np.concatenate([np.array(obj_pos), np.array(obj_quat)]))
+
     def _reset_internal(self):
         """
         Resets the simulation's internal configuration and object positions and robot eef
@@ -906,9 +994,10 @@ class Picking(SingleArmEnv):
         # TODO: need to decide when the locations of objects should be updated. if arm does not finish picking everything, do we want to move things around?
         The goal object should also not be changed for this time. Should this only happen in a hard reset?
         """
-        global _reset_internal_has_been_run
+        global _reset_internal_after_picking_all_objs
 
-        if _reset_internal_has_been_run:
+        # if we have not finished picking_all_objs, calling _reset_internal will do nothing
+        if not _reset_internal_after_picking_all_objs:
             return
 
         super()._reset_internal()
@@ -995,15 +1084,6 @@ class Picking(SingleArmEnv):
                 # self.sim.data.set_joint_qpos('gripper0_finger_joint2', -0.04)
 
                 for obj_pos, obj_quat, obj in self.object_placements.values():
-                    # Set HER 50% of the time
-                    HER = np.random.uniform() < 0.50
-                    # introduce offset between grip site and gripper mount to prevent collision
-                    offset = 0.03
-                    # maximum gripping space
-                    longitude_max = 0.07
-                    # HER flag for activating HER 100% all the time
-                    HER = True
-
                     # Set the visual object body locations
                     if "visualobject" in obj.name.lower():                             # switched "visual" for "v"
                         self.sim.model.body_pos[self.obj_body_id[obj.name]]  = obj_pos
@@ -1019,49 +1099,7 @@ class Picking(SingleArmEnv):
 
                     # Set the position of 'collision' objects:
                     elif obj.name.lower() == self.goal_object['name'].lower():
-                        if HER:
-                            # Rename goal object pos as eef pos, goal object quat
-                            HER_pos = self._eef_xpos
-                            HER_quat = obj_quat
-                            print("Original object pos is {}".format(HER_pos))
-                            print("Original obj_quat is {}".format(HER_quat))
-                            min_longitude = min(obj.x_radius * 2, obj.y_radius * 2, obj.vertical_radius)
-
-                            # Gripping strategy if horizontal radius is the shorter side
-                            if min_longitude == (obj.x_radius * 2) or min_longitude == (obj.y_radius * 2):
-                                # Check for offset
-                                if (obj.vertical_radius > offset):
-                                    HER_pos[2] -= (obj.vertical_radius/2 - offset)
-                                # Rotate if current orientation is too long
-                                if(obj.x_radius * 2 >= longitude_max):
-                                    # quat = (x,y,z,w)
-                                    # rx 90 degrees
-                                    HER_quat = [0.98, 0, 0, 0]
-                                    # Set left & right fingers to reach the goal obj
-                                    self.sim.data.set_joint_qpos('gripper0_finger_joint1', obj.y_radius)
-                                    self.sim.data.set_joint_qpos('gripper0_finger_joint2', -obj.y_radius)
-                                # Otherwise revert back to obj default orientation
-                                else:
-                                    HER_quat = [0, 0, 0, 1]
-                                    # Set left & right fingers to reach the goal obj
-                                    self.sim.data.set_joint_qpos('gripper0_finger_joint1', obj.x_radius)
-                                    self.sim.data.set_joint_qpos('gripper0_finger_joint2', -obj.x_radius)
-                            # Gripping strategy if the vertical radius is the shorter side
-                            else: # rz 90 degreez
-                                HER_quat = [0, 0, 0.7, -0.7]
-                                # Check for offset
-                                if(obj.y_radius > offset):
-                                    HER_pos[2] -= (obj.y_radius - offset)
-                                # Set left & right fingers to reach the goal obj
-                                self.sim.data.set_joint_qpos('gripper0_finger_joint1', obj.vertical_radius/2)
-                                self.sim.data.set_joint_qpos('gripper0_finger_joint2', -obj.vertical_radius/2)
-
-                            # Update goal_object with (HER_pos, HER_quat) on the simulation
-                            self.sim.data.set_joint_qpos(obj.joints[0], np.concatenate([np.array(HER_pos), np.array(HER_quat)]))
-                            # print("Update HER pos for {} to {}".format(self.goal_object['name'], HER_pos))
-                            # print("Update HER pose for {} to {}".format(self.goal_object['name'], HER_quat))
-                        else:
-                            self.sim.data.set_joint_qpos(obj.joints[0], np.concatenate([np.array(obj_pos), np.array(obj_quat)]))
+                        self._activate_her(obj_pos=obj_pos, obj_quat=obj_quat, obj=obj)
                     else:
                         self.sim.data.set_joint_qpos(obj.joints[0], np.concatenate([np.array(obj_pos), np.array(obj_quat)]))
 
@@ -1155,13 +1193,12 @@ class Picking(SingleArmEnv):
                 self.sim.model.body_pos[self.sim.model.body_name2id("bin2")] = self.bin2_pos
 
                 # flag to run _reset_internal for the very first time only
-                _reset_internal_has_been_run = True
-
+                _reset_internal_after_picking_all_objs = False
         return True
 
     def return_sorted_objs_to_model(self,obs):
         '''
-        The goal of this method is to return a list of num_objects in length that are closest to self.goal_object and that we want to model as nodes
+        The goal of this method is to return a dictionary num_objects in length that are closest to self.goal_object ['name'] that we want to model in the graph as nodes
         1) Access all objects that are not the goal
         2) Compute their norm with the goal
         3) Sort them
@@ -1204,11 +1241,43 @@ class Picking(SingleArmEnv):
         sorted_obj_dist.move_to_end( self.goal_object['name'], last=False) # move to front
 
         return sorted_obj_dist
+    
+    def return_fallen_objs(self, obs):
+        """
+        return list of fallen objs names if lower than table height
+        """
+        fallen_objs = []
+
+        # for obj_pos, obj_quat, obj in self.object_placements.values():
+        for placed_pos , placed_quat, obj in self.object_placements.values():
+            # Get real-time pos from observables
+            
+            # print(obs[obj.name + '_pos'][2])
+            obj_pos = self.sim.data.body_xpos[self.obj_body_id[obj.name]]
+            print("can we read obj observations? {}".format(obj_pos))
+            # check if obj has fallen below bin
+            if obj_pos[2] < self.bin1_pos[2]+self.bin_thickness[2] and obj.name in self.object_names:
+                print("new fallen obj !!! {}, pos is {}".format(obj.name, obj_pos))
+                fallen_objs.append(obj.name)
+                # if fallen obj, remove from list
+                print("initially we have {} in object names list".format(self.object_names))
+                self.object_names.remove(obj.name)
+                print("removed {} now we have {}".format(obj.name, self.object_names))
+
+                # Check whether this is necessary.
+                # Also remove from sorted_object list so that it is no longer considered in computing
+                # the observations in the next iteration
+                if obj.name in self.sorted_objects_to_model:
+                    print("initially we have {} in sorted object to model list")
+                    self.sorted_objects_to_model.__delitem__(obj.name)
+
+        return fallen_objs
 
     def _is_success(self, achieved_goal, desdired_goal):
         """
         HER-Specific check success method comparing achieved and desired positions 
-        TODO: current do not analyze orientation. Test good performance with position only first. 
+        TODO: currently we do not analyze orientation. Test good performance with position only first. 
+        TODO: Should also add an additional check to see if the object is in fact touching the fingers. This check is done in standard robosuite and should be integrated here. 
 
         Currently the achieved_goal (current position of goal object) and desired_goal are numpy arrays with [pos|quat] shape (7,) 
 
@@ -1221,12 +1290,14 @@ class Picking(SingleArmEnv):
             3. select new next object_goal 
 
         Returns:
-            bool: True if object placed correctly
+            bool: True if 1 / all object(s) placed correctly
 
         TODO: consider modifing the definition of is_success according to QT-OPTs criteria to increase reactivity
         requires reaching a certain height... see paper for more. also connected with one parameter in observations.
+
+        TODO: after succeeding, in any occurrence, move the end-effector to a starting position
         """
-        global _reset_internal_has_been_run
+        global _reset_internal_after_picking_all_objs
         
         # Subtract obj_pos from goal and compute that error's norm:
         target_dist_error = np.linalg.norm(achieved_goal - desdired_goal)
@@ -1235,23 +1306,28 @@ class Picking(SingleArmEnv):
             # After successfully placing self.goal_object, remove this from the list of considered names for the next round
             self.object_names.remove(self.goal_object['name'])
 
+            # TODO: double check if the above line is enough, or we aldso need the line below. Also remove from sorted_object list so that it is no longer considered in computing the observations in the next iteration
+            self.sorted_objects_to_model.__delitem__(self.goal_object['name'])
+
             # Get a new object_goal if objs still available
             self.goal_object,_ = self.get_goal_object() 
             print(f"Successful placement. New object goal is {self.goal_object['name']}") 
 
             # Add the current goal object to the list ob objects in target bins
             self.objects_in_target_bin.append(self.goal_object['name'])
-
+            print("Picked {}". format(self.goal_object['name']))
             return True
         elif len(self.object_names) == 0 and len(self.objects_in_target_bin) == self.num_objs_to_load:
-            _reset_internal_has_been_run = False
-            print("Finished picking and placing all objects")
+            _reset_internal_after_picking_all_objs = True
+            print("Finished picking and placing all objects, can call reset internal again")
             return True
         else:
             return False
 
     def check_success(self):
         """
+        **Standard robosuite method. Not used with HER. **
+
         General check success method based on where the goal object is placed. 
 
         Check if self.goal_object is placed at target position. 
@@ -1419,20 +1495,28 @@ class Picking(SingleArmEnv):
 
         Method executes the following:
         1. Compute observations as np arrays [grip_xyz, f1x, f2x, grip_vxyz, f1v, f2v, obj1_pos, rel_pos_wrt_gripp_obj, obj1_theta, obj1_vxyz, obj1_dtheta obj2... ]
-        2. Achieved goal: [obj1_pos obj2_pos ... objn_pos grip_xyz]
-        3. Desired goal: goal obtained in ._sample_goal()
+        2. Achieved goal: [goal_obj.pos]                        # First iteration, testing placing only with pos and w/out orientation.
+        3. Desired goal: goal pos obtained in ._sample_goal()   # same as achieved_goal 
 
-        Achieve Goal
-        if it has the object, use robotic gripper. otherwise use the object position.     
+        Notes: 
 
-        Note:
+        Observable Modalities:
         Currently we do not consider the observable's modalities in this function. 
-        The GymWrapper uses hem in its constructor... So far I don't think it will be a problem but need to check. 
+        The GymWrapper uses them in its constructor... So far I don't think it will be a problem but need to check. 
         
-        ## TODO: currently we are collecting quaternions. However, we are using an OSC Controller than requests 
-        xyz rpy for the robot. It seems that observations should match action space to facilitate the learning of the network, 
-        otherwise it needs to learn that mapping as well... but working with Euler angles is prone to singularities when pitch=90 deg
-
+        Orientations:
+        For combined pick and place, we will collect quaternions in the robot and object observations to help with pick. 
+        However, we will not include the quat's for achieved/desired goals used in placement for now. Important to keep correct dims into account in relationalRL/graph code.
+        
+        
+        Impact on Actions:
+        Action dims are set by the controller used (i.e. robosuite's Operational Space Controller (OSC)).
+        OSC uses xyz rpy updates for the robot. 
+        
+        Consideration: will the use of quat's in observations and rpy in actions make learning more difficult for the NN?
+        TODO: may need to test performance between in-quat + out-rpy and in-rpy + out-rpy or in-quat + out-quat.
+        
+        Additional Observations:
         ## TODO: Additional observations
             # (1) End-effector type: use robosuites list to provide an appropriate number to these
             # (2) QT-OPTs DONE parameter for reactivity.
@@ -1479,13 +1563,15 @@ class Picking(SingleArmEnv):
 
         # Observations for Objects
         # *Note: there are three quantities of interest: (i) (total) num_objs_to_load, (ii) num_objs (to_model), and (iii) goal object. 
-        # We report data for num_objs that are closes to goal_object and ignore the rest. 
+        # We report data for num_objs that are closest to goal_object and ignore the rest. This list is updated when is_success is True.
         # We only consider the relative position between the goal object and end-effector, all the rest are set to 0.
         self.sorted_objects_to_model = self.return_sorted_objs_to_model(obs)
 
         # Place goal object at the front
         self.sorted_objects_to_model
 
+        # TODO: sorted_objects should be updated when an object is successfully picked. Such that when there is one object less, 
+        # the new dimensionality is reflected in these observations as well.
         for i in range( len(self.sorted_objects_to_model )):
 
             name_list = list(self.sorted_objects_to_model)
@@ -1512,9 +1598,9 @@ class Picking(SingleArmEnv):
                 #--------------------------------------------------------------------------
                 # TODO: double check if this works effectively for our context + HER. Otherwise can add objects and grip pose.
                 #--------------------------------------------------------------------------                                 
-                 achieved_goal = np.concatenate([    # 7 * num objects                
-                    object_i_pos.copy(),    # 3 * num_objects
-                    object_i_quat.copy(),   # 4 * num_objects
+                 achieved_goal = np.concatenate([    # 3          # 7                
+                    object_i_pos.copy(),    # 3      # Try pos only first.           
+                    # object_i_quat.copy(), # 4
                 ])
 
             else:
@@ -1553,9 +1639,9 @@ class Picking(SingleArmEnv):
         # 03 Desired Goal
         #--------------------------------------------------------------------------
         desired_goal = []
-        desired_goal = np.concatenate([ # 7
-            self.goal_object['pos'],    # 3
-            self.goal_object['quat']    # 4
+        desired_goal = np.concatenate([ # 3             # 7
+            self.goal_object['pos'],    # 3             # Try pos only first.
+            # self.goal_object['quat']    # 4
         ])
         
         # Returns obs, ag, and also dg
@@ -1581,7 +1667,8 @@ class Picking(SingleArmEnv):
 
         Takes a step in simulation with control command @action:
 
-        01 Move simulation sim.forward() steps 2-21 (http://mujoco.org/book/computation.html#piForward)
+        01 Call sim.forward() 
+            sim.forwrad() performs steps 2-21 (http://mujoco.org/book/computation.html#piForward) of a regular sim.step() call. Step 2-21 summarized below.
             fk->poses bodies/geoms/sites/cams
             body inertias+joint axes in global frames centered at CoM
             tendon lengths/moment arms
@@ -1600,13 +1687,16 @@ class Picking(SingleArmEnv):
             compute constraint forces with selected solver. update joint acceleration in mjData.aqcc main out of FwdDyns
             compute sensor data that dpeends on force/acceleration
             
-        02 Clip action
+        02 Clip action 
+            Note: not necessary when we wrap the env with the NormalizedBoxEnv class)
+
         03 Set data to mujoco sim.data.ctrl
+
         04 Step (steps 1-24)
             
             check pos/vels for unacceptably large vals indicating divergence.
             ...
-            ... those from above
+            ... steps from sim.forward() above
             ... 
             check for unacceptably lare values, if so reset
             compare FwdDyn | InvDyn to diagnose poor solver conv
@@ -1652,14 +1742,14 @@ class Picking(SingleArmEnv):
             # 01. sim.forward()
             self.sim.forward()
 
-            # TODO: is this necessary if we have the NormalizedBoxEnv in robosuite: 
-            # 02. Set (clipped) action in mujoco
-            action = np.clip(action, 
-                             self.action_spec[0],
-                             self.action_spec[1])
+            # Not necessary to clip actions within robosuite as we wrap with the NormalizedBoxEnv. 
+            # -->Set (clipped) action in mujoco
+            # action = np.clip(action, 
+            #                  self.action_spec[0],
+            #                  self.action_spec[1])
             
         
-            # 03 Copy action to sim.data.ctrl (no mocaps)
+            # 03 Copy action to sim.data.ctrl (no mocaps used currently. differs from FetchEnv step approach)
             self._pre_action(action, policy_step)
 
             # 04 sim.step
@@ -1679,45 +1769,82 @@ class Picking(SingleArmEnv):
         # Note: this is done all at once to avoid floating point inaccuracies
         self.cur_time += self.control_timestep        
 
-        # 06 Process Done
-        done = (self.timestep >= self.horizon) and not self.ignore_done
+        # 06 Process info
+        info = { 'is_success': self._is_success(env_obs['achieved_goal'], env_obs['desired_goal']) }
 
-        # 05 Process Reward * Info
-        # TODO: design a manner to describe observations in our graph node setting. currently just 'state', but later will use images in nodes, and can extend beyond.
-        # if "image" in self.obs_type:
-        #     reward = self.compute_reward_image()
-        #     if reward < .05:
-        #         info = { 'is_success': True }
-        #     else:
-        #         info = { 'is_success': False }
-        # elif "state" in self.obs_type: ...
-        # else:
-        #     raise ("Obs_type not recognized")        
+        # 06b Process Reward * Info
+            # TODO: design a manner to describe observations in our graph node setting. currently just 'state', but later will use images in nodes, and can extend beyond.
+            # if "image" in self.obs_type:
+            #     reward = self.compute_reward_image()
+            #     if reward < .05:
+            #         info = { 'is_success': True }
+            #     else:
+            #         info = { 'is_success': False }
+            # elif "state" in self.obs_type: ...
+            # else:
+            #     raise ("Obs_type not recognized")
 
-        # 07 Process info
-        info   = { 'is_success': self._is_success(env_obs['achieved_goal'], env_obs['desired_goal']) }
+        # 06c Check & remove fallen objs
 
+        fallen_objs = self.return_fallen_objs(obs=env_obs)
+
+        # 07 Process Done: 
+        # If (i) time_step is past horizon OR (ii) we have succeeded, set to true.
+        done = (self.timestep >= self.horizon) and not self.ignore_done or info['is_success']
+    
         # 08 Process Reward
         reward = self.compute_reward(env_obs['achieved_goal'], env_obs['desired_goal'], info)
 
-        return env_obs, reward, done, info        
+        return env_obs, reward, done, info       
+
+    def __reduce__(self):
+        
+    # #     # Return the object’s local name relative to its module; 
+    # #     #return "picking_blocks1_numrelblocks3_nqh1_rewardsparse_dictstateObs" #self.__module__
+        return 'Picking'
+    
+    def __getnewargs_ex__(self):
+        '''
+        The arguments needed to pass in are those used in base.py to create the new meta classes, i.e.
+        def __new__(meta, name, bases, class_dict):
+
+        Where, 
+        - meta is the MujocoEnv class isntance
+        - name is the name of the class, i.e. Picking
+        - bases is a tuple with the <class 'robosuite.environments.manipulation.single_arm_env.SingleArmEnv'>
+        - classes_dict is a dict with all the class method names and associated method objects
+        '''
+        args = tuple()
+        meta, name, bases = None, None, None
+        
+        kwargs = {}
+        kwargs['meta']  = self
+        kwargs['name']  = suite.environments.base.EnvMeta
+        kwargs['bases'] = (suite.environments.manipulation.single_arm_env.SingleArmEnv,) #(<class 'robosuite.environments.manipulation.single_arm_env.SingleArmEnv'>,)
+        kwargs          =  picking_dict['picking_dict'] # self.__dict__
+        return (args,kwargs)
 #-------------------------------------------------------------
 # Define new permutation of classes to register based on picking for relationalRL code
+# *This was my original sol. in following rlkit-relational FetchBlockConstruction. However it breaks, pickle.dumps/loads used in relationalRL. 
+# *Moved this to the base.py:MakeEnv and then added a __reduce__ method below to solve a __reduce__ related error, but could not. 
+#  For these reasons, currently giving up on registerin different classes. Will just go with 1 class Picking.
 #-------------------------------------------------------------
-for num_blocks in range(1, 25): # use of num_blocks indicates objects. kept for historical reasons.
-    for num_relational_blocks in [3]: # currently only testin with 3 relational blocks (message passing)
-        for num_query_heads in [1]: # number of query heads (multi-head attention) currently fixed at 1
-            for reward_type in ['incremental','sparse']: #could add sparse
-                for obs_type in ['dictstate','dictimage','np']: #['dictimage', 'np', 'dictstate']:
 
-                    # Generate the class name 
-                    className = F"picking_blocks{num_blocks}_numrelblocks{num_relational_blocks}_nqh{num_query_heads}_reward{reward_type}_{obs_type}Obs"
+#-------------------------------------------------------------    
+# for num_blocks in range(1, 25): # use of num_blocks indicates objects. kept for historical reasons.
+#     for num_relational_blocks in [3]: # currently only testin with 3 relational blocks (message passing)
+#         for num_query_heads in [1]: # number of query heads (multi-head attention) currently fixed at 1
+#             for reward_type in ['incremental','sparse']: #could add sparse
+#                 for obs_type in ['dictstate','dictimage','np']: #['dictimage', 'np', 'dictstate']:
 
-                    # Add necessary attributes
+#                     # Generate the class name 
+#                     className = F"picking_blocks{num_blocks}_numrelblocks{num_relational_blocks}_nqh{num_query_heads}_reward{reward_type}_{obs_type}Obs"
 
-                    # Generate the class type using type and set parent class to Picking
-                    pickingReNN = type(className, (Picking,), {}) # args: (i) class name, (ii) tuple of base class, (iii) dictionary of attributes
+#                     # Add necessary attributes
 
-                    # Customize the class name
-                    globals()[className] = pickingReNN
+#                     # Generate the class type using type and set parent class to Picking
+#                     pickingReNN = type(className, (Picking,), {}) # args: (i) class name, (ii) tuple of base class, (iii) dictionary of attributes
+
+#                     # Customize the class name
+#                     globals()[className] = pickingReNN
 

@@ -255,7 +255,7 @@ class SingleArm(Manipulator):
 
         # Get gripper action, if applicable
         if self.has_gripper:
-            self.grip_action(gripper=self.gripper, gripper_action=gripper_action)
+            self.grip_action(gripper=self.gripper, gripper_action=gripper_action) # sets self.sim.data.ctrl[actuator_idxs] 
 
         # Apply joint torque control
         self.sim.data.ctrl[self._ref_joint_actuator_indexes] = self.torques

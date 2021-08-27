@@ -25,7 +25,7 @@ class GymWrapper(Wrapper, Env):
         AssertionError: [Object observations must be enabled if no keys]
     """
 
-    def __init__(self, env, keys=None):
+    def __init__(self, env, rlkit_relational=True, keys=None):
         # Run super method
         super().__init__(env=env)
         # Create name for gym
@@ -53,9 +53,9 @@ class GymWrapper(Wrapper, Env):
         self.metadata = None
 
         # HACK: forcing rlkit_relational settings
-        rlkit_relational = True
+        self.rlkit_relational = rlkit_relational
 
-        if not rlkit_relational:
+        if not self.rlkit_relational:
             # set up observation and action spaces
             obs                 = self.env.reset()                              # dictionary of observables
             self.modality_dims  = {key: obs[key].shape for key in self.keys}
@@ -67,7 +67,7 @@ class GymWrapper(Wrapper, Env):
             low, high           = self.env.action_spec
             self.action_space   = spaces.Box(low=low, high=high)
 
-        if rlkit_relational:
+        if self.rlkit_relational:
             # set up observation and action spaces
             obs                 = self.env.reset()                              # dictionary of observables
             self.modality_dims  = {key: obs[key].shape for key in self.keys}
@@ -76,7 +76,17 @@ class GymWrapper(Wrapper, Env):
             
             high                = np.inf * np.ones(self.obs_dim)
             low                 = -high
-            self.observation_space = spaces.Box(low=low, high=high)
+
+            #-------------------------------------------------------------------------------------------------------------
+            ## rlkit-relational interface: The ObsDictRelabelingBuffer used for the ReplayBuffer checks for the following below:
+            #-------------------------------------------------------------------------------------------------------------
+            # Set the observation space as a spaces.Dict. Can check rlkit_relational/FCB/FCB/envs/robotics/robot_env.py__init__
+            # Spatial Information:
+            self.observation_space = spaces.Dict(dict(
+                desired_goal  = spaces.Box(-np.inf, np.inf, shape=obs['achieved_goal'].shape, dtype='float32'),
+                achieved_goal = spaces.Box(-np.inf, np.inf, shape=obs['achieved_goal'].shape, dtype='float32'),
+                observation   = spaces.Box(-np.inf, np.inf, shape=obs['observation'].shape, dtype='float32'),
+            ))
             
             # Action specs set in robot environ and depend on controller (gripper + robot)
             # i.e. if 2 gripper fingers => gripper is dim(1), if OSC controller 'fixed' dim is xyz rpy
@@ -110,11 +120,16 @@ class GymWrapper(Wrapper, Env):
             np.array: Flattened environment observation space after reset occurs
         """
         ob_dict = self.env.reset()
-        return self._flatten_obs(ob_dict)
+        if self.rlkit_relational:
+            return ob_dict
+        else:
+            return self._flatten_obs(ob_dict)
 
     def step(self, action):
         """
-        Extends vanilla step() function call to return flattened observation instead of normal OrderedDict.
+        Extends vanilla step() function. 
+        - Normally returns flattened observation instead of normal OrderedDict.
+        - For relationalRL, we do not flatten. 
 
         Args:
             action (np.array): Action to take in environment
@@ -122,13 +137,17 @@ class GymWrapper(Wrapper, Env):
         Returns:
             4-tuple:
 
-                - (np.array) flattened observations from the environment
+                - (np.array) <flattened> observations from the environment
                 - (float) reward from the environment
                 - (bool) whether the current episode is completed or not
                 - (dict) misc information
         """
         ob_dict, reward, done, info = self.env.step(action)
-        return self._flatten_obs(ob_dict), reward, done, info
+
+        if self.rlkit_relational:
+            return ob_dict, reward, done, info
+        else:
+            return self._flatten_obs(ob_dict), reward, done, info
 
     def seed(self, seed=None):
         """
@@ -152,12 +171,15 @@ class GymWrapper(Wrapper, Env):
         Dummy function to be compatible with gym interface that simply returns environment reward
 
         Args:
-            achieved_goal: [NOT USED]
-            desired_goal: [NOT USED]
+            achieved_goal:
+            desired_goal: 
             info: [NOT USED]
 
         Returns:
             float: environment reward
         """
         # Dummy args used to mimic Wrapper interface
-        return self.env.reward()
+        if self.rlkit_relational:
+            return self.env.compute_reward(achieved_goal, desired_goal, info)
+        else:
+            return self.env.reward()
