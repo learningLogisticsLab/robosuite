@@ -7,7 +7,6 @@
   <worldbody>
     <body>
       <body name="object">
-        <inertial pos="-0.030714691255337507 0.024350845730285495 0.02356763398968421" mass="0.895" fullinertia="3.1058012590273494e-06 2.3564289011284853e-06 9.038816388046967e-07 -6.063427395307717e-23 -2.221703917876514e-22 -1.743075631141687e-22"/>
         <geom name="power_drill" pos="0.04411209611308028 -0.018798698444334364 -0.0254735" mesh="power_drill_mesh" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" mass="0.895" friction="0.95 0.3 0.1"  material="power_drill" group="0" condim="4"/>
       </body>
       <site rgba="1 0 0 1" size="0.005" pos="0 0 -0.023" name="bottom_site"/>

@@ -7,7 +7,6 @@
   <worldbody>
     <body>
       <body name="object">
-        <inertial pos="0.023228351441964463 -0.02270556071884342 0.016179821688211804" mass="0.0984" fullinertia="1.0455872762990073e-07 1.045355134114841e-07 8.5096611833145e-09 1.2978673122254933e-23 7.690434192648382e-24 8.454789472824443e-24"/>
         <geom name="flat_screwdriver" pos="0.014083765598958868 -0.013290671121382417 -0.014204226530278594" mesh="flat_screwdriver_mesh" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" mass="0.0984" friction="0.95 0.3 0.1"  material="flat_screwdriver" group="0" condim="4"/>
       </body>
       <site rgba="1 0 0 1" size="0.005" pos="0 0 -0.0155" name="bottom_site"/>

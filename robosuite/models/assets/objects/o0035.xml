@@ -7,7 +7,6 @@
   <worldbody>
     <body>
       <body name="object">
-        <inertial pos="-0.01707606691752894 0.00951738900221132 0.013626341524550546" mass="0.208" fullinertia="1.548488478544847e-08 1.1426254423194741e-08 8.409682265277153e-09 -2.8991985493440624e-24 3.6896049559677124e-25 -2.487050850367256e-25"/>
         <geom name="padlock" pos="0.020753042042217142 0.0022114956954649182 -0.0142495" mesh="padlock_mesh" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" mass="0.208" friction="0.95 0.3 0.1"  material="padlock" group="0" condim="4"/>
       </body>
       <site rgba="1 0 0 1" size="0.005" pos="0 0 -0.012" name="bottom_site"/>
