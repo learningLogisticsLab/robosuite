@@ -259,6 +259,24 @@ class MujocoObject(MujocoModel):
         """
         raise NotImplementedError
 
+    @property
+    def x_radius(self):
+        """
+        Returns x in (x,y,z) format where x refers to the position in mujoco & excel database.
+
+        Added to encode object orientation when performing computations. if x > y, then object is wider.
+        """
+        raise NotImplementedError
+
+    @property
+    def y_radius(self):
+        """
+        Returns y in (x,y,z) format where y refers to the position in mujoco & excel database.
+
+        Added to encode object orientation when performing computations. if x > y, then object is wider.
+        """
+        raise NotImplementedError
+
     @staticmethod
     def get_site_attrib_template():
         """
@@ -457,7 +475,8 @@ class MujocoXMLObject(MujocoObject, MujocoXML):
         horizontal_radius_site = self.worldbody.find(
             "./body/site[@name='{}horizontal_radius_site']".format(self.naming_prefix)
         )
-        return string_to_array(horizontal_radius_site.get("pos"))[0]
+        return max(string_to_array(horizontal_radius_site.get("pos"))[0],
+                   string_to_array(horizontal_radius_site.get("pos"))[1])
 
     @property
     def vertical_radius(self):
@@ -465,6 +484,20 @@ class MujocoXMLObject(MujocoObject, MujocoXML):
             "./body/site[@name='{}vertical_radius_site']".format(self.naming_prefix)
         )
         return string_to_array(vertical_radius_site.get("pos"))[2]
+
+    @property
+    def x_radius(self):
+        horizontal_radius_site = self.worldbody.find(
+            "./body/site[@name='{}horizontal_radius_site']".format(self.naming_prefix)
+        )
+        return string_to_array(horizontal_radius_site.get("pos"))[0]
+
+    @property
+    def y_radius(self):
+        horizontal_radius_site = self.worldbody.find(
+            "./body/site[@name='{}horizontal_radius_site']".format(self.naming_prefix)
+        )
+        return string_to_array(horizontal_radius_site.get("pos"))[1]
 
 
 class MujocoGeneratedObject(MujocoObject):
@@ -575,4 +608,10 @@ class MujocoGeneratedObject(MujocoObject):
         raise NotImplementedError
     
     def vertical_radius(self):
+        raise NotImplementedError
+
+    def x_radius(self):
+        raise NotImplementedError
+
+    def y_radius(self):
         raise NotImplementedError
