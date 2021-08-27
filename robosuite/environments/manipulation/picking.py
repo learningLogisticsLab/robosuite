@@ -228,6 +228,7 @@ class Picking(SingleArmEnv):
         # move bins
         bin1_pos=(-0.1, -0.25, 0.8),  # Follows xml
         bin2_pos=(-0.1, 0.28, 0.8),
+        bin_thickness=(0, 0, 0.02),
         
         # Observations
         use_camera_obs = True,                  # TODO: Currently these two options are setup to work in oposition it seems. Can we have both to True?
@@ -349,6 +350,7 @@ class Picking(SingleArmEnv):
         # settings for bin position
         self.bin1_pos = np.array(bin1_pos)
         self.bin2_pos = np.array(bin2_pos)
+        self.bin_thickness = np.array(bin_thickness)
 
         # Initialize Parent Classes: SingleArmEnv->ManipEnv->RobotEnv->MujocoEnv
         super().__init__(
@@ -621,7 +623,7 @@ class Picking(SingleArmEnv):
                     rotation_axis                   = 'z',                          # Currently only accepts one axis. TODO: extend to multiple axes.
                     ensure_object_boundary_in_range = True,
                     ensure_valid_placement          = True,
-                    reference_pos                   = self.bin1_pos,
+                    reference_pos                   = self.bin1_pos+self.bin_thickness,
                     z_offset                        = 0.,
                 )
             )
@@ -644,7 +646,7 @@ class Picking(SingleArmEnv):
                     rotation_axis                   = 'z',                              # Currently only accepts one axis. TODO: extend to multiple axes.
                     ensure_object_boundary_in_range = True,
                     ensure_valid_placement          = True,
-                    reference_pos                   = self.bin1_pos,
+                    reference_pos                   = self.bin1_pos+self.bin_thickness,
                     z_offset                        = 0.,
                 )
             )
@@ -668,7 +670,7 @@ class Picking(SingleArmEnv):
                     rotation_axis                   = 'z',                              # Currently only accepts one axis. TODO: extend to multiple axes.
                     ensure_object_boundary_in_range = True,
                     ensure_valid_placement          = True,
-                    reference_pos                   = self.bin1_pos,
+                    reference_pos                   = self.bin1_pos+self.bin_thickness,
                     z_offset                        = 0.,
                 )
             )
@@ -707,7 +709,7 @@ class Picking(SingleArmEnv):
             z_range=[min_z, max_z],
             rotation=None,
             rotation_axis='z',
-            reference_pos=self.bin1_pos,
+            reference_pos=self.bin1_pos+self.bin_thickness,
             )
 
     def _load_model(self):
@@ -1254,7 +1256,7 @@ class Picking(SingleArmEnv):
             obj_pos = self.sim.data.body_xpos[self.obj_body_id[obj.name]]
             print("can we read obj observations? {}".format(obj_pos))
             # check if obj has fallen below bin
-            if obj_pos[2] < self.bin1_pos[2] and obj.name in self.object_names:
+            if obj_pos[2] < self.bin1_pos[2]+self.bin_thickness[2] and obj.name in self.object_names:
                 print("new fallen obj !!! {}, pos is {}".format(obj.name, obj_pos))
                 fallen_objs.append(obj.name)
                 # if fallen obj, remove from list
