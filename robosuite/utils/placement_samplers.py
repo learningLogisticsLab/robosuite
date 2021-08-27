@@ -292,9 +292,9 @@ class UniformRandomSampler(ObjectPositionSampler):
 
                 # Place the object in the air with z_offset with probability z_offset_prob
                 if np.random.uniform() < self.z_offset_prob:
-                    object_z = self.z_offset + base_offset[2] + obj.vertical_radius/2
+                    object_z = self.z_offset + base_offset[2] + obj.vertical_radius / 2
                 else:
-                    object_z = base_offset[2] + obj.vertical_radius/2
+                    object_z = base_offset[2] + obj.vertical_radius / 2
 
                 if on_top:
                     object_z -= bottom_offset[-1]  # subtract the negative bottom_offset equal to adding the top offset.
@@ -303,35 +303,16 @@ class UniformRandomSampler(ObjectPositionSampler):
                 location_valid = True
 
                 # Once an xyz is computed for the object, make sure it does not collide with other objects. 
-                # TODO: does this assume objects are always facing up vs tripped over? It's possible the computations here will fall apart if the objects have a different orientaiton
-                if self.ensure_valid_placement:
-                    for (x, y, z), _, other_obj in placed_objects.values():
-                        if (
-                                np.linalg.norm((object_x - x,
-                                                object_y - y))  # Compute the norm between current object and each of the other objects
-                                <= other_obj.horizontal_radius + horizontal_radius
-                        # If the norm is less than the sum of the horizontal radius of both objects it means collision
-                        ) and (
-                                object_z - z <= other_obj.top_offset[-1] - bottom_offset[-1]  # ??
-                        ):
-                            location_valid = False
-                            # if location_valid is False:
-                            # print(f'Could find a location to place object {obj.name} without collision in the placement_sampler')
-                            # print(f'position is ({object_x},{object_y},{object_z}), norm is {np.linalg.norm((object_x - x, object_y - y))}, and the sum of horizontal raidii between the two objects is {other_obj.horizontal_radius + horizontal_radius}')
-                            break
-
-                if location_valid:
-                    # random rotation
-                    quat = self._sample_quat()
-
-                    # multiply this quat by the object's initial rotation if it has the attribute specified
-                    if hasattr(obj, "init_quat"):
-                        quat = quat_multiply(quat, obj.init_quat)
-
-                    # location is valid, put the object down
-                    pos = (object_x, object_y, object_z)
-                    placed_objects[obj.name] = (pos, quat, obj)
-                    success = True
+                # TODO: does this assume objects are always facing up vs tripped over?
+                #  It's possible the computations here will fall apart if the objects have a different orientaiton
+                location_valid, success, placed_objects = self.recheck_validity_pos(location_valid=location_valid,
+                                                                                    success=success,
+                                                                                    placed_objects=placed_objects,
+                                                                                    object_x=object_x,
+                                                                                    object_y=object_y,
+                                                                                    object_z=object_z,
+                                                                                    obj=obj)
+                if (location_valid == True):
                     break
 
             if not success:
@@ -341,10 +322,65 @@ class UniformRandomSampler(ObjectPositionSampler):
                 pos = (object_x, object_y, object_z)
                 placed_objects[obj.name] = (pos, quat, obj)
                 # TODO: recheck validity of this position. Convert code segment starting with if self.ensure_valid_placement into a function and call here.
-                # if it failes then raise RandomizationError
-                # raise RandomizationError("Cannot place all objects ):")
+                if self.recheck_validity_pos(location_valid=location_valid,
+                                             success=success,
+                                             placed_objects=placed_objects,
+                                             object_x=object_x,
+                                             object_y=object_y,
+                                             object_z=object_z,
+                                             obj=obj)[0] == False:
+                    raise RandomizationError("Cannot place all objects")
+                    # print("cannot place all objects")
+                    # if it failes then raise RandomizationError
+                    # raise RandomizationError("Cannot place all objects ):")
 
         return placed_objects
+
+    def recheck_validity_pos(self, location_valid, success, placed_objects, object_x, object_y, object_z, obj):
+        """
+        check validity of the position
+        requirements:
+        location_valid
+        placed_objects
+        object_x
+        object_y
+        object_z
+        obj.horizontal_radius
+        obj.bottom_offset
+        """
+        print("inside function", location_valid, placed_objects)
+
+        if self.ensure_valid_placement:
+            for (x, y, z), _, other_obj in placed_objects.values():
+                if (
+                        np.linalg.norm((object_x - x,
+                                        object_y - y))  # Compute the norm between current object and each of the other objects
+                        <= max(other_obj.horizontal_radius, other_obj.vertical_radius/2) + max(obj.horizontal_radius, obj.vertical_radius/2)
+                        # If the norm is less than the sum of the horizontal radius of both objects it means collision
+                ) and (
+                        object_z - z <= other_obj.top_offset[-1] - obj.bottom_offset[-1]  # ??
+                ):
+                    location_valid = False
+                    # if location_valid is False:
+                    # print(f'Could find a location to place object {obj.name} without collision in the placement_sampler')
+                    # print(f'position is ({object_x},{object_y},{object_z}), norm is {np.linalg.norm((object_x - x, object_y - y))}, and the sum of horizontal raidii between the two objects is {other_obj.horizontal_radius + horizontal_radius}')
+                    break
+
+        if location_valid:
+            # random rotation
+            quat = self._sample_quat()
+
+            # multiply this quat by the object's initial rotation if it has the attribute specified
+            if hasattr(obj, "init_quat"):
+                quat = quat_multiply(quat, obj.init_quat)
+
+            # location is valid, put the object down
+            pos = (object_x, object_y, object_z)
+            placed_objects[obj.name] = (pos, quat, obj)
+            success = True
+            print("inside function", location_valid, placed_objects)
+
+        return location_valid, success, placed_objects
 
 
 class UniformWallSampler(ObjectPositionSampler):
