@@ -218,7 +218,7 @@ class Picking(SingleArmEnv):
         control_freq       = 20,        
         controller_configs = None,
 
-        # Arena 
+        # Arena
         table_full_size = (0.39, 0.49, 0.82), # these dims are table*2 -0.01 in (x,y). z would have been 0.02*2 -1 = 0.03 but it is 0.82 ??
         table_friction  = (1, 0.005, 0.0001), # (sliding, torsional, rolling) rations across surfaces. 
 
@@ -228,6 +228,7 @@ class Picking(SingleArmEnv):
         # move bins
         bin1_pos=(-0.1, -0.25, 0.8),  # Follows xml
         bin2_pos=(-0.1, 0.28, 0.8),
+        bin_thickness=(0, 0, 0.02),
         
         # Observations
         use_camera_obs = True,                  # TODO: Currently these two options are setup to work in oposition it seems. Can we have both to True?
@@ -349,7 +350,8 @@ class Picking(SingleArmEnv):
         # settings for bin position
         self.bin1_pos = np.array(bin1_pos)
         self.bin2_pos = np.array(bin2_pos)
-
+        self.bin_thickness = np.array(bin_thickness)
+        
         # Initialize Parent Classes: SingleArmEnv->ManipEnv->RobotEnv->MujocoEnv
         super().__init__(
             robots                  = robots,
@@ -621,7 +623,7 @@ class Picking(SingleArmEnv):
                     rotation_axis                   = 'z',                          # Currently only accepts one axis. TODO: extend to multiple axes.
                     ensure_object_boundary_in_range = True,
                     ensure_valid_placement          = True,
-                    reference_pos                   = self.bin1_pos,
+                    reference_pos                   = self.bin1_pos + self.bin_thickness,
                     z_offset                        = 0.,
                 )
             )
@@ -644,7 +646,7 @@ class Picking(SingleArmEnv):
                     rotation_axis                   = 'z',                              # Currently only accepts one axis. TODO: extend to multiple axes.
                     ensure_object_boundary_in_range = True,
                     ensure_valid_placement          = True,
-                    reference_pos                   = self.bin1_pos,
+                    reference_pos                   = self.bin1_pos + self.bin_thickness,
                     z_offset                        = 0.,
                 )
             )
@@ -668,7 +670,7 @@ class Picking(SingleArmEnv):
                     rotation_axis                   = 'z',                              # Currently only accepts one axis. TODO: extend to multiple axes.
                     ensure_object_boundary_in_range = True,
                     ensure_valid_placement          = True,
-                    reference_pos                   = self.bin1_pos,
+                    reference_pos                   = self.bin1_pos + self.bin_thickness,
                     z_offset                        = 0.,
                 )
             )
@@ -684,7 +686,7 @@ class Picking(SingleArmEnv):
                 rotation_axis                   = 'z',                              # Currently only accepts one axis. TODO: extend to multiple axes.
                 ensure_object_boundary_in_range = True,
                 ensure_valid_placement          = True,
-                reference_pos                   = self.bin2_pos,
+                reference_pos                   = self.bin2_pos + self.bin_thickness,
                 z_offset                        = 0.20,                             # Set a vertical offset of XXcm above the bin
                 z_offset_prob                   = 0.50,                             # probability with which to set the z_offset
             )
@@ -707,7 +709,7 @@ class Picking(SingleArmEnv):
             z_range=[min_z, max_z],
             rotation=None,
             rotation_axis='z',
-            reference_pos=self.bin1_pos,
+            reference_pos=self.bin1_pos + self.bin_thickness,
             )
 
     def _load_model(self):
@@ -1253,7 +1255,7 @@ class Picking(SingleArmEnv):
             # Get real-time pos from observables
             obj_pos = self._observables[name+'_pos'].obs
             # check if obj has fallen below bin
-            if obj_pos[2] < self.bin1_pos[2] and name in self.object_names:
+            if obj_pos[2] < self.bin1_pos[2] + self.bin_thickness[2] and name in self.object_names:
                 print("new fallen obj !!! {}, pos is {}".format(name, obj_pos))
                 fallen_objs.append(name)
                 # if fallen obj, remove from list
@@ -1557,10 +1559,23 @@ class Picking(SingleArmEnv):
         # We only consider the relative position between the goal object and end-effector, all the rest are set to 0.
 
         # Check & remove fallen objs
-        self.fallen_objs = self.return_fallen_objs()
+        self.fallen_objs = self.return_fallen_objs() # remove obj from self.obj_names
 
-        # get new goal, other_objs than goals after removing fallen obj
-        self.goal_object, self.other_objs_than_goals = self.get_goal_object()
+        # get new goal, other_objs than goals if there is a fallen objefct
+        # if there is no fallen objs, do nothing
+        # if there is a fallen goal obj, call get goal obj
+        # if there is a fallen not goal obj, keep goal obj, remove fallen obj from self other obj than goal
+        if self.fallen_objs:
+            if self.goal_object['name'] in self.fallen_objs:
+                self.goal_object, self.other_objs_than_goals = self.get_goal_object()
+                print("fallen is {}, goal is {}, other obj is {}".format(self.fallen_objs, self.goal_object, self.other_objs_than_goals))
+            elif self.goal_object['name'] not in self.fallen_objs:
+                self.other_objs_than_goals = list(set(self.other_objs_than_goals)-set(self.fallen_objs)) + \
+                                             list(set(self.fallen_objs) - set(self.other_objs_than_goals))
+                print("fallen is {}, goal is {}, other obj is {}".format(self.fallen_objs, self.goal_object, self.other_objs_than_goals))
+
+        # Get robosuite observations as an Ordered dict
+        obs = self._get_observations(force_update)  # if called by reset() [see base class] this will be set to True.
 
         # Place goal object at the front
         self.sorted_objects_to_model = self.return_sorted_objs_to_model(obs)
