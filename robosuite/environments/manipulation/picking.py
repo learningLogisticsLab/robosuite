@@ -266,7 +266,7 @@ class Picking(SingleArmEnv):
         has_renderer            = False,
         has_offscreen_renderer  = True,
         
-        render_camera           = "birdview", #TODO: may need to adjust here for better angle for our work
+        render_camera           = "agentview", #TODO: may need to adjust here for better angle for our work
         render_collision_mesh   = False,
         render_visual_mesh      = True,
         render_gpu_device_id    = 0,            # was -1 
