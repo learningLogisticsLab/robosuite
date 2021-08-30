@@ -1,5 +1,4 @@
 import torch
-print(torch.__version__, torch.cuda.is_available())
 
 from detectron2.utils.logger import setup_logger
 setup_logger()
@@ -16,28 +15,37 @@ class Trainer():
     def __init__(
         self,
         NUM_CLASSES    = 20,
+        train_mode     = False,
         DATA_ROOT      = None,
         MODEL_ROOT     = None,
         NEW_MODEL_ROOT = None   
         ):
+        self.train_mode     = train_mode
         self.DATA_ROOT      = DATA_ROOT
         self.MODEL_ROOT     = [MODEL_ROOT]
         self.NEW_MODEL_ROOT = NEW_MODEL_ROOT
         self.NUM_CLASSES    = NUM_CLASSES
+        if self.train_mode:
+            assert MODEL_ROOT     is not None, "Need to provide MODEL_ROOT"
+            assert DATA_ROOT      is not None, "Need to provide DATA_ROOT"
+            assert NEW_MODEL_ROOT is not None, "Need to provide NEW_DATA_ROOT"
 
         
-    def train(self, hyperparam_kwarg = None):
+    def train(self, sche, hyperparam_kwarg = None):
+        self.current_dir = sche
         self.set_hyperparam(**hyperparam_kwarg)
+
         trainer = DefaultTrainer(self.cfg) 
         trainer.resume_or_load(resume=False)
         trainer.train()
-        with open(os.path.join(self.NEW_MODEL_ROOT, 'model_cfg.pickle'), 'wb') as f:
+        
+        with open(os.path.join(self.NEW_MODEL_ROOT, sche , 'model_cfg.pickle'), 'wb') as f:
             pickle.dump(self.cfg,f)
-        return self.NEW_MODEL_ROOT
-
-    def set_new_model_root(self,path):
-        self.MODEL_ROOT.append(self.NEW_MODEL_ROOT)
-        self.NEW_MODEL_ROOT = path
+        self.MODEL_ROOT.append( os.path.join(self.NEW_MODEL_ROOT, self.current_dir) )
+        
+        
+    def get_current_root(self):
+        return self.MODEL_ROOT[-1]
 
     def set_hyperparam(self):
 
@@ -92,4 +100,4 @@ class Trainer():
         # Confident Level
         self.cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = 0.7   # set a custom testing threshold
 
-        self.cfg.OUTPUT_DIR = self.NEW_MODEL_ROOT
+        self.cfg.OUTPUT_DIR = os.path.join(self.NEW_MODEL_ROOT, self.current_dir)

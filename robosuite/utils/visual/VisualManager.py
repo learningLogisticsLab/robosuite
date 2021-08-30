@@ -1,34 +1,56 @@
-import os
-import pickle
-from PIL import Image
-import time
-
-import numpy as np
-import torch
-import torch.nn as nn
-
-from detectron2.engine import DefaultPredictor
-
-from robosuite.utils.visual.Trainer import Trainer
-
 ################################################################
 '''
 README
 
 # VisualManager
+    The Visual Manager is a class which handle all visual related task,
+    which composited by:
+    - Preprocessor
+        extract object's feature vector form a image input
+    - ImageSaver
+        annotate and save data for futher training
+    - Trainer
+        tune a new model form the old model on the data that we generated
+    
+
+    
+
+    # EXAMPLE
     # constructor
+    
+    ----------------------------------------------------------------------------------------------------------------------------
     eyes = VisualManager(
+        MODEL_ROOT = path,               # The directory to the model
+            
+        DATA_ROOT  = path,               # THe directoey to save image and data
+            
+        verbose    = True,               # verbose
+
+        train_schedule     = (10_000,),  # The trainer will tune the model when saved image hit the number listed
+
         preprocessor_kwarg = dict(
-            ...
-        ),
-        imagesaver_kwarg = dict(
-            ...
+            masks_size = (128,128),      # size that image will be wrap to
+            grayscale  = True,           # allow gray for more information
+            thresold   = 0.5,            # thresold of confident score
+            backbone   = None,           # backbone for image and masks
+            getVec     = None,           # get vector from feature map
+            norm       = None,           # norm layer for image and masks
+            acti       = None,           # activation layer for image and masks
+        ),   
+        imagesaver_kwarg = dict(   
+            save_mode = True,            # True to turn on image saving mode
+            save_freq = 100              # how often will save image and annotations
+        ),   
+        trainer_kwarg = dict(   
+            NUM_CLASSES    = 20,         # Number for classes for classify
+            train_mode     = True,       # True to turn on training mode
+            NEW_MODEL_ROOT = path,       # The directory that all newly tuned model will be saved 
         )
     )
+    ----------------------------------------------------------------------------------------------------------------------------
 
     # use
     feature_vectors = eyes(obs['agentview_image'],env)
-
         ! obs can have any other camera name
         ! must be passed for annotation purposes
 
@@ -63,6 +85,20 @@ IMAGE_SAVE_DIR
     L {id}.png
 """
 
+
+import os
+import pickle
+from PIL import Image
+import time
+
+import numpy as np
+import torch
+import torch.nn as nn
+
+from detectron2.engine import DefaultPredictor
+
+from robosuite.utils.visual.Trainer import Trainer
+
 class Preprocessor(nn.Module):
     def __init__(
         self,
@@ -77,10 +113,9 @@ class Preprocessor(nn.Module):
         ):
         super(Preprocessor, self).__init__()
         assert MODEL_ROOT is not None
-        self.MODEL_ROOT = MODEL_ROOT
         # Load the config and weight of model and construct the predictor 
         self.threshold = threshold
-        self.load_model()
+        self.load_model(MODEL_ROOT)
 
         self.mask_size = mask_size
         self.format = 'L' if grayscale else "1"
@@ -111,7 +146,7 @@ class Preprocessor(nn.Module):
             nn.Linear( 128, 64),
         ) if getVec is None else getVec
 
-        self.norm = nn.BatchNorm2d(3) if norm is None else norm
+        self.norm = nn.LayerNorm(self.mask_size) if norm is None else norm
         self.acti = nn.Tanh() if acti is None else acti
         ##############################################################################
         self.testdrive()
@@ -156,13 +191,13 @@ class Preprocessor(nn.Module):
             for m in instances.pred_masks
         ]
         masks = torch.tensor( np.asarray(masks) , dtype = torch.float).unsqueeze(1)
-        masks = self.acti(masks)
+        masks = self.acti(self.norm(masks))
 
         image = torch.tensor(
             np.asarray(Image.fromarray(img).resize( self.mask_size )),
             dtype=torch.float32
         ).permute((2,0,1))
-        image = self.norm(image.repeat(N,1,1,1))
+        image = self.acti(self.norm(image.repeat(N,1,1,1)))
         '''
         N       : number of instances idenify in the image
         HS, WS  : pre-defined number of the resized mask, default (128, 128)
@@ -190,15 +225,40 @@ class Preprocessor(nn.Module):
     def testdrive(self):
         N   = 12
         H,W = self.mask_size
-        test_masks = torch.rand(N, 4, H, W)
-        test_info  = torch.rand(N, 6)
+
         with torch.no_grad():
-            test_map = self.backbone( test_masks ).reshape((N,-1))
+
+            test_info  = torch.rand(N, 6)
+            test_masks = torch.rand(N, 1, H, W)
+            test_image = torch.rand(H, W, 3).permute((2,0,1))
+            
+            try:
+                test_masks = self.acti(test_masks)
+            except:
+                raise Exception("The specified acti layer is not compatible")
+
+            try:
+                test_image = self.norm(test_image.repeat(N,1,1,1))
+            except:
+                raise Exception("THe specifed norm layer is not compatible")
+
+
+            test_imgnseg = torch.cat((test_masks,test_image),dim=1)
+
+            try:
+                test_map = self.backbone( test_imgnseg ).reshape((N,-1))
+            except:
+                raise Exception("The specifed backbone layer is not compatible")
             vector   = torch.cat( (test_map,test_info) ,dim=1)
-            vec      = self.getVec( vector )
+
+            try:
+                vec      = self.getVec( vector )
+            except:
+                raise Exception("The specified getVec is not compatible")
             assert len(vec.shape) == 2
 
-    def load_model(self):
+    def load_model(self, MODEL_ROOT):
+        self.MODEL_ROOT = MODEL_ROOT
         with open(os.path.join(self.MODEL_ROOT, 'model_cfg.pickle'), 'rb') as f:
             cfg = pickle.load(f)
 
@@ -212,15 +272,15 @@ class ImageSaver():
         self,
         save_mode = False,
         save_freq = None,
-        IMAGE_DIR = None,
+        DATA_ROOT = None,
         ):
         self.save_mode = save_mode
         if self.save_mode is True:
             assert save_freq is not None, "save mode is on but saves frequency is not provide, try save_mode = False, or save_freq = 1_000"
-            assert IMAGE_DIR is not None, "save mode is on but Image directory is not provide, try save_mode = False, or provide directory to save the data"
-            self.IMAGE_DIR = IMAGE_DIR
+            assert DATA_ROOT is not None, "save mode is on but Image directory is not provide, try save_mode = False, or provide directory to save the data"
+            self.DATA_ROOT = DATA_ROOT
             self.save_freq = save_freq
-            self.counter   = 0
+        self.counter   = 0
         
 
     def __call__(self, img, seg, env):
@@ -232,8 +292,8 @@ class ImageSaver():
         return self.counter == 1
 
     def pre_save(self):
-        if not os.path.isdir(self.IMAGE_DIR):
-            os.mkdir(self.IMAGE_DIR)
+        if not os.path.isdir(self.DATA_ROOT):
+            os.mkdir(self.DATA_ROOT)
 
     def save(self, img, seg, env):
         self.pre_save()
@@ -242,9 +302,9 @@ class ImageSaver():
         while id in os.listdir():
             id = int(time.time())
         
-        with open(os.path.join(self.IMAGE_DIR,f'{id}.pickle') , 'wb') as f:
+        with open(os.path.join(self.DATA_ROOT,f'{id}.pickle') , 'wb') as f:
             pickle.dump( self.seg2anno(seg, env) ,f)
-        Image.fromarray(img).save(os.path.join(self.IMAGE_DIR,f'{id}.png'))
+        Image.fromarray(img).save(os.path.join(self.DATA_ROOT,f'{id}.png'))
         
         #raise Exception("This function is not finish yet")
         
@@ -276,31 +336,57 @@ class ImageSaver():
         masks = ( mask[np.newaxis] == ids[:, np.newaxis, np.newaxis, np.newaxis]).squeeze()#.astype(np.uint8)
         #masks = np.array(list( filter( lambda m: m.sum() > 100, masks ) )) outdated
         #masks = masks * 255
+
+        # id     : list of id
+        # object : map<id,name>
+        # masks  : masks
+
+
+
         return masks
 
 class VisualManager():
     def __init__(
         self,
+        MODEL_ROOT         = None,
+        DATA_ROOT          = None,
+        verbose            = True,
+        train_schedule     = (10_000,),
         _preprocessor      = Preprocessor,
         preprocessor_kwarg = dict(),
         _imagesaver        = ImageSaver,
         imagesaver_kwarg   = dict(),
         _trainer           = Trainer,
         trainer_kwarg      = dict(),
-        train_schedule     = (10_000,),
         ):
-        self.preprocessor   = _preprocessor(**preprocessor_kwarg) 
-        self.imagesaver     = _imagesaver(**imagesaver_kwarg)
-        self.trainer        = _trainer(**trainer_kwarg)
+        preprocessor_kwarg["MODEL_ROOT"] = MODEL_ROOT
+        self.preprocessor = _preprocessor(**preprocessor_kwarg)
+
+        imagesaver_kwarg["DATA_ROOT"] = DATA_ROOT
+        self.imagesaver = _imagesaver(**imagesaver_kwarg)
+        
+        self.trainer = _trainer(
+            MODEL_ROOT = MODEL_ROOT,
+            DATA_ROOT = DATA_ROOT,
+            **trainer_kwarg
+            )
+        
+        self.verbose        = verbose
         self.image_saved    = 0
         self.train_schedule = train_schedule
 
-
-        print("Finished Init VisualManage")
+        if not self.imagesaver.save_mode and self.trainer.train_mode:
+            print("[VisualManager]Warning: the train_mode is on but save_mode is not pn, it will not train when VisualManager is call, ")
+            _sanity = input('[VisualManager]but you can call VisualManager.train() to force train, are you sure?[y/n(default, will raise error)]')
+            assert _sanity == 'Y' or _sanity == 'y', '[VisaulManager]train_mode is on, while save_mode is not'
+        if self.verbose: print("[VisualManager]Finished Init")
 
 
     def __call__(self,vis,env):
-        print("Using Visual Manager")
+        if self.verbose and self.imagesaver.save_mode :
+            print(f"[VisualManager]Datasaver  : {self.imagesaver.counter}/{self.imagesaver.save_freq}")
+            print(f"[VisualManager]image saved: {self.image_saved}")
+
         img, seg = np.array(vis).astype(np.uint8)
 
         img = np.rot90(img,k=2)
@@ -309,12 +395,23 @@ class VisualManager():
         if self.imagesaver(img, seg, env): 
 
             self.image_saved += 1
+            if self.verbose:    
+                print("[VisualManager]One Image saved")
+                print(f"[VisualManager]train schedule:", self.train_schedule)
 
-            if self.image_saved in self.train_schedule: 
-                self.preprocessor.MODEL_ROOT = self.trainer.train()
-                self.preprocessor.load_model()
-
+            if self.image_saved in self.train_schedule and self.trainer.train_mode: 
+                if self.verbose: print("[VisualManager]Trainer start training")
+                self.trainer.train(sche = f"tune_model_{self.image_saved}")
+                self.preprocessor.load_model(self.trainer.get_current_root())
 
         # return embedded vectors
+        if self.verbose: print("[VisualManager]returning feature vectors...")
         return self.preprocessor(img)
 
+    def train(self,train_name = "force-train"):
+        print("[VisualManager]unschedule train")
+        
+        if self.verbose: print("[VisualManager]Trainer start training")
+
+        self.trainer.train(sche = f"tune_model_{train_name}")
+        self.preprocessor.load_model(self.trainer.get_current_root())

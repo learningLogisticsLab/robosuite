@@ -65,13 +65,19 @@ if __name__ == "__main__":
     low, high = env.action_spec
 
     eye = VisualManager(
+        MODEL_ROOT = '/home/dizzyi/GNN/detectron/tutorial/output',
+
+        DATA_ROOT = './imagesave',
+
         preprocessor_kwarg = dict(
-            MODEL_ROOT = '/home/dizzyi/GNN/detectron/tutorial/output'
         ),
         imagesaver_kwarg = dict(
-            save_mode = True,
-            save_freq = 100,
-            IMAGE_DIR = './imagesave'
+            save_mode = False,
+            save_freq = 20,
+        ),
+        trainer_kwarg = dict(
+            train_mode = True,
+            NEW_MODEL_ROOT = './new_model'
         )
     )
 
@@ -79,6 +85,8 @@ if __name__ == "__main__":
     import time
     # do visualization
     for i in range(1000):
+
+        print("--------------------------------------")
         #delta = time.time()
         action = np.random.uniform(low, high)
         obs, reward, done, _ = env.step(action)
@@ -124,6 +132,5 @@ if __name__ == "__main__":
             seg_png.save(f'./seg/{ids[ind]}-{objects[ids[ind]]}.png')
             print(ind)
         '''
-        print('end loop')
         #print(time.time()-delta)
         #env.render()
