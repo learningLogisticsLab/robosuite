@@ -1222,13 +1222,12 @@ class Picking(SingleArmEnv):
                 # left & right finger
                 # self.sim.data.set_joint_qpos('gripper0_finger_joint1', 0.04)
                 # self.sim.data.set_joint_qpos('gripper0_finger_joint2', -0.04)
-            print("self obj placements {}".format(self.object_placements.keys()))
+            # print("self obj placements {}".format(self.object_placements.keys()))
             # Position the objects
             for obj_pos, obj_quat, obj in self.object_placements.values():
 
                 # Set the visual object body locations
                 if "visualobject" in obj.name.lower():                             # switched "visual" for "v"
-                    print(self.obj_body_id.keys())
                     self.sim.model.body_pos[self.obj_body_id[obj.name]]  = obj_pos
                     self.sim.model.body_quat[self.obj_body_id[obj.name]] = obj_quat
 
