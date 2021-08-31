@@ -204,7 +204,7 @@ class Picking(SingleArmEnv):
         control_freq       = 20,        
         controller_configs = None,
 
-        # Arena 
+        # Arena
         table_full_size = (0.39, 0.49, 0.82), # these dims are table*2 -0.01 in (x,y). z would have been 0.02*2 -1 = 0.03 but it is 0.82 ??
         table_friction  = (1, 0.005, 0.0001), # (sliding, torsional, rolling) rations across surfaces. 
 
@@ -675,7 +675,7 @@ class Picking(SingleArmEnv):
                     rotation_axis                   = 'z',                          # Currently only accepts one axis. TODO: extend to multiple axes.
                     ensure_object_boundary_in_range = True,
                     ensure_valid_placement          = True,
-                    reference_pos                   = self.bin1_pos+self.bin_thickness,
+                    reference_pos                   = self.bin1_pos + self.bin_thickness,
                     z_offset                        = 0.,
                 )
             )
@@ -698,7 +698,7 @@ class Picking(SingleArmEnv):
                     rotation_axis                   = 'z',                              # Currently only accepts one axis. TODO: extend to multiple axes.
                     ensure_object_boundary_in_range = True,
                     ensure_valid_placement          = True,
-                    reference_pos                   = self.bin1_pos+self.bin_thickness,
+                    reference_pos                   = self.bin1_pos + self.bin_thickness,
                     z_offset                        = 0.,
                 )
             )
@@ -722,7 +722,7 @@ class Picking(SingleArmEnv):
                     rotation_axis                   = 'z',                              # Currently only accepts one axis. TODO: extend to multiple axes.
                     ensure_object_boundary_in_range = True,
                     ensure_valid_placement          = True,
-                    reference_pos                   = self.bin1_pos+self.bin_thickness,
+                    reference_pos                   = self.bin1_pos + self.bin_thickness,
                     z_offset                        = 0.,
                 )
             )
@@ -738,7 +738,7 @@ class Picking(SingleArmEnv):
                 rotation_axis                   = 'z',                              # Currently only accepts one axis. TODO: extend to multiple axes.
                 ensure_object_boundary_in_range = True,
                 ensure_valid_placement          = True,
-                reference_pos                   = self.bin2_pos,
+                reference_pos                   = self.bin2_pos + self.bin_thickness,
                 z_offset                        = 0.20,                             # Set a vertical offset of XXcm above the bin
                 z_offset_prob                   = 0.50,                             # probability with which to set the z_offset
             )
@@ -761,7 +761,7 @@ class Picking(SingleArmEnv):
             z_range=[min_z, max_z],
             rotation=None,
             rotation_axis='z',
-            reference_pos=self.bin1_pos+self.bin_thickness,
+            reference_pos=self.bin1_pos + self.bin_thickness,
             )
 
     def _load_model(self):
@@ -1299,35 +1299,21 @@ class Picking(SingleArmEnv):
         sorted_obj_dist.move_to_end( self.goal_object['name'], last=False) # move to FRONT
 
         return sorted_obj_dist
-    
+
     def return_fallen_objs(self, obs):
         """
         return list of fallen objs names if lower than table height
         """
         fallen_objs = []
-
-        # for obj_pos, obj_quat, obj in self.object_placements.values():
-        for placed_pos , placed_quat, obj in self.object_placements.values():
+        for name in self.object_names:
             # Get real-time pos from observables
-            
-            # print(obs[obj.name + '_pos'][2])
-            obj_pos = self.sim.data.body_xpos[self.obj_body_id[obj.name]]
-            print("can we read obj observations? {}".format(obj_pos))
+            obj_pos = self._observables[name + '_pos'].obs
             # check if obj has fallen below bin
-            if obj_pos[2] < self.bin1_pos[2]+self.bin_thickness[2] and obj.name in self.object_names:
-                print("new fallen obj !!! {}, pos is {}".format(obj.name, obj_pos))
-                fallen_objs.append(obj.name)
+            if obj_pos[2] < self.bin1_pos[2] + self.bin_thickness[2] and name in self.object_names:
+                print("new fallen obj !!! {}, pos is {}".format(name, obj_pos))
+                fallen_objs.append(name)
                 # if fallen obj, remove from list
-                print("initially we have {} in object names list".format(self.object_names))
-                self.object_names.remove(obj.name)
-                print("removed {} now we have {}".format(obj.name, self.object_names))
-
-                # Check whether this is necessary.
-                # Also remove from sorted_object list so that it is no longer considered in computing
-                # the observations in the next iteration
-                if obj.name in self.sorted_objects_to_model:
-                    print("initially we have {} in sorted object to model list")
-                    self.sorted_objects_to_model.__delitem__(obj.name)
+                self.object_names.remove(name)
 
         return fallen_objs
 
@@ -1692,7 +1678,28 @@ class Picking(SingleArmEnv):
         # *Note: there are three quantities of interest: (i) (total) num_objs_to_load, (ii) num_objs (to_model), and (iii) goal object. 
         # We report data for num_objs that are closest to goal_object and ignore the rest. This list is updated when is_success is True.
         # We only consider the relative position between the goal object and end-effector, all the rest are set to 0.
-        self.sorted_objects_to_model = self.return_sorted_objs_to_model(self.goal_object, self.other_objs_than_goals)
+
+        # Check & remove fallen objs
+        self.fallen_objs = self.return_fallen_objs() # remove obj from self.obj_names
+
+        # get new goal, other_objs than goals if there is a fallen objefct
+        # if there is no fallen objs, do nothing
+        # if there is a fallen goal obj, call get goal obj
+        # if there is a fallen not goal obj, keep goal obj, remove fallen obj from self other obj than goal
+        if self.fallen_objs:
+            if self.goal_object['name'] in self.fallen_objs:
+                self.goal_object, self.other_objs_than_goals = self.get_goal_object()
+                print("fallen is {}, goal is {}, other obj is {}".format(self.fallen_objs, self.goal_object, self.other_objs_than_goals))
+            elif self.goal_object['name'] not in self.fallen_objs:
+                self.other_objs_than_goals = list(set(self.other_objs_than_goals)-set(self.fallen_objs)) + \
+                                             list(set(self.fallen_objs) - set(self.other_objs_than_goals))
+                print("fallen is {}, goal is {}, other obj is {}".format(self.fallen_objs, self.goal_object, self.other_objs_than_goals))
+
+        # Get robosuite observations as an Ordered dict
+        obs = self._get_observations(force_update)  # if called by reset() [see base class] this will be set to True.
+
+        # Place goal object at the front
+        self.sorted_objects_to_model = self.return_sorted_objs_to_model(obs)
 
         # TODO: sorted_objects should be updated when an object is successfully picked. Such that when there is one object less, 
         # the new dimensionality is reflected in these observations as well.
@@ -1909,9 +1916,8 @@ class Picking(SingleArmEnv):
             # else:
             #     raise ("Obs_type not recognized")
 
-        # 06c Check & remove fallen objs
-
-        fallen_objs = self.return_fallen_objs(obs=env_obs)
+        # # 06c Check & remove fallen objs
+        # self.fallen_objs = self.return_fallen_objs()
 
         # 07 Process Done: 
         # If (i) time_step is past horizon OR (ii) we have succeeded, set to true.
