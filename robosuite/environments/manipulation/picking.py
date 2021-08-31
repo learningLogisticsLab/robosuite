@@ -1300,7 +1300,7 @@ class Picking(SingleArmEnv):
 
         return sorted_obj_dist
 
-    def return_fallen_objs(self, obs):
+    def return_fallen_objs(self):
         """
         return list of fallen objs names if lower than table height
         """
@@ -1699,7 +1699,7 @@ class Picking(SingleArmEnv):
         obs = self._get_observations(force_update)  # if called by reset() [see base class] this will be set to True.
 
         # Place goal object at the front
-        self.sorted_objects_to_model = self.return_sorted_objs_to_model(obs)
+        self.sorted_objects_to_model = self.return_sorted_objs_to_model(self.goal_object, self.other_objs_than_goals)
 
         # TODO: sorted_objects should be updated when an object is successfully picked. Such that when there is one object less, 
         # the new dimensionality is reflected in these observations as well.
@@ -1915,9 +1915,6 @@ class Picking(SingleArmEnv):
             # elif "state" in self.obs_type: ...
             # else:
             #     raise ("Obs_type not recognized")
-
-        # # 06c Check & remove fallen objs
-        # self.fallen_objs = self.return_fallen_objs()
 
         # 07 Process Done: 
         # If (i) time_step is past horizon OR (ii) we have succeeded, set to true.
