@@ -235,7 +235,7 @@ class Picking(SingleArmEnv):
         object_randomization  = True,       # Randomly select new objects from database after reset or not
 
         # Reset
-        hard_reset            = True,       # If True, re-loads model|sim|render object w reset call. Else, only call sim.reset and reset all robosuite-internal variables
+        hard_reset            = False,       # If True, re-loads model|sim|render object w reset call. Else, only call sim.reset and reset all robosuite-internal variables        
 
         # Goals
         goal                    = 0,
@@ -274,7 +274,7 @@ class Picking(SingleArmEnv):
         # 4. generate random list of objects to load: more involved as several checks required. 
 
         # Init structs for object names, visual object names, object_to_ids, sorted_objects, objs _in_target_bing...        
-        self.object_names           = []                        # list of names currently modeled objects
+        self.object_names           = []                        # list of names (string) currently modeled objects
         self.visual_object_names    = []                        # same for visual
 
         self.not_yet_considered_object_names        = []        # list of names of loaded objs that are not currently being modeled
@@ -335,11 +335,14 @@ class Picking(SingleArmEnv):
         print(f"The object reset strategy is: {self.object_reset_strategy} and new objects will be randomly picked after reset\n")
         #-----------        
 
-        # (C) reward configuration
+        # (C) reward/reset configuration
+        self.distance_threshold = 0.05                          # Determine whether obj reaches goal
+
         self.reward_scale   = reward_scale                      # Sets a scale for final reward
         self.reward_shaping = reward_shaping
 
-        self.distance_threshold = 0.05                          # Determine whether obj reaches goal
+        self.first_reset = True
+        self.do_reset_internal = True
 
         # (D) Arena: bins_arena.xml
 
@@ -387,6 +390,7 @@ class Picking(SingleArmEnv):
         )
 
     def clear_object_strucs(self):
+
         self.objects.clear()
         self.visual_objects.clear()
 
@@ -646,9 +650,13 @@ class Picking(SingleArmEnv):
         - Samplers can be accessed via the samplers object. Each sub-sampler obj is accessed as a dict key self.placement_initializer.samplers[sampler_obj_name]
 
         %---------------------------------------------------------------------------------------------------------
-        TODO: 1) extend this function to place objects according to strategy: wall, organized.
+        TODO: 1) extend this function to place objects according to strategy: organized.
         %---------------------------------------------------------------------------------------------------------
         """
+
+        if self.object_reset_strategy == 'random':
+            self.object_reset_strategy = random.choice(object_reset_strategy_cases[0:3]) # Do not include random in selection
+
         if self.object_reset_strategy == 'jumbled':
             self.placement_initializer = SequentialCompositeSampler(name="ObjectSampler")  # Samples position for each object sequentially. Allows chaining multiple placement initializers together - so that object locations can be sampled on top of other objects or relative to other object placements.
 
@@ -763,7 +771,7 @@ class Picking(SingleArmEnv):
         
         Return an xml model under self.model
         """
-        super()._load_model()
+        super()._load_model() # loads robot_env->robot; single_arm->gripper; manipulation_env-> robot/gripper/objects/bins
 
         # Extract hard coded starting pose for your robot
         xpos = self.robots[0].robot_model.base_xpos_offset["bins"] # Access your robot's (./model/robots/manipulator/robot_name.py) base_xpose_offset hardcoded position as dict
@@ -783,15 +791,22 @@ class Picking(SingleArmEnv):
         # store some arena attributes
         self.bin_size = mujoco_arena.table_full_size # bin_size is really the area covered by the two bins
 
-        # Given that self.object_names and self.visual_object_names are available from load, return classes
-        (self.visual_objects, self.objects,
-        self.not_yet_considered_visual_objects, self.not_yet_considered_objects) = self.extract_obj_classes()
+        # Given the available objects, randomly pick num_objs_to_load and return: names, visual names, and not_yet_modelled_equivalents and name_to_id
+        (self.object_names, self.visual_object_names, 
+        self.not_yet_considered_object_names, self.not_yet_considered_visual_object_names, 
+        self.object_to_id) = self.load_objs_to_simulate(self.num_objs_in_db,self.num_objs_to_load)
+
+        # B. Extract class names (must match those in ./robosuite/models/objects/xml_objects.py ) and call them with the name of the MujocoXMLObject
+        (self.visual_objects, self.objects, 
+        self.not_yet_considered_visual_objects, self.not_yet_considered_objects)  = self.extract_obj_classes()
+
+        self.mujoco_objects = self.visual_objects + self.objects + self.not_yet_considered_visual_objects + self.not_yet_considered_objects
 
         # insantiate object model: includes arena, robot, and objects of interest. merges them to return a single model. 
         self.model = ManipulationTask(
             mujoco_arena    = mujoco_arena,
             mujoco_robots   = [robot.robot_model for robot in self.robots], 
-            mujoco_objects  = self.visual_objects + self.objects + self.not_yet_considered_visual_objects + self.not_yet_considered_objects,
+            mujoco_objects  = self.mujoco_objects
         )
 
         # Create placement initializers for each existing object (self.placement_initializer): will place according to strategy
@@ -837,12 +852,12 @@ class Picking(SingleArmEnv):
 
     def _setup_observables(self):
         """
-        Sets up observables to be used for this environment. Creates object-based observables if enabled
+        Sets up observables to be used for this environment. Creates object-based observables if enabled (i.e. for 1 object: _pos, _quat, _velp, _velr, eef_pos, eef_quat)
 
         Returns:
             OrderedDict: Dictionary mapping observable names to its corresponding Observable object
         """
-        observables = super()._setup_observables()
+        observables = super()._setup_observables() # Creates observables for gripper and robot. Each observable has an interface to mujoco methods to extract the appropriate data xpos/quat/velp/velr and others
 
         # low-level object information
         if self.use_object_obs:
@@ -867,7 +882,7 @@ class Picking(SingleArmEnv):
             for i, obj in enumerate(self.objects):
                 # Create object sensors
                 using_obj = True #(self.single_object_mode == 0 or self.object_id == i)
-                obj_sensors, obj_sensor_names = self._create_obj_sensors(obj_name=obj.name, modality=modality)
+                obj_sensors, obj_sensor_names = self._create_obj_sensors(obj_name=obj.name, modality=modality) # creates obj pos/quat/velp/velr/eef_pos/eef_quat snesors
                 num_obj_sensors = len(obj_sensor_names)
                 sensors     += obj_sensors
                 names       += obj_sensor_names
@@ -1020,23 +1035,27 @@ class Picking(SingleArmEnv):
 
     def _reset_internal(self):
         """
-        Resets the simulation's internal configuration and object positions and robot eef
-        TODO: should use IKs to test if positions are admissible. 
-
-        Upon a hard reset, we will place num_obs_to_load according to object_reset_strategy. 
-        [organized, jumbled, wall, random]. 
+        Resets the simulation's internal configuration and object positions and robot eef according to object_reset_strategy. 
+        [organized, jumbled, wall, random].  Recall that we have a multi-object environment. 
         
-        Where, 
+        Note that objects are not reset until all objects have been successfully picked. What objects are loaded after reset
+        depend on the object_randomization flag. If set to True, a new set of objects are loaded, otherwise, the same objects 
+        are used.The number of objects to load is controlled by num_obs_to_load. 
+
+        Since we are using a GNN model for DRL, we use num_objs to denote which objs to consider for graph modeling as nodes. 
+        This results in two sets of lists (of objects, visual objects, and their corresponding names). i.e. self.objects vs 
+        self.not_yet_considered_bojects. 
+
+        Everytime an object is picked, a new goal object is picked from within the modelled objects while at the same time a 
+        not_yet_considered_object is moved into the modeled group. 
+        Note: at the beginning of the program reset() may be called upto 3 times before actually starting rollouts: by Picking.__init__,  GymWrapper.__init__, and by RLAlgorithm._start_new_rollout()
+        
+        Object Placement Strategies (activated in self.placement_initializer)
         - 'organized': nicely stacked side-by-side, if no more fit, on-top of each other. left-to-right.
         - 'jumbled':   just dropped in from top at center, let them fall freely.
         - 'wall':      align objects with wall. start on far wall on the left and move clock-wise.
-        - 'random':    select above strategy randomly with each new reset.
+        - 'random':    select above strategy randomly with each new reset.        
 
-        Note, that under these strategies we could keep the same objects or change them. This is configured by 
-        the object_randomization flag. The latter depends on the num_objs_in_db available in the db, and the num_obs_to_load. 
-
-        # TODO: need to decide when the locations of objects should be updated. if arm does not finish picking everything, do we want to move things around?
-        The goal object should also not be changed for this time. Should this only happen in a hard reset?
         """
         global _reset_internal_after_picking_all_objs
 
@@ -1044,253 +1063,193 @@ class Picking(SingleArmEnv):
         if not _reset_internal_after_picking_all_objs:
             return
 
-        super()._reset_internal() # action_dim|controllers|cameras| observables|model|render
-
         # Reset all object positions using initializer sampler if we're not directly loading from an xml
         if not self.deterministic_reset: # i.e. stochastic (flag set in base.py)
 
-            if self.object_reset_strategy == 'random':
-                self.object_reset_strategy = random.choice(object_reset_strategy_cases[0:3]) # Do not include random in selection
+            if self.first_reset:
+                super()._reset_internal() # action_dim|controllers|cameras|model|render
+                self.first_reset = False # reset() is called during base.py:MujocoEnv.__init__(), then by robosuite/wrappers/gym_wrappery.py:GymWrapper.__init__, and then when starting to train (batch/online) rlkit/core/rl_algorithm.py:RLAlgorithm._start_new_rollout 
+            
+            elif not self.first_reset and self.object_randomization == True:
+                self.hard_reset = True      # Used in base.py:MujocoEnv._reset_internal to load new objects and update observables
+                super()._reset_internal()
+                self.hard_reset = False
 
-            if self.object_reset_strategy == 'jumbled':
+            # I) If we want to randomize objects with new reset: select new objects, and update the placement samplers (as done in _load_model). 
+            # elif self.object_randomization == True and _reset_internal_after_picking_all_objs:
 
-                # A) If we want to randomize objects with new reset: select new objects, and update the placement samplers (as done in _load_model). 
-                if self.object_randomization == True:
+            #     # Reset the flag set in _is_success
+            #     _reset_internal_after_picking_all_objs = False 
 
-                    # A. Clear object structures and select new objects
-                    self.clear_object_strucs()
-
-                    # Given the available objects, randomly pick num_objs_to_load and return: names, visual names, and not_yet_modelled_equivalents and name_to_id
-                    (self.object_names, self.visual_object_names, 
-                    self.not_yet_considered_object_names, self.not_yet_considered_visual_object_names, 
-                    self.object_to_id) = self.load_objs_to_simulate(self.num_objs_in_db,self.num_objs_to_load)
-
-                    # B. Extract class names (must match those in ./robosuite/models/objects/xml_objects.py ) and call them with the name of the MujocoXMLObject
-                    (self.visual_objects, self.objects, 
-                    self.not_yet_considered_visual_objects, self.not_yet_considered_objects)  = self.extract_obj_classes()
-
-                    # C. Update the model's mujoco objects
-                    self.model.mujoco_objects  = self.visual_objects + self.objects + self.not_yet_considered_objects + self.not_yet_considered_visual_objects
-
-                    # D. Do th eequivalent of a hard reset to recreate the world with the new objects. Based on the reset() in base.py
-
-
-                    # self._load_model() # loads robot/gripper/objects/bins            
-                    # self._postprocess_model()
-                    # self._initialize_sim()      # creates self.sim and self.cmodel
-                    # self.sim.forward()          # update the simulation 
-
-                    # # E. Observables
-                    # _observables = self._setup_observables()
-                    # for obs_name, obs in _observables.items():
-                    #     self.modify_observable(observable_name=obs_name, attribute="sensor", modifier=obs._sensor)
-
-                    # Try to update the self.model = manipulatioTask directly.
-                    self.model = ManipulationTask(
-                        mujoco_arena=self.model.mujoco_arena,
-                        mujoco_robots = self.model.mujoco_robots,
-                        mujoco_objects = self.model.mujoco_objects                    
-                    )
-
-                    self._postprocess_model()
-                    self._initialize_sim()      # creates self.sim and self.cmodel
-                    self.sim.forward()          # update the simulation 
-
-                    super()._reset_internal() # to setup references like obj_body_id.
-
-                    self._observables = self._setup_observables()
-
-                    # F. Create placement initializer objects for each existing object (self.placement_initializer): will place according to strategy
-                    self._get_placement_initializer()   
-
-                # B. Not Object Randomizations. 
-                # Two possibilities: (i) First Reset (ii) Continuing Reset. 
-                # (i) Create placement initializer for mujoco objects
-                # (ii) Copy objects in target bin back to object names and then clear the former. 
-                # After that, both (i) and (ii) require us to collect the object's positions and orientation. And for collision objects, set the HER strategy.
-                elif self.objects_in_target_bin == []:                # Entering for the first time
-                    
-                    # All quantities below are first available when calling the constructor. Mujoco uses that information there. Should not be done here.
-                    # (self.object_names, self.visual_object_names, 
-                    # self.not_yet_considered_object_names, self.not_yet_considered_visual_object_names, 
-                    # self.object_to_id) = self.load_objs_to_simulate(self.num_objs_in_db,self.num_objs_to_load)
-
-                    # B. Extract class names (must match those in ./robosuite/models/objects/xml_objects.py ) and call them with the name of the MujocoXMLObject
-                    (self.visual_objects, self.objects, 
-                    self.not_yet_considered_visual_objects, self.not_yet_considered_objects)  = self.extract_obj_classes()
-
-                    # C. Update the model's mujoco objects
-                    self.model.mujoco_objects  = self.visual_objects + self.objects + self.not_yet_considered_objects + self.not_yet_considered_visual_objects
-
-                    # D. Create placement initializer objects for each existing object (self.placement_initializer): will place according to strategy
-                    self._get_placement_initializer()                           
-                    
-
-                else:
-                    self.object_names = self.objects_in_target_bin.copy()
-                    self.objects_in_target_bin.clear()
-
-                    # can keep the same placement initializer object. no need to create a new one.. In the next step, we will sample new locations. 
-
-
-                # Sample from the "placement initializer" for all objects (regular and visual objects)
-                self.object_placements = self.placement_initializer.sample()
+            #     # A. Clear object structures and select new objects
+            #     self.clear_object_strucs()
                 
-                # Set goal object to pick up and sort closest objects to model
-                self.goal_object, self.other_objs_than_goals = self.get_goal_object()               
+            #     # Wanted to directly call base.py:MujocoEnv->super().reset() but reset() has a call to reset_internal() so it would be a circular call. So, we have to replicate the reset functionality before its call to reset_internal as well as code after _reset_internal. 
+            #     self.hard_reset = True # calls: base.py:MujocoEnv -> reset enables to load the model once again, i.e. all the new objects. 
+            #     self.do_reset_internal = False # skip reset_internal call in base.py:MujocoEnv->reset()
+            #     super().reset()
 
-                # eef_placement
-                    #eef_pos = self._eef_xpos
-                    #print("Testing {}".format(self._observables))
-                    # # Move eef
-                    # if hasattr(self, 'robot_placement_initializer'):
-                    #     robot_placements = self.robot_placement_initializer.sample()
-                    #     # 2. set pose of robot. (data.ctrl is for joint angles not pose).
-                    #     for robot in robot_placements.keys():
-                    #         if self.sim.data.ctrl is not None:
-                    #             print(f"Starting eef_xpos: {self._eef_xpos}. \nDesired xpos {robot_placements[robot][0][:3]}")
-                    #             self.sim.data.site_xpos[self.robots[0].eef_site_id] = robot_placements[robot][0][:3]
-                    #             #self.sim.data_site_
-                    #             self.sim.data.site_xpos[2] = robot_placements[robot][0][:3]
-                    #             self.sim.data.site_xpos[3] = robot_placements[robot][0][1]
-                    #             self.sim.data.site_xpos[4] = robot_placements[robot][0][2]
-                    #
-                    #             self.sim.data.set_joint_qpos('robot0_joint1', robot_placements[robot][0][0])
-                    #             self.sim.data.set_joint_qpos('robot0_joint2', robot_placements[robot][0][1])
-                    #             self.sim.data.set_joint_qpos('robot0_joint3', robot_placements[robot][0][2])
-                    #             self.sim.data.set_joint_qpos('robot0_joint4', robot_placements[robot][1][0])
-                    #             self.sim.data.set_joint_qpos('robot0_joint5', robot_placements[robot][1][1])
-                    #             self.sim.data.set_joint_qpos('robot0_joint6', robot_placements[robot][1][2])
-                    #             self.sim.data.set_joint_qpos('robot0_joint7', robot_placements[robot][1][3])
-                    #
-                    #             self.sim.data.ctrl[:3]  =  np.asarray(robot_placements[robot][0])   # pos
-                    #             self.sim.data.ctrl[3:7] =  np.asarray(robot_placements[robot][1])   # quat
-                    #             self.sim.data.ctrl[7:9] =  np.array([0,0])                          # two fingers
-                    #
-                    #         for i in range(10):
-                    #             self.sim.step()
-                    #             self._update_observables()
-                    #     print(f"Updated eef_xpos: {self._eef_xpos}")
 
-                    # Available "joint" names = ('robot0_joint1', 'robot0_joint2', 'robot0_joint3',
-                    # 'robot0_joint4', 'robot0_joint5', 'robot0_joint6', 'robot0_joint7',
-                    # 'gripper0_finger_joint1', 'gripper0_finger_joint2'
-                    # left & right finger
-                    # self.sim.data.set_joint_qpos('gripper0_finger_joint1', 0.04)
-                    # self.sim.data.set_joint_qpos('gripper0_finger_joint2', -0.04)
 
-                for obj_pos, obj_quat, obj in self.object_placements.values():
+                # # B. Follow super.reset(): destroy_viewer|_load_model|_postprocess_model|_initialize_sim
+                # # Do not destroy_viewer()
 
-                    # Set the visual object body locations
-                    if "visualobject" in obj.name.lower():                             # switched "visual" for "v"
-                        self.sim.model.body_pos[self.obj_body_id[obj.name]]  = obj_pos
-                        self.sim.model.body_quat[self.obj_body_id[obj.name]] = obj_quat
+                # # B.1 Replicate self._load_model()                
+                # # Given the available objects, randomly pick num_objs_to_load and return: names, visual names, and not_yet_modelled_equivalents and name_to_id
+                # (self.object_names, self.visual_object_names, 
+                # self.not_yet_considered_object_names, self.not_yet_considered_visual_object_names, 
+                # self.object_to_id) = self.load_objs_to_simulate(self.num_objs_in_db,self.num_objs_to_load)
 
-                        ## Addition ---
-                        # self.object_placements is a place holder for all objects. However:
-                        # Under HER paradigm, we have a self.goal variable for the desired goal +
-                        # Under our current architecture we set self.goal_object as a single goal until that object is placed. 
-                        # Use this to fill self.goal which will be used in _get_obs to set the desired_goal.
-                        if obj.name.lower() == self.goal_object['name'][:5] + 'visualobject':
-                                self.goal_object['pos'] = obj_pos
-                                self.goal_object['quat'] = obj_quat
+                # # Extract class names (must match those in ./robosuite/models/objects/xml_objects.py ) and call them with the name of the MujocoXMLObject
+                # (self.visual_objects, self.objects, 
+                # self.not_yet_considered_visual_objects, self.not_yet_considered_objects)  = self.extract_obj_classes()
 
-                    # Set the position of 'collision' objects:
-                    elif obj.name.lower() == self.goal_object['name'].lower():
-                        self._activate_her(obj_pos=obj_pos, obj_quat=obj_quat, obj=obj)
-                    else:
-                        self.sim.data.set_joint_qpos(obj.joints[0], np.concatenate([np.array(obj_pos), np.array(obj_quat)]))
+                # # Update the model's mujoco objects
+                # self.model.mujoco_objects  = self.visual_objects + self.objects + self.not_yet_considered_objects + self.not_yet_considered_visual_objects
 
-                # Set the bins to the desired position
-                self.sim.model.body_pos[self.sim.model.body_name2id("bin1")] = self.bin1_pos
-                self.sim.model.body_pos[self.sim.model.body_name2id("bin2")] = self.bin2_pos
+                # # reset time from base.py reset_internal?
 
-            # Robot EEF: TODO not sure this is the right way to move the end-effector. Needs follow-up study.
-                # 1. Call robot placement_initializer to sample eef poses above bin1. Ret's dict of robots with (pos,quat,obj)
-                #----------------------
-                # if hasattr(self,'robot_placement_initializer'):
+                # # Update the self.model = manipulatioTask directly. suites/models/tasks/task.py:Task.__init__
+                # self.model = ManipulationTask(
+                #     mujoco_arena   = self.model.mujoco_arena,
+                #     mujoco_robots  = self.model.mujoco_robots,
+                #     mujoco_objects = self.model.mujoco_objects                    
+                # )
+
+                # # B.2 continue
+                # self._postprocess_model()
+                # self._initialize_sim()      # creates self.sim and integrates self.model
+
+                #  ## TODO: do we need C below, if we are calling reset_internal?
+                # # B.3 Replicate base.py:MujocoEnv._reset_internal() but do not touch viewer/rendered
+
+                # # self.sim_state_initial = self.sim.get_state()
+                # # self._setup_references()    # Set references like obj_body_id for each object. These will be necessary before observables are setup as they use these id's to get pos/quat/velp/velr for different objects.      
+                # # self.cur_time = 0
+                # # self.timestep = 0
+                # # self.done = False        
+
+                # super()._reset_internal()   # ->robot_env._reset_inernal: reset_controller|action_dim|cameras ->mujoco_env._reset_internal: viewer/renderer|sim_state_initial|setup referencescur_time/timestep/done| observables reset
+                
+                # # B.4 Move sim forward with new locations
+                # self.sim.forward()
+                
+                # # B.5 Create, then update/reset observables and read new sensor info for robot/gripper/objects
+                # self._obs_cache = {}
+                # self.__observables = self._setup_observables()
+
+                # for obs_name, obs in self._observables.items():
+                #     if 'Object' in obs_name or 'gripper' in obs_name:
+                #         self.modify_observable(observable_name=obs_name, attribute="sensor", modifier=obs._sensor)
+                #         obs.reset()
+                
+
+                
+                # C. Create placement initializer objects for each existing object (self.placement_initializer): will place according to strategy
+                # self._get_placement_initializer()   
+
+            # II. Not Object Randomizations. 
+            # Continuing Reset. 
+            # Copy objects in target bin back to object names and then clear the former. 
+            # After that, both (i) and (ii) require us to collect the object's positions and orientation. And for collision objects, set the HER strategy.
+            else:
+                super()._reset_internal()
+                if self.objects_in_target_bin != []:
+
+                    # Print object info before reset
+                    print('Current objects in target bin are: ')
+                    for obj in self.objects_in_target_bin:
+                        print(f'{obj} ')
+
+                    self.object_names = self.objects_in_target_bin[:self.num_objects]
+                    self.not_yet_considered_object_names = self.objects_in_target_bin[self.num_objects:]
+
+                    # Print object info after the reset
+                    print('After the reset, the modeled object names are: ')
+                    for obj in self.object_names:
+                        print(f'{obj} ')
+                    print('And thet unmodeled or not yet considered objects are: ')
+                    for obj in self.not_yet_considered_object_names:
+                        print(f'{obj} ')
+
+                    # Proceed to place objects at the self.object_placements location.
+                
+
+                # self.objects, visual_objects, same. TODO: what about not_yet
+            # Sample from the "placement initializer" for all objects (regular and visual objects)
+            self.object_placements = self.placement_initializer.sample()
+            
+            # Set goal object to pick up and sort closest objects to model
+            self.goal_object, self.other_objs_than_goals = self.get_goal_object()               
+
+            # eef_placement
+                #eef_pos = self._eef_xpos
+                #print("Testing {}".format(self._observables))
+                # # Move eef
+                # if hasattr(self, 'robot_placement_initializer'):
                 #     robot_placements = self.robot_placement_initializer.sample()
-
                 #     # 2. set pose of robot. (data.ctrl is for joint angles not pose).
-                #     # for robot in robot_placements.keys():
-                #     #     if self.sim.data.ctrl is not None:
-                #     #         print(f"Starting eef_xpos: {self._eef_xpos}. \nDesired xpos {robot_placements[robot][0][:3]}")
-                #     #         self.sim.data.site_xpos[self.robots[0].eef_site_id] = robot_placements[robot][0][:3]
-                #     #         #self.sim.data_site_
-                #     #             # self.sim.data.site_xpos[2] = robot_placements[robot][0][:3]
-                #     #             # self.sim.data.site_xpos[3] = robot_placements[robot][0][1]
-                #     #             # self.sim.data.site_xpos[4] = robot_placements[robot][0][2]
+                #     for robot in robot_placements.keys():
+                #         if self.sim.data.ctrl is not None:
+                #             print(f"Starting eef_xpos: {self._eef_xpos}. \nDesired xpos {robot_placements[robot][0][:3]}")
+                #             self.sim.data.site_xpos[self.robots[0].eef_site_id] = robot_placements[robot][0][:3]
+                #             #self.sim.data_site_
+                #             self.sim.data.site_xpos[2] = robot_placements[robot][0][:3]
+                #             self.sim.data.site_xpos[3] = robot_placements[robot][0][1]
+                #             self.sim.data.site_xpos[4] = robot_placements[robot][0][2]
+                #
+                #             self.sim.data.set_joint_qpos('robot0_joint1', robot_placements[robot][0][0])
+                #             self.sim.data.set_joint_qpos('robot0_joint2', robot_placements[robot][0][1])
+                #             self.sim.data.set_joint_qpos('robot0_joint3', robot_placements[robot][0][2])
+                #             self.sim.data.set_joint_qpos('robot0_joint4', robot_placements[robot][1][0])
+                #             self.sim.data.set_joint_qpos('robot0_joint5', robot_placements[robot][1][1])
+                #             self.sim.data.set_joint_qpos('robot0_joint6', robot_placements[robot][1][2])
+                #             self.sim.data.set_joint_qpos('robot0_joint7', robot_placements[robot][1][3])
+                #
+                #             self.sim.data.ctrl[:3]  =  np.asarray(robot_placements[robot][0])   # pos
+                #             self.sim.data.ctrl[3:7] =  np.asarray(robot_placements[robot][1])   # quat
+                #             self.sim.data.ctrl[7:9] =  np.array([0,0])                          # two fingers
+                #
+                #         for i in range(10):
+                #             self.sim.step()
+                #             self._update_observables()
+                #     print(f"Updated eef_xpos: {self._eef_xpos}")
 
-                #     #             # self.sim.data.set_joint_qpos('robot0_joint1', robot_placements[robot][0][0])
-                #     #             # self.sim.data.set_joint_qpos('robot0_joint2', robot_placements[robot][0][1])
-                #     #             # self.sim.data.set_joint_qpos('robot0_joint3', robot_placements[robot][0][2])
-                #     #             # self.sim.data.set_joint_qpos('robot0_joint4', robot_placements[robot][1][0])
-                #     #             # self.sim.data.set_joint_qpos('robot0_joint5', robot_placements[robot][1][1])
-                #     #             # self.sim.data.set_joint_qpos('robot0_joint6', robot_placements[robot][1][2])
-                #     #             # self.sim.data.set_joint_qpos('robot0_joint7', robot_placements[robot][1][3])
+                # Available "joint" names = ('robot0_joint1', 'robot0_joint2', 'robot0_joint3',
+                # 'robot0_joint4', 'robot0_joint5', 'robot0_joint6', 'robot0_joint7',
+                # 'gripper0_finger_joint1', 'gripper0_finger_joint2'
+                # left & right finger
+                # self.sim.data.set_joint_qpos('gripper0_finger_joint1', 0.04)
+                # self.sim.data.set_joint_qpos('gripper0_finger_joint2', -0.04)
+            
+            # Position the objects
+            for obj_pos, obj_quat, obj in self.object_placements.values():
 
-                #     #             # self.sim.data.ctrl[:3]  =  np.asarray(robot_placements[robot][0])   # pos
-                #     #             # self.sim.data.ctrl[3:7] =  np.asarray(robot_placements[robot][1])   # quat
-                #     #             # self.sim.data.ctrl[7:9] =  np.array([0,0])                          # two fingers
-                    
-                #     #     for i in range(10):
-                #     #         self.sim.step() 
-                #     #         #self._update_observables()
-                #     # print(f"Updated eef_xpos: {self._eef_xpos}")
-                #-------------------------
+                # Set the visual object body locations
+                if "visualobject" in obj.name.lower():                             # switched "visual" for "v"
+                    self.sim.model.body_pos[self.obj_body_id[obj.name]]  = obj_pos
+                    self.sim.model.body_quat[self.obj_body_id[obj.name]] = obj_quat
 
-            if self.object_reset_strategy == 'wall':
+                    ## Addition ---
+                    # self.object_placements is a place holder for all objects. However:
+                    # Under HER paradigm, we have a self.goal variable for the desired goal +
+                    # Under our current architecture we set self.goal_object as a single goal until that object is placed. 
+                    # Use this to fill self.goal which will be used in _get_obs to set the desired_goal.
+                    if obj.name.lower() == self.goal_object['name'][:5] + 'visualobject':
+                            self.goal_object['pos'] = obj_pos
+                            self.goal_object['quat'] = obj_quat
 
-                # A) If we want to randomize objects with new reset: select new objects, and update the placement samplers (as done in _load_model). 
-                if self.object_randomization == True:
-                    # A. Select new objects
-                    # Given the available objects, randomly pick num_objs_to_load and return names, visual names, and name_to_id
-                    self.object_names, self.visual_object_names, self.object_to_id = self.load_objs_to_simulate(
-                        self.num_objs_in_db, self.num_objs_to_load)
+                # Set the position of 'collision' objects:
+                elif obj.name.lower() == self.goal_object['name'].lower():
+                    self._activate_her(obj_pos=obj_pos, obj_quat=obj_quat, obj=obj)
+                else:
+                    self.sim.data.set_joint_qpos(obj.joints[0], np.concatenate([np.array(obj_pos), np.array(obj_quat)]))
 
-                    # B. Extract class names (must match those in ./robosuite/models/objects/xml_objects.py ) and call them with the name of the MujocoXMLObject
-                    self.objects = []
-                    self.visual_objects = []
+            # Set the bins to the desired position
+            self.sim.model.body_pos[self.sim.model.body_name2id("bin1")] = self.bin1_pos
+            self.sim.model.body_pos[self.sim.model.body_name2id("bin2")] = self.bin2_pos
 
-                    # Given that self.object_names and self.visual_object_names are available from load, return classes
-                    self.visual_objects, self.objects = self.extract_obj_classes()
 
-                    # C. Update the model's mujoco objects
-                    self.model.mujoco_objects = self.visual_objects + self.objects
-
-                    # Create placement initializer objects for each existing object (self.placement_initializer): will place according to strategy
-                    self._get_placement_initializer()
-
-                # ----------------- Continue to update placement of objects
-                # Sample from the placement initializer for all objects (regular and visual objects)
-                self.object_placements = self.placement_initializer.sample()
-
-                # Set goal object to pick up and sort closest objects to model
-                self.goal_object, self.other_objs_than_goals = self.get_goal_object()
-
-                # Sample from the placement initializer for all objects (regular and visual objects)
-                object_placements = self.placement_initializer.sample()
-
-                # Loop through all objects and reset their positions
-                for obj_pos, obj_quat, obj in object_placements.values():
-                    # Set the visual object body locations
-                    if "v" in obj.name.lower():  # switched "visual" for "v"
-                        self.sim.model.body_pos[self.obj_body_id[obj.name]] = obj_pos
-                        self.sim.model.body_quat[self.obj_body_id[obj.name]] = obj_quat
-                    else:
-                        # Set the collision object joints (setting pose for obj)
-                        self.sim.data.set_joint_qpos(obj.joints[0],
-                                                     np.concatenate([np.array(obj_pos), np.array(obj_quat)]))
-
-                # Set the bins to the desired position
-                self.sim.model.body_pos[self.sim.model.body_name2id("bin1")] = self.bin1_pos
-                self.sim.model.body_pos[self.sim.model.body_name2id("bin2")] = self.bin2_pos
-
-                # flag to run _reset_internal for the very first time only
-                _reset_internal_after_picking_all_objs = False
-
-            if self.object_reset_strategy == 'organized':
-                pass
         return True
 
     def return_sorted_objs_to_model(self, goal, others):

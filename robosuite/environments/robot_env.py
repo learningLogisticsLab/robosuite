@@ -300,7 +300,7 @@ class RobotEnv(MujocoEnv):
         observables = super()._setup_observables()
         # Loop through all robots and grab their observables, adding it to the proprioception modality
         for robot in self.robots:
-            robot_obs = robot.setup_observables()
+            robot_obs = robot.setup_observables() # rets robot0_joint_pos/pos_cos/pos_sin/joint_vel/eef_pos/eef_velp/eef_velr/gripper_qpos/gripper_qvel
             observables.update(robot_obs)
 
         # Loop through cameras and update the observations if using camera obs
@@ -391,7 +391,7 @@ class RobotEnv(MujocoEnv):
         02 Reset number of action dimensions according to controller
         03 Camera related info
         """
-        # Run superclass reset functionality
+        # mujoco_env._reset_internal: to setup references like obj_body_id.
         super()._reset_internal()
 
         # Reset controllers

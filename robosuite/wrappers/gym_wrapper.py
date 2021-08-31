@@ -68,6 +68,7 @@ class GymWrapper(Wrapper, Env):
             self.action_space   = spaces.Box(low=low, high=high)
 
         if self.rlkit_relational:
+            self.env.first_reset = True # If true, picking.py:Picking.reset_internal() goes through a standard reset path. otherwise skips due to our formalism in dealing with objects in the picking environment. 
             # set up observation and action spaces
             obs                 = self.env.reset()                              # dictionary of observables
             self.modality_dims  = {key: obs[key].shape for key in self.keys}
