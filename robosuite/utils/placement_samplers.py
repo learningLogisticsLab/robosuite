@@ -277,6 +277,8 @@ class UniformRandomSampler(ObjectPositionSampler):
                 .format(base_offset)
 
         # Sample pos and quat for all objects assigned to this sampler
+        print("{} objs of self muj objs {}".format(len(self.mujoco_objects), self.mujoco_objects))
+        print("{} placed objs of placed obj {}".format(len(placed_objects), placed_objects))
         for obj in self.mujoco_objects:
 
             # First make sure the currently sampled object hasn't already been sampled
@@ -315,24 +317,23 @@ class UniformRandomSampler(ObjectPositionSampler):
                 if (location_valid == True):
                     break
 
-            if not success:
-                # We cannot find a good location, so raise it by 10cm the air and drop it.
-                object_z += 0.10
-                quat = self._sample_quat()
-                pos = (object_x, object_y, object_z)
-                placed_objects[obj.name] = (pos, quat, obj)
-                # TODO: recheck validity of this position. Convert code segment starting with if self.ensure_valid_placement into a function and call here.
-                if self.recheck_validity_pos(location_valid=location_valid,
-                                             success=success,
-                                             placed_objects=placed_objects,
-                                             object_x=object_x,
-                                             object_y=object_y,
-                                             object_z=object_z,
-                                             obj=obj)[0] == False:
-                    raise RandomizationError("Cannot place all objects")
-                    # print("cannot place all objects")
-                    # if it failes then raise RandomizationError
-                    # raise RandomizationError("Cannot place all objects ):")
+        if not success:
+            # # We cannot find a good location, so raise it by 10cm the air and drop it.
+            # object_z += 0.10
+            # quat = self._sample_quat()
+            # pos = (object_x, object_y, object_z)
+            # placed_objects[obj.name] = (pos, quat, obj)
+            # # TODO: recheck validity of this position. Convert code segment starting with if self.ensure_valid_placement into a function and call here.
+            # if self.recheck_validity_pos(location_valid=location_valid,
+            #                              success=success,
+            #                              placed_objects=placed_objects,
+            #                              object_x=object_x,
+            #                              object_y=object_y,
+            #                              object_z=object_z,
+            #                              obj=obj)[0] == False:
+            #     raise RandomizationError("Cannot place all objects")
+            # raise RandomizationError("Cannot place all objects ):")
+            print("cannot place all objs")
 
         return placed_objects
 
@@ -348,8 +349,6 @@ class UniformRandomSampler(ObjectPositionSampler):
         obj.horizontal_radius
         obj.bottom_offset
         """
-        print("inside function", location_valid, placed_objects)
-
         if self.ensure_valid_placement:
             for (x, y, z), _, other_obj in placed_objects.values():
                 if (
@@ -378,7 +377,6 @@ class UniformRandomSampler(ObjectPositionSampler):
             pos = (object_x, object_y, object_z)
             placed_objects[obj.name] = (pos, quat, obj)
             success = True
-            print("inside function", location_valid, placed_objects)
 
         return location_valid, success, placed_objects
 

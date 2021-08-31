@@ -252,7 +252,7 @@ class Picking(SingleArmEnv):
         has_renderer            = False,
         has_offscreen_renderer  = True,
         
-        render_camera           = "birdview", #TODO: may need to adjust here for better angle for our work
+        render_camera           = "agentview", #TODO: may need to adjust here for better angle for our work
         render_collision_mesh   = False,
         render_visual_mesh      = True,
         render_gpu_device_id    = 0,            # was -1 
@@ -663,12 +663,11 @@ class Picking(SingleArmEnv):
             # can sample anywhere in bin
             bin_x_half = self.model.mujoco_arena.table_full_size[0] / 2 - 0.05 # half of bin - edges (2*0.025 half of each side of each wall so that we don't hit the wall)
             bin_y_half = self.model.mujoco_arena.table_full_size[1] / 2 - 0.05
-
             # pickObjectSampler: (non-visual) objects are sampled within the bounds of the picking bin #1 (with some tolerance) and outside the object radiuses
             self.placement_initializer.append_sampler(
                 sampler = UniformRandomSampler(
                     name                            = "pickObjectSampler",
-                    mujoco_objects                  = self.objects,
+                    mujoco_objects                  = self.objects+self.not_yet_considered_objects,
                     x_range                         = [-bin_x_half, bin_x_half],    # This (+ve,-ve) range goes from center to the walls on each side of the bin
                     y_range                         = [-bin_y_half, bin_y_half],
                     rotation                        = None,                         # Add uniform random rotation
@@ -691,7 +690,7 @@ class Picking(SingleArmEnv):
             self.placement_initializer.append_sampler(
                 sampler = UniformWallSampler(
                     name                            = "pickObjectSampler",
-                    mujoco_objects                  = self.objects,
+                    mujoco_objects                  = self.objects+self.not_yet_considered_objects,
                     x_range                         = [-bin_x_half, bin_x_half],        # This (+ve,-ve) range goes from center to the walls on each side of the bin
                     y_range                         = [-bin_y_half, bin_y_half],
                     rotation                        = None,                             # Add uniform random rotation
@@ -715,7 +714,7 @@ class Picking(SingleArmEnv):
             self.placement_initializer.append_sampler(
                 sampler                             = UniformRandomSampler(
                     name                            = "pickObjectSampler",
-                    mujoco_objects                  = self.objects,
+                    mujoco_objects                  = self.objects+self.not_yet_considered_objects,
                     x_range                         = [-bin_x_half, bin_x_half],        # This (+ve,-ve) range goes from center to the walls on each side of the bin
                     y_range                         = [-bin_y_half, bin_y_half],
                     rotation                        = None,                             # Add uniform random rotation
@@ -726,12 +725,11 @@ class Picking(SingleArmEnv):
                     z_offset                        = 0.,
                 )
             )
-
         # placeObjectSamplers: each visual object receives a sampler that places it in the TARGET bin
         self.placement_initializer.append_sampler(
             sampler=UniformRandomSampler(
                 name                            = "placeObjectSampler",             # name for object sampler for each object
-                mujoco_objects                  = self.visual_objects,
+                mujoco_objects                  = self.visual_objects+self.not_yet_considered_visual_objects,
                 x_range                         = [-bin_x_half, bin_x_half],        # This (+ve,-ve) range goes from center to the walls on each side of the bin
                 y_range                         = [-bin_y_half, -bin_y_half * 0.8],
                 rotation                        = None,                             # Add uniform random rotation
@@ -801,7 +799,7 @@ class Picking(SingleArmEnv):
         self.not_yet_considered_visual_objects, self.not_yet_considered_objects)  = self.extract_obj_classes()
 
         self.mujoco_objects = self.visual_objects + self.objects + self.not_yet_considered_visual_objects + self.not_yet_considered_objects
-
+        # print("{} self objs, {} self not yet cons objs".format(len(self.objects), len(self.not_yet_considered_objects)))
         # insantiate object model: includes arena, robot, and objects of interest. merges them to return a single model. 
         self.model = ManipulationTask(
             mujoco_arena    = mujoco_arena,
@@ -832,13 +830,13 @@ class Picking(SingleArmEnv):
         self.obj_geom_id = {}
 
         # object-specific ids
-        for obj in (self.visual_objects + self.objects):
+        for obj in (self.mujoco_objects):
             self.obj_body_id[obj.name] = self.sim.model.body_name2id(obj.root_body)
             self.obj_geom_id[obj.name] = [self.sim.model.geom_name2id(g) for g in obj.contact_geoms]
 
         # target locations in bin for each object type
-        self.target_bin_placements = np.zeros((len(self.objects), 3))
-        for i, obj in enumerate(self.objects):
+        self.target_bin_placements = np.zeros((len(self.objects+self.not_yet_considered_objects), 3))
+        for i, obj in enumerate(self.objects+self.not_yet_considered_objects):
             bin_id = i
             bin_x_low = self.bin2_pos[0]
             bin_y_low = self.bin2_pos[1]
@@ -1027,6 +1025,9 @@ class Picking(SingleArmEnv):
                 self.sim.data.set_joint_qpos('gripper0_finger_joint2', -obj.vertical_radius / 2)
 
             # Update goal_object with (HER_pos, HER_quat) on the simulation
+            self.object_placements[self.goal_object['name']]=(HER_pos, HER_quat, obj)
+            self.goal_object['pos'] = HER_pos
+            self.goal_object['quat'] = HER_quat
             self.sim.data.set_joint_qpos(obj.joints[0], np.concatenate([np.array(HER_pos), np.array(HER_quat)]))
             # print("Update HER pos for {} to {}".format(self.goal_object['name'], HER_pos))
             # print("Update HER pose for {} to {}".format(self.goal_object['name'], HER_quat))
@@ -1221,12 +1222,13 @@ class Picking(SingleArmEnv):
                 # left & right finger
                 # self.sim.data.set_joint_qpos('gripper0_finger_joint1', 0.04)
                 # self.sim.data.set_joint_qpos('gripper0_finger_joint2', -0.04)
-            
+            print("self obj placements {}".format(self.object_placements.keys()))
             # Position the objects
             for obj_pos, obj_quat, obj in self.object_placements.values():
 
                 # Set the visual object body locations
                 if "visualobject" in obj.name.lower():                             # switched "visual" for "v"
+                    print(self.obj_body_id.keys())
                     self.sim.model.body_pos[self.obj_body_id[obj.name]]  = obj_pos
                     self.sim.model.body_quat[self.obj_body_id[obj.name]] = obj_quat
 
