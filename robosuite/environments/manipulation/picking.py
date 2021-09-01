@@ -731,7 +731,7 @@ class Picking(SingleArmEnv):
                 name                            = "placeObjectSampler",             # name for object sampler for each object
                 mujoco_objects                  = self.visual_objects+self.not_yet_considered_visual_objects,
                 x_range                         = [-bin_x_half, bin_x_half],        # This (+ve,-ve) range goes from center to the walls on each side of the bin
-                y_range                         = [-bin_y_half, -bin_y_half * 0.8],
+                y_range                         = [-bin_y_half, -bin_y_half*0.8],
                 rotation                        = None,                             # Add uniform random rotation
                 rotation_axis                   = 'z',                              # Currently only accepts one axis. TODO: extend to multiple axes.
                 ensure_object_boundary_in_range = True,

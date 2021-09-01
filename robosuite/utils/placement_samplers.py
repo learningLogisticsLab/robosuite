@@ -287,7 +287,6 @@ class UniformRandomSampler(ObjectPositionSampler):
             horizontal_radius = obj.horizontal_radius
             bottom_offset = obj.bottom_offset
             success = False
-
             for i in range(100):  # 5000 retries
                 object_x = self._sample_x(horizontal_radius) + base_offset[0]
                 object_y = self._sample_y(horizontal_radius) + base_offset[1]
@@ -307,56 +306,38 @@ class UniformRandomSampler(ObjectPositionSampler):
                 # Once an xyz is computed for the object, make sure it does not collide with other objects. 
                 # TODO: does this assume objects are always facing up vs tripped over?
                 #  It's possible the computations here will fall apart if the objects have a different orientaiton
-                location_valid, placed_objects = self.recheck_validity_pos(location_valid=location_valid,
+                location_valid, success, placed_objects = self.recheck_validity_pos(location_valid=location_valid,
+                                                                                    success=success,
                                                                                     placed_objects=placed_objects,
                                                                                     object_x=object_x,
                                                                                     object_y=object_y,
                                                                                     object_z=object_z,
                                                                                     obj=obj)
                 if location_valid:
-                    # random rotation
+                    break
+                else:
+                    # We cannot find a good location, so raise it by 10cm the air and drop it.
+                    object_z += 0.10
                     quat = self._sample_quat()
-
-                    # multiply this quat by the object's initial rotation if it has the attribute specified
-                    if hasattr(obj, "init_quat"):
-                        quat = quat_multiply(quat, obj.init_quat)
-
-                    # location is valid, put the object down
                     pos = (object_x, object_y, object_z)
                     placed_objects[obj.name] = (pos, quat, obj)
-                    success = True
-                    break
+                    # TODO: recheck validity of this position. Convert code segment starting with if self.ensure_valid_placement into a function and call here.
+                    location_valid, success, placed_objects = self.recheck_validity_pos(location_valid=location_valid,
+                                                                                        success=success,
+                                                                                        placed_objects=placed_objects,
+                                                                                        object_x=object_x,
+                                                                                        object_y=object_y,
+                                                                                        object_z=object_z,
+                                                                                        obj=obj)
 
         if not success:
-            # We cannot find a good location, so raise it by 10cm the air and drop it.
-            object_z += 0.10
-            quat = self._sample_quat()
-            pos = (object_x, object_y, object_z)
-            placed_objects[obj.name] = (pos, quat, obj)
-            # TODO: recheck validity of this position. Convert code segment starting with if self.ensure_valid_placement into a function and call here.
-            location_valid, placed_objects = self.recheck_validity_pos(location_valid=location_valid,
-                                         placed_objects=placed_objects,
-                                         object_x=object_x,
-                                         object_y=object_y,
-                                         object_z=object_z,
-                                         obj=obj)
-            if location_valid:
-                # random rotation
-                quat = self._sample_quat()
-
-                # multiply this quat by the object's initial rotation if it has the attribute specified
-                if hasattr(obj, "init_quat"):
-                    quat = quat_multiply(quat, obj.init_quat)
-
-                # location is valid, put the object down
-                pos = (object_x, object_y, object_z)
-                placed_objects[obj.name] = (pos, quat, obj)
-                success = True
+            print("cannot place all objs")
             # raise RandomizationError("Cannot place all objects ):")
-        # print("{} placed objs are {}".format(len(placed_objects), placed_objects))
+        # print("{} placed objs are {}".format(len(placed_objects.keys()), placed_objects.keys()))
+        # print("{} placed vis objs are {}")
         return placed_objects
 
-    def recheck_validity_pos(self, location_valid, placed_objects, object_x, object_y, object_z, obj):
+    def recheck_validity_pos(self, location_valid, success, placed_objects, object_x, object_y, object_z, obj):
         """
         check validity of the position
         requirements:
@@ -392,7 +373,20 @@ class UniformRandomSampler(ObjectPositionSampler):
                     # print(f'position is ({object_x},{object_y},{object_z}), norm is {np.linalg.norm((object_x - x, object_y - y))}, and the sum of horizontal raidii between the two objects is {other_obj.horizontal_radius + horizontal_radius}')
                     break
 
-        return location_valid, placed_objects
+            if location_valid:
+                # random rotation
+                quat = self._sample_quat()
+
+                # multiply this quat by the object's initial rotation if it has the attribute specified
+                if hasattr(obj, "init_quat"):
+                    quat = quat_multiply(quat, obj.init_quat)
+
+                # location is valid, put the object down
+                pos = (object_x, object_y, object_z)
+                placed_objects[obj.name] = (pos, quat, obj)
+                success = True
+
+        return location_valid, success, placed_objects
 
 
 class UniformWallSampler(ObjectPositionSampler):
