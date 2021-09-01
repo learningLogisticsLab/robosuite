@@ -251,7 +251,7 @@ class Picking(SingleArmEnv):
 
         has_renderer            = False,
         has_offscreen_renderer  = True,
-        
+        # "camera" names = ('frontview', 'birdview', 'agentview', 'robot0_robotview', 'robot0_eye_in_hand').
         render_camera           = "agentview", #TODO: may need to adjust here for better angle for our work
         render_collision_mesh   = False,
         render_visual_mesh      = True,
@@ -737,7 +737,7 @@ class Picking(SingleArmEnv):
                 ensure_object_boundary_in_range = True,
                 ensure_valid_placement          = True,
                 reference_pos                   = self.bin2_pos + self.bin_thickness,
-                z_offset                        = 0.20,                             # Set a vertical offset of XXcm above the bin
+                z_offset                        = 0.10,                             # Set a vertical offset of XXcm above the bin
                 z_offset_prob                   = 0.50,                             # probability with which to set the z_offset
             )
         )
