@@ -356,6 +356,9 @@ class Picking(SingleArmEnv):
         # whether to use ground-truth object states
         self.use_object_obs = use_object_obs
 
+        # Hard Reset: afects re-loading on reset
+        self.hard_reset = hard_reset
+
         # (b) Strategies
         self.object_reset_strategy  = object_reset_strategy     # organized|jumbled|wall|random
         self.object_randomization   = object_randomization      # randomize with new objects after reset (bool)
@@ -414,7 +417,7 @@ class Picking(SingleArmEnv):
             render_visual_mesh      = render_visual_mesh,
             render_gpu_device_id    = render_gpu_device_id,            
 
-            initialization_noise    = initialization_noise,            
+            initialization_noise    = initialization_noise,                     
         )
 
     def clear_object_strucs(self):
@@ -1194,6 +1197,11 @@ class Picking(SingleArmEnv):
             sorted_obj_dist:    dictionary with name as key and distance as value.
 
         '''
+
+        # Check for an empty goal
+        if goal == {}:
+            return {}
+
         obj_dist        = {}
         sorted_obj_dist = {}
 
@@ -1237,12 +1245,13 @@ class Picking(SingleArmEnv):
                 if name in self.object_names:
                     self.object_names.remove(name)
                     self.sorted_objects_to_model.popitem(name)
+                    
                     # Add one new unmodeled object to self.object_names, the closest one to the goal, if available from the self.not_yet_considered_object_names
                     sorted_non_modeled_elems = self.return_sorted_objs_to_model(self.goal_object,
                                                                                 self.not_yet_considered_object_names)  # returns dict of sorted objects
                     closest_obj_to_goal = next(iter(sorted_non_modeled_elems.items()))  # Extract first dict item
                     self.object_names.append(closest_obj_to_goal[0])  # Only pass the name
-                    self.sorted_objects_to_model.update(closest_obj_to_goal[0])
+                    self.sorted_objects_to_model[closest_obj_to_goal[0]] = closest_obj_to_goal[1]
                 elif name in self.not_yet_considered_object_names:
                     self.not_yet_considered_object_names.remove(name)
 
@@ -1312,14 +1321,17 @@ class Picking(SingleArmEnv):
             
             # 02 Object Handling
             # Add the current goal object to the list of target bin objects
+            assert self.goal_object != {}, 'checking Picking._is_successful(). Your goal_object is empty.'
+
             self.objects_in_target_bin.append(self.goal_object['name'])
             print("The current objects in the target bin are:")
             for object in self.objects_in_target_bin:
                 print(f"{object} ")    
                                    
-            # Remove goal from the list of modeled names for the next round
+            # Remove goal from the list of modeled names for the next round            
             self.object_names.remove(self.goal_object['name'])
             self.sorted_objects_to_model.popitem(self.goal_object['name'])
+            self.goal_object.clear()
 
             # Get new goal (method checks if objs available else returns empty)
             if self.object_names != []:
@@ -1335,8 +1347,7 @@ class Picking(SingleArmEnv):
                 print(f"Computing new object goal. New goal obj is {self.goal_object['name']} with location {self.goal_object['pos']}.")                 
 
             else: # len(self.object_names) == 0 and len(self.objects_in_target_bin) == self.num_objs_to_load:
-                _reset_internal_after_picking_all_objs = True                
-
+                _reset_internal_after_picking_all_objs = True                                
                 print("Finished picking and placing all objects, can call reset internal again")
 
             return True
@@ -1857,7 +1868,7 @@ class Picking(SingleArmEnv):
 
         # 07 Process Done: 
         # If (i) time_step is past horizon OR (ii) we have succeeded, set to true.
-        done = (self.timestep >= self.horizon) and not self.ignore_done or info['is_success'] and self.fallen_objs_flag
+        done = (self.timestep >= self.horizon) and not self.ignore_done or info['is_success'] or self.fallen_objs_flag
     
         # 08 Process Reward
         reward = self.compute_reward(env_obs['achieved_goal'], env_obs['desired_goal'], info)
