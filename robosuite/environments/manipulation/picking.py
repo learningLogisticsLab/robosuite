@@ -543,7 +543,7 @@ class Picking(SingleArmEnv):
 
         # filter out objects that are already in the correct bins
         active_objs = []
-        for i, obj in enumerate(self.objects):
+        for i, obj in enumerate(self.objects+self.not_yet_considered_objects):
             if self.objects_in_target_bin[i]:
                 continue
             active_objs.append(obj)
@@ -877,7 +877,7 @@ class Picking(SingleArmEnv):
             actives  = [False]
 
             # Create sensors for objects
-            for i, obj in enumerate(self.objects):
+            for i, obj in enumerate(self.objects+self.not_yet_considered_objects):
                 # Create object sensors
                 using_obj = True #(self.single_object_mode == 0 or self.object_id == i)
                 obj_sensors, obj_sensor_names = self._create_obj_sensors(obj_name=obj.name, modality=modality) # creates obj pos/quat/velp/velr/eef_pos/eef_quat snesors
@@ -1238,10 +1238,17 @@ class Picking(SingleArmEnv):
             sorted dict: a dict of sorted objects. can be empty. 
         """
         global _reset_internal_after_picking_all_objs
-        
+
         # 01 Check if Successfull
         # Subtract obj_pos from goal and compute that error's norm:
         target_dist_error = np.linalg.norm(achieved_goal - desired_goal)
+
+        # while not check_grasp:
+        check_grasp = self._check_grasp(
+            gripper=self.robots[0].gripper,
+            object_geoms=[g for g in self.object_placements[self.goal_object['name']][2].contact_geoms])
+        # print("obj geoms {}".format([g for g in self.object_placements[self.goal_object['name']][2].contact_geoms]))
+        # print("debug check grasp {}".format(check_grasp))
 
         # If successfully placed
         if target_dist_error <= self.goal_pos_error_thresh:
