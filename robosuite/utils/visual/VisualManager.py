@@ -17,7 +17,7 @@ README
 
     # EXAMPLE
     # constructor
-    
+
     ----------------------------------------------------------------------------------------------------------------------------
     eyes = VisualManager(
         MODEL_ROOT = path,               # The directory to the model
@@ -29,9 +29,9 @@ README
         train_schedule     = (10_000,),  # The trainer will tune the model when saved image hit the number listed
 
         preprocessor_kwarg = dict(
-            masks_size = (128,128),      # size that image will be wrap to
+            mask_size = (128,128),       # size that image will be wrap to
             grayscale  = True,           # allow gray for more information
-            thresold   = 0.5,            # thresold of confident score
+            threshold  = 0.5,            # thresold of confident score
             backbone   = None,           # backbone for image and masks
             getVec     = None,           # get vector from feature map
             norm       = None,           # norm layer for image and masks
@@ -303,44 +303,66 @@ class ImageSaver():
             id = int(time.time())
         
         with open(os.path.join(self.DATA_ROOT,f'{id}.pickle') , 'wb') as f:
-            pickle.dump( self.seg2anno(seg, env) ,f)
+            pickle.dump( self.seg2anno(seg, env, id) ,f)
         Image.fromarray(img).save(os.path.join(self.DATA_ROOT,f'{id}.png'))
         
         #raise Exception("This function is not finish yet")
         
-    def seg2anno(self, seg, env):
+    def seg2anno(self, seg, env, img_id):
         # TODO 
         #   figure out how to programmatically annotation mask
-        #   maybe save in coco format
 
         # objects: a dictionary [id] => name
         # ids: list of M id 
-        objects = {}
-        ids = []
-        for i in seg.reshape(-1,3):
-            name = env.sim.model.geom_id2name(i[1])
-            objects[i[1]] = name
-            if i[1] not in ids: ids.append(i[1])
-        ids = np.array(sorted(ids))
-        #for k, v in sorted(objects.items()): print(k, v.split("_") if v is not None else v)
-
 
         # mask (256,256,1) with M ID
         _,mask,_ = np.split(seg,3,axis=2)
 
+        objects = {}
+        ids = np.unique(mask)
+        for id in ids:
+            name = env.sim.model.geom_id2name(id)
+            objects[id] = name
+
+        for k, v in sorted(objects.items()): print(k, v.split("_") if v is not None else v)
+
         # mask[np.newaxis]                           ==> ( 1, 256, 256, 1)
         # ids[:, np.newaxis, np.newaxis, np.newaxis] ==> ( M,   1,   1, 1)
-        #                                                 L Broadcastable
-
+        #                                                 L Broadcastable to
+                                                        #( M, 256, 256 ,1)
         # masks  ==> (M, 256, 256, 1) 
-        masks = ( mask[np.newaxis] == ids[:, np.newaxis, np.newaxis, np.newaxis]).squeeze()#.astype(np.uint8)
-        #masks = np.array(list( filter( lambda m: m.sum() > 100, masks ) )) outdated
-        #masks = masks * 255
+        masks = (mask[np.newaxis] == ids[:, np.newaxis, np.newaxis, np.newaxis]).squeeze().astype(np.uint8)
+        #masks = np.asarray(masks)  
 
         # id     : list of id
         # object : map<id,name>
         # masks  : masks
+        have_name = False
+        no_name_counter = 0
+        name2idMask = {}
+        for _id, _mask in zip(ids,masks):
+            _name = objects[_id]
+            if _name is not None:
+                _name = _name.split('_')[0]
+            if _name is None and have_name:
+                have_name = False
+                no_name_counter += 1
+            if _name is not None and not have_name:
+                have_name = True
 
+            if _name is None:
+                _name = f'bin{no_name_counter}'
+            if _name in name2idMask:
+                old_mask, old_id = name2idMask[_name]
+                name2idMask[_name] = (old_mask + _mask, old_id + [_id])
+            else:
+                name2idMask[_name] = (_mask, [_id])
+
+        for k,v in sorted(name2idMask.items()):
+            _vis = np.asarray(v[0] * 255 / v[0].max()).astype(np.uint8)
+            Image.fromarray(_vis, 'L').save(os.path.join('.','imgseg',f'{img_id}_{k}.png'))
+            
+        # name2idMask : dict< one word name : ( mask<256,256> , list<id> ) >
 
 
         return masks
@@ -376,7 +398,7 @@ class VisualManager():
         self.train_schedule = train_schedule
 
         if not self.imagesaver.save_mode and self.trainer.train_mode:
-            print("[VisualManager]Warning: the train_mode is on but save_mode is not pn, it will not train when VisualManager is call, ")
+            print("[VisualManager]Warning: the train_mode is on but save_mode is not on, it will not train when VisualManager is call, ")
             _sanity = input('[VisualManager]but you can call VisualManager.train() to force train, are you sure?[y/n(default, will raise error)]')
             assert _sanity == 'Y' or _sanity == 'y', '[VisaulManager]train_mode is on, while save_mode is not'
         if self.verbose: print("[VisualManager]Finished Init")
@@ -406,7 +428,9 @@ class VisualManager():
 
         # return embedded vectors
         if self.verbose: print("[VisualManager]returning feature vectors...")
+        
         return self.preprocessor(img)
+
 
     def train(self,train_name = "force-train"):
         print("[VisualManager]unschedule train")

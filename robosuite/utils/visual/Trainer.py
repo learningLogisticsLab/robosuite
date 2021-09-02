@@ -41,6 +41,7 @@ class Trainer():
         
         with open(os.path.join(self.NEW_MODEL_ROOT, sche , 'model_cfg.pickle'), 'wb') as f:
             pickle.dump(self.cfg,f)
+            
         self.MODEL_ROOT.append( os.path.join(self.NEW_MODEL_ROOT, self.current_dir) )
         
         

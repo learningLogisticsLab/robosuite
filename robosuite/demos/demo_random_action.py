@@ -64,20 +64,34 @@ if __name__ == "__main__":
     # Get action limits
     low, high = env.action_spec
 
-    eye = VisualManager(
-        MODEL_ROOT = '/home/dizzyi/GNN/detectron/tutorial/output',
+    eyes = VisualManager(
+        MODEL_ROOT ='/home/dizzyi/GNN/detectron/tutorial/output',               
+                                         # The directory to the model
+            
+        DATA_ROOT  = './imagesave',      # THe directoey to save image and data
+            
+        verbose    = True,               # verbose
 
-        DATA_ROOT = './imagesave',
+        train_schedule     = (10_000,),  # The trainer will tune the model when saved image hit the number listed
 
         preprocessor_kwarg = dict(
-        ),
-        imagesaver_kwarg = dict(
-            save_mode = False,
-            save_freq = 20,
-        ),
-        trainer_kwarg = dict(
-            train_mode = True,
-            NEW_MODEL_ROOT = './new_model'
+            mask_size = (128,128),       # size that image will be wrap to
+            grayscale  = True,           # allow gray for more information
+            threshold  = 0.5,            # thresold of confident score
+            backbone   = None,           # backbone for image and masks
+            getVec     = None,           # get vector from feature map
+            norm       = None,           # norm layer for image and masks
+            acti       = None,           # activation layer for image and masks
+        ),   
+        imagesaver_kwarg = dict(   
+            save_mode = True,            # True to turn on image saving mode
+            save_freq = 5                # how often will save image and annotations
+        ),   
+        trainer_kwarg = dict(   
+            NUM_CLASSES    = 20,         # Number for classes for classify
+            train_mode     = True,       # True to turn on training mode
+            NEW_MODEL_ROOT =  './new_model',       
+                                        # The directory that all newly tuned model will be saved 
         )
     )
 
@@ -91,8 +105,8 @@ if __name__ == "__main__":
         action = np.random.uniform(low, high)
         obs, reward, done, _ = env.step(action)
 
-        feature_vectors = eye(obs['agentview_image'],env)
-
+        feature_vectors = eyes(obs['agentview_image'],env)
+        
         '''
 
         img = Image.fromarray(img).rotate(180)
