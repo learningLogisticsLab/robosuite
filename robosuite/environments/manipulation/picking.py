@@ -1281,7 +1281,7 @@ class Picking(SingleArmEnv):
         # print("debug check grasp {}".format(check_grasp))
 
         # If successfully placed
-        if target_dist_error <= self.goal_pos_error_thresh:
+        if target_dist_error <= self.goal_pos_error_thresh and check_grasp:
 
             print("Successfully picked {}". format(self.goal_object['name'])) 
             
