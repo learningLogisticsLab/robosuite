@@ -299,6 +299,9 @@ class Picking(SingleArmEnv):
         self.goal_object            = {}                     # holds name, pos, quat
         self.goal_pos_error_thresh  = goal_pos_error_thresh  # set threshold to determine if current pos of object is at goal.
 
+        # Fallen objects flag
+        self.fallen_objs_flag       = False
+
         ## Organize object information
 
         # No longer use code below, instead use mods = dir() in preamble. This is left for considerations.
@@ -1191,7 +1194,11 @@ class Picking(SingleArmEnv):
 
     def return_fallen_objs(self):
         """
-        return list of fallen objs names if lower than table height
+        return list of fallen objs names if lower than table height and update obj lists/dicts accordingly
+        -when modelled obj fell, remove from obj_names, sorted_objs_to_model, then add 1 unmodelled to both
+        -when unmodelled obj fell, remove from not_yet_consd_obj_names
+        -if goal obj fell get new goal obj
+        -if other_obj_than_goals fell keep same goal obj and remove obj from other_obj_than_goals list
         """
         fallen_objs = []
         for name in self.object_names:
@@ -1202,7 +1209,30 @@ class Picking(SingleArmEnv):
                 print("new fallen obj !!! {}, pos is {}".format(name, obj_pos))
                 fallen_objs.append(name)
                 # if fallen obj, remove from list
-                self.object_names.remove(name)
+                if name in self.object_names:
+                    self.object_names.remove(name)
+                    self.sorted_objects_to_model.popitem(name)
+                    # Add one new unmodeled object to self.object_names, the closest one to the goal, if available from the self.not_yet_considered_object_names
+                    sorted_non_modeled_elems = self.return_sorted_objs_to_model(self.goal_object,
+                                                                                self.not_yet_considered_object_names)  # returns dict of sorted objects
+                    closest_obj_to_goal = next(iter(sorted_non_modeled_elems.items()))  # Extract first dict item
+                    self.object_names.append(closest_obj_to_goal[0])  # Only pass the name
+                    self.sorted_objects_to_model.update(closest_obj_to_goal[0])
+                elif name in self.not_yet_considered_object_names:
+                    self.not_yet_considered_object_names.remove(name)
+
+        # get new goal, other_objs than goals if there is a fallen object
+        # if there is no fallen objs, do nothing
+        # if there is a fallen goal obj, call get goal obj
+        # if there is a fallen not goal obj, keep goal obj, remove fallen obj from self other obj than goal
+        if fallen_objs:
+            if self.goal_object['name'] in fallen_objs:
+                self.goal_object, self.other_objs_than_goals = self.get_goal_object()
+                print("fallen is {}, goal is {}, other obj is {}".format(fallen_objs, self.goal_object, self.other_objs_than_goals))
+            elif self.goal_object['name'] not in fallen_objs:
+                self.other_objs_than_goals = list(set(self.other_objs_than_goals)-set(fallen_objs)) + \
+                                             list(set(fallen_objs) - set(self.other_objs_than_goals))
+                print("fallen is {}, goal is {}, other obj is {}".format(fallen_objs, self.goal_object, self.other_objs_than_goals))
 
         return fallen_objs
 
@@ -1577,22 +1607,6 @@ class Picking(SingleArmEnv):
 
         # Check & remove fallen objs
         self.fallen_objs = self.return_fallen_objs() # remove obj from self.obj_names
-
-        # get new goal, other_objs than goals if there is a fallen objefct
-        # if there is no fallen objs, do nothing
-        # if there is a fallen goal obj, call get goal obj
-        # if there is a fallen not goal obj, keep goal obj, remove fallen obj from self other obj than goal
-        if self.fallen_objs:
-            if self.goal_object['name'] in self.fallen_objs:
-                self.goal_object, self.other_objs_than_goals = self.get_goal_object()
-                print("fallen is {}, goal is {}, other obj is {}".format(self.fallen_objs, self.goal_object, self.other_objs_than_goals))
-            elif self.goal_object['name'] not in self.fallen_objs:
-                self.other_objs_than_goals = list(set(self.other_objs_than_goals)-set(self.fallen_objs)) + \
-                                             list(set(self.fallen_objs) - set(self.other_objs_than_goals))
-                print("fallen is {}, goal is {}, other obj is {}".format(self.fallen_objs, self.goal_object, self.other_objs_than_goals))
-
-        # Get robosuite observations as an Ordered dict
-        obs = self._get_observations(force_update)  # if called by reset() [see base class] this will be set to True.
 
         # Place goal object at the front
         self.sorted_objects_to_model = self.return_sorted_objs_to_model(self.goal_object, self.other_objs_than_goals)
