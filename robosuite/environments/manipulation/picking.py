@@ -1234,7 +1234,7 @@ class Picking(SingleArmEnv):
         -if other_obj_than_goals fell keep same goal obj and remove obj from other_obj_than_goals list
         """
         fallen_objs = []
-        for name in self.object_names:
+        for name in self.object_names+self.not_yet_considered_object_names:
             # Get real-time pos from observables
             obj_pos = self._observables[name + '_pos'].obs
             # check if obj has fallen below bin
@@ -1244,30 +1244,28 @@ class Picking(SingleArmEnv):
                 # if fallen obj, remove from list
                 if name in self.object_names:
                     self.object_names.remove(name)
-                    self.sorted_objects_to_model.popitem(name)
-                    
-                    # Add one new unmodeled object to self.object_names, the closest one to the goal, if available from the self.not_yet_considered_object_names
-                    sorted_non_modeled_elems = self.return_sorted_objs_to_model(self.goal_object,
-                                                                                self.not_yet_considered_object_names)  # returns dict of sorted objects
-                    closest_obj_to_goal = next(iter(sorted_non_modeled_elems.items()))  # Extract first dict item
-                    self.object_names.append(closest_obj_to_goal[0])  # Only pass the name
-                    self.sorted_objects_to_model[closest_obj_to_goal[0]] = closest_obj_to_goal[1]
                 elif name in self.not_yet_considered_object_names:
                     self.not_yet_considered_object_names.remove(name)
-
+        print("obj names {}, not yet cons obj names{}".format(self.object_names,
+                                                                             self.not_yet_considered_object_names))
         # get new goal, other_objs than goals if there is a fallen object
         # if there is no fallen objs, do nothing
         # if there is a fallen goal obj, call get goal obj
         # if there is a fallen not goal obj, keep goal obj, remove fallen obj from self other obj than goal
-        if fallen_objs:
+        if fallen_objs and self.object_names!=[]:
             if self.goal_object['name'] in fallen_objs:
                 self.goal_object, self.other_objs_than_goals = self.get_goal_object()
-                print("fallen is {}, goal is {}, other obj is {}".format(fallen_objs, self.goal_object, self.other_objs_than_goals))
             elif self.goal_object['name'] not in fallen_objs:
-                self.other_objs_than_goals = list(set(self.other_objs_than_goals)-set(fallen_objs)) + \
+                self.other_objs_than_goals = list(set(self.other_objs_than_goals) - set(fallen_objs)) + \
                                              list(set(fallen_objs) - set(self.other_objs_than_goals))
-                print("fallen is {}, goal is {}, other obj is {}".format(fallen_objs, self.goal_object, self.other_objs_than_goals))
-
+            # Add one new unmodeled object to self.object_names, the closest one to the goal, if available from the self.not_yet_considered_object_names
+            sorted_non_modeled_elems = self.return_sorted_objs_to_model(self.goal_object,
+                                                                        self.not_yet_considered_object_names)  # returns dict of sorted objects
+            closest_obj_to_goal = next(iter(sorted_non_modeled_elems.items()))  # Extract first dict item
+            self.object_names.append(closest_obj_to_goal[0])  # Only pass the name
+            self.sorted_objects_to_model[closest_obj_to_goal[0]] = closest_obj_to_goal[1]
+            print("fallen is {}, goal is {}, other obj is {}".format(fallen_objs, self.goal_object,
+                                                                     self.other_objs_than_goals))
         return fallen_objs
 
     def _is_success(self, achieved_goal, desired_goal):
@@ -1342,7 +1340,7 @@ class Picking(SingleArmEnv):
                 sorted_non_modeled_elems = self.return_sorted_objs_to_model(self.goal_object, self.not_yet_considered_object_names) # returns dict of sorted objects
                 closest_obj_to_goal = next(iter(sorted_non_modeled_elems.items()))          # Extract first dict item
                 self.object_names.append( closest_obj_to_goal[0] )                          # Only pass the name
-                self.sorted_objects_to_model.update( closest_obj_to_goal[0] )
+                self.sorted_objects_to_model[closest_obj_to_goal[0]] = closest_obj_to_goal[1]
 
                 print(f"Computing new object goal. New goal obj is {self.goal_object['name']} with location {self.goal_object['pos']}.")                 
 
