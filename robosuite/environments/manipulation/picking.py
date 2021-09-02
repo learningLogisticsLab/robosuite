@@ -1234,6 +1234,8 @@ class Picking(SingleArmEnv):
         -if other_obj_than_goals fell keep same goal obj and remove obj from other_obj_than_goals list
         """
         fallen_objs = []
+        if self.object_names == []:
+            return []
         for name in self.object_names+self.not_yet_considered_object_names:
             # Get real-time pos from observables
             obj_pos = self._observables[name + '_pos'].obs
