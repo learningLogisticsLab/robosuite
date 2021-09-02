@@ -1605,8 +1605,12 @@ class Picking(SingleArmEnv):
         # We report data for num_objs that are closest to goal_object and ignore the rest. This list is updated when is_success is True.
         # We only consider the relative position between the goal object and end-effector, all the rest are set to 0.
 
-        # Check & remove fallen objs
+        # Check, remove & update fallen objs list/dicts
         self.fallen_objs = self.return_fallen_objs() # remove obj from self.obj_names
+
+        # when all objs fell turn on flag to reset later in 07 Process Done in step
+        if self.object_names==[] and self.not_yet_considered_object_names==[]:
+            self.fallen_objs_flag = True
 
         # Place goal object at the front
         self.sorted_objects_to_model = self.return_sorted_objs_to_model(self.goal_object, self.other_objs_than_goals)
@@ -1828,7 +1832,7 @@ class Picking(SingleArmEnv):
 
         # 07 Process Done: 
         # If (i) time_step is past horizon OR (ii) we have succeeded, set to true.
-        done = (self.timestep >= self.horizon) and not self.ignore_done or info['is_success']
+        done = (self.timestep >= self.horizon) and not self.ignore_done or info['is_success'] and self.fallen_objs_flag
     
         # 08 Process Reward
         reward = self.compute_reward(env_obs['achieved_goal'], env_obs['desired_goal'], info)
