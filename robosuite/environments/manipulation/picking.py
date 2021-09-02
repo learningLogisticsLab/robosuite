@@ -129,7 +129,32 @@ class Picking(SingleArmEnv):
                                      Ie. if 100 objs available in db, but you only place 20 in bin, you can continue to choose 
                                      20 new ones with each new reset. 
 
-        self_object_to_use (str):    contains a string to the name of the object that would be set as a goal
+        # Init structs for object names, visual object names, object_to_ids, sorted_objects, objs _in_target_bing...        
+        self.object_names                                   # list of names (string) currently modeled objects
+        self.visual_object_names                            # same for visual
+
+        self.not_yet_considered_object_names                # list of names of loaded objs that are not currently being modeled
+        self.not_yet_considered_visual_object_names         # same for visual
+
+        self.objects                                        # list of modeled instantiated objects
+        self.visual_objects                                
+
+        self.not_yet_considered_objects                     # list of unmodeled instantiated objects
+        self.not_yet_considered_visual_objects              # same for visual        
+
+        self.object_to_id                                   # dict with mappings between object and id
+        self.object_id_to_sensors                           # Maps object id to sensor names for that object         
+
+        self.sorted_objects_to_model                        # closest objects to the self.goal_object based on norm2 dist
+        self.object_placements                              # placements for all objects upon reset    
+
+        self.other_objs_than_goals   
+        self.objects_in_target_bin                          # list of object names (str) in target bin        
+
+        # Goal pose for HER setting
+        self.goal_object                                    # holds name, pos, quat
+        self.goal_pos_error_thresh                          # set threshold to determine if current pos of object is at goal.
+
 
         #--- Cameras --------------------------------------------------------------------------------------------
         camera_names (str or list of str): name of camera to be rendered. Should either be single str if
@@ -1839,32 +1864,32 @@ class Picking(SingleArmEnv):
 
         return env_obs, reward, done, info       
 
-    def __reduce__(self):
+    # def __reduce__(self):
         
-    # #     # Return the object’s local name relative to its module; 
-    # #     #return "picking_blocks1_numrelblocks3_nqh1_rewardsparse_dictstateObs" #self.__module__
-        return 'Picking'
+    # # #     # Return the object’s local name relative to its module; 
+    # # #     #return "picking_blocks1_numrelblocks3_nqh1_rewardsparse_dictstateObs" #self.__module__
+    #     return 'Picking'
     
-    def __getnewargs_ex__(self):
-        '''
-        The arguments needed to pass in are those used in base.py to create the new meta classes, i.e.
-        def __new__(meta, name, bases, class_dict):
+    # def __getnewargs_ex__(self):
+    #     '''
+    #     The arguments needed to pass in are those used in base.py to create the new meta classes, i.e.
+    #     def __new__(meta, name, bases, class_dict):
 
-        Where, 
-        - meta is the MujocoEnv class isntance
-        - name is the name of the class, i.e. Picking
-        - bases is a tuple with the <class 'robosuite.environments.manipulation.single_arm_env.SingleArmEnv'>
-        - classes_dict is a dict with all the class method names and associated method objects
-        '''
-        args = tuple()
-        meta, name, bases = None, None, None
+    #     Where, 
+    #     - meta is the MujocoEnv class isntance
+    #     - name is the name of the class, i.e. Picking
+    #     - bases is a tuple with the <class 'robosuite.environments.manipulation.single_arm_env.SingleArmEnv'>
+    #     - classes_dict is a dict with all the class method names and associated method objects
+    #     '''
+    #     args = tuple()
+    #     meta, name, bases = None, None, None
         
-        kwargs = {}
-        kwargs['meta']  = self
-        kwargs['name']  = suite.environments.base.EnvMeta
-        kwargs['bases'] = (suite.environments.manipulation.single_arm_env.SingleArmEnv,) #(<class 'robosuite.environments.manipulation.single_arm_env.SingleArmEnv'>,)
-        kwargs          = picking_dict['picking_dict'] # self.__dict__
-        return (args,kwargs)
+    #     kwargs = {}
+    #     kwargs['meta']  = self
+    #     kwargs['name']  = suite.environments.base.EnvMeta
+    #     kwargs['bases'] = (suite.environments.manipulation.single_arm_env.SingleArmEnv,) #(<class 'robosuite.environments.manipulation.single_arm_env.SingleArmEnv'>,)
+    #     kwargs          = picking_dict['picking_dict'] # self.__dict__
+    #     return (args,kwargs)
 #-------------------------------------------------------------
 # Define new permutation of classes to register based on picking for relationalRL code
 # *This was my original sol. in following rlkit-relational FetchBlockConstruction. However it breaks, pickle.dumps/loads used in relationalRL. 
