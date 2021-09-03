@@ -1150,7 +1150,8 @@ class Picking(SingleArmEnv):
             
             # Position the objects
             for obj_pos, obj_quat, obj in self.object_placements.values():
-
+                if obj.name != []:
+                    continue
                 # Set the visual object body locations
                 if "visualobject" in obj.name.lower():                             # switched "visual" for "v"
                     self.sim.model.body_pos[self.obj_body_id[obj.name]]  = obj_pos
