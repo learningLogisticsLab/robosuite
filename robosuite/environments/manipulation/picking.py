@@ -479,6 +479,7 @@ class Picking(SingleArmEnv):
 
         # Else: "There are no objects to load!! zero out info."
         else:
+            print("Picking.get_goal_object(): cannot choose goal as self.object_names list is empty")
             goal_obj['name'] = []
             goal_obj['pos']  = np.array([0,0,0])
             goal_obj['quat'] = np.array([1,0,0,0])
@@ -1121,18 +1122,23 @@ class Picking(SingleArmEnv):
                     # Print object info before reset
                     print('Current objects in target bin are: ')
                     for obj in self.objects_in_target_bin:
-                        print(f'{obj} ')
+                        print(f'{obj}    ')
 
+                    # Bring back objects from target bin to object_names and not_yet_consiered_object_names
+                    # Use slicing so that you create new objects (no need to copy)
                     self.object_names = self.objects_in_target_bin[:self.num_objects]
                     self.not_yet_considered_object_names = self.objects_in_target_bin[self.num_objects:]
+                    self.objects_in_target_bin.clear()
 
                     # Print object info after the reset
                     print('After the reset, the modeled object names are: ')
                     for obj in self.object_names:
                         print(f'{obj} ')
-                    print('And thet unmodeled or not yet considered objects are: ')
-                    for obj in self.not_yet_considered_object_names:
-                        print(f'{obj} ')
+                    
+                    if len(self.not_yet_considered_object_names) != 0:
+                        print('And thet unmodeled or not yet considered objects are: ')
+                        for obj in self.not_yet_considered_object_names:
+                            print(f'{obj} ')
 
                     # Proceed to place objects at the self.object_placements location.
                 
@@ -1239,17 +1245,22 @@ class Picking(SingleArmEnv):
         for name in self.object_names+self.not_yet_considered_object_names:
             # Get real-time pos from observables
             obj_pos = self._observables[name + '_pos'].obs
+
             # check if obj has fallen below bin
             if obj_pos[2] < self.bin1_pos[2] + self.bin_thickness[2] and name in self.object_names:
                 print("new fallen obj !!! {}, pos is {}".format(name, obj_pos))
                 fallen_objs.append(name)
-                # if fallen obj, remove from list
+
+                # if fallen obj, remove from list under two conditions: (i) doing self.object_randomization and (ii) this is not the last object in the bin
                 if name in self.object_names:
                     self.object_names.remove(name)
+                    
                 elif name in self.not_yet_considered_object_names:
                     self.not_yet_considered_object_names.remove(name)
-        print("obj names {}, not yet cons obj names{}".format(self.object_names,
-                                                                             self.not_yet_considered_object_names))
+        
+        # Debug
+        # print("obj names {}, not yet cons obj names{}".format(self.object_names,self.not_yet_considered_object_names))
+
         # get new goal, other_objs than goals if there is a fallen object
         # if there is no fallen objs, do nothing
         # if there is a fallen goal obj, call get goal obj
