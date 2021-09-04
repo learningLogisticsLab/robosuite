@@ -1150,7 +1150,7 @@ class Picking(SingleArmEnv):
             
             # Position the objects
             for obj_pos, obj_quat, obj in self.object_placements.values():
-                if obj.name == []:
+                if obj.name == [] or self.goal_object['name'] == []:
                     break
                 # Set the visual object body locations
                 if "visualobject" in obj.name.lower():                             # switched "visual" for "v"
