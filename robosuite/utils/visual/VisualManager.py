@@ -194,7 +194,6 @@ class Preprocessor(nn.Module):
             for m in instances.pred_masks
         ]
         masks = torch.tensor( np.asarray(masks) , dtype = torch.float).unsqueeze(1)
-        masks = self.acti(self.norm(masks))
 
         image = torch.tensor(
             np.asarray(Image.fromarray(img).resize( self.mask_size )),
