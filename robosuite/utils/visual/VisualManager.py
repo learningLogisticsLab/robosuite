@@ -370,7 +370,7 @@ class ImageSaver():
 
         for k,v in sorted(name2idMask.items()):
             _mask, _ids = v
-
+            #if not this_Instance_Should_be_Saved(_ids): continue
             annoDict = {}
 
             annoDict['bbox']        = self.mask2BBox(_mask)
@@ -384,7 +384,6 @@ class ImageSaver():
             annoDict['segmentation'] = _RLE
             
             
-            #if this_Instance_Should_be_Saved(_ids): returnDict['annotations'].append(annoDict)
             returnDict['annotations'].append(annoDict)
             #_vis = np.asarray(_mask * 255 / _mask.max()).astype(np.uint8)
             #Image.fromarray(_vis, 'L').filter(ImageFilter.DETAIL).convert('1').save(os.path.join('.','imgseg',f'{img_id}_{k}.png'))
