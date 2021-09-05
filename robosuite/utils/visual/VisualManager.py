@@ -377,11 +377,14 @@ class ImageSaver():
             annoDict['bbox_mode']   = BoxMode.XYXY_ABS
 
             annoDict['category_id'] = 1
+            # annoDict['category_id'] = mapGeomIDtoCategoryID(_ids)
             raise Exception('Insert Map function form geom ID to category ID here ')
 
             _RLE = Mask2RLE( np.asarray( _mask,dtype=np.uint8, order= 'F') )
             annoDict['segmentation'] = _RLE
             
+            
+            #if this_Instance_Should_be_Saved(_ids): returnDict['annotations'].append(annoDict)
             returnDict['annotations'].append(annoDict)
             #_vis = np.asarray(_mask * 255 / _mask.max()).astype(np.uint8)
             #Image.fromarray(_vis, 'L').filter(ImageFilter.DETAIL).convert('1').save(os.path.join('.','imgseg',f'{img_id}_{k}.png'))
