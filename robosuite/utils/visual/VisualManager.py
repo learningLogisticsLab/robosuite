@@ -88,14 +88,17 @@ IMAGE_SAVE_DIR
 
 import os
 import pickle
-from PIL import Image
+from PIL import Image, ImageFilter
 import time
 
 import numpy as np
 import torch
 import torch.nn as nn
 
+from pycocotools.mask import encode as Mask2RLE
+
 from detectron2.engine import DefaultPredictor
+from detectron2.structures import BoxMode
 
 from robosuite.utils.visual.Trainer import Trainer
 
@@ -309,11 +312,15 @@ class ImageSaver():
         #raise Exception("This function is not finish yet")
         
     def seg2anno(self, seg, env, img_id):
-        # TODO 
-        #   figure out how to programmatically annotation mask
-
         # objects: a dictionary [id] => name
         # ids: list of M id 
+        returnDict = {}
+        returnDict['file_name']   = os.path.join(self.DATA_ROOT, f'{img_id}.png')
+        returnDict['height']      = len(seg)
+        returnDict['width']       = len(seg[0])
+        returnDict['image_id']    = img_id
+        returnDict['annotations'] = []
+
 
         # mask (256,256,1) with M ID
         _,mask,_ = np.split(seg,3,axis=2)
@@ -326,12 +333,12 @@ class ImageSaver():
 
         for k, v in sorted(objects.items()): print(k, v.split("_") if v is not None else v)
 
-        # mask[np.newaxis]                           ==> ( 1, 256, 256, 1)
-        # ids[:, np.newaxis, np.newaxis, np.newaxis] ==> ( M,   1,   1, 1)
+        # mask.squeeze()[np.newaxis]                 ==> ( 1, 256, 256)
+        # ids[:, np.newaxis, np.newaxis, np.newaxis] ==> ( M,   1,   1)
         #                                                 L Broadcastable to
                                                         #( M, 256, 256 ,1)
         # masks  ==> (M, 256, 256, 1) 
-        masks = (mask[np.newaxis] == ids[:, np.newaxis, np.newaxis, np.newaxis]).squeeze().astype(np.uint8)
+        masks = (mask.squeeze()[np.newaxis] == ids[:, np.newaxis, np.newaxis]).astype(np.uint8)
         #masks = np.asarray(masks)  
 
         # id     : list of id
@@ -358,14 +365,37 @@ class ImageSaver():
             else:
                 name2idMask[_name] = (_mask, [_id])
 
-        for k,v in sorted(name2idMask.items()):
-            _vis = np.asarray(v[0] * 255 / v[0].max()).astype(np.uint8)
-            Image.fromarray(_vis, 'L').save(os.path.join('.','imgseg',f'{img_id}_{k}.png'))
-            
         # name2idMask : dict< one word name : ( mask<256,256> , list<id> ) >
 
 
+
+        for k,v in sorted(name2idMask.items()):
+            _mask, _ids = v
+
+            annoDict = {}
+
+            annoDict['bbox']        = self.mask2BBox(_mask)
+            annoDict['bbox_mode']   = BoxMode.XYXY_ABS
+
+            annoDict['category_id'] = 1
+            raise Exception('Insert Map function form geom ID to category ID here ')
+
+            _RLE = Mask2RLE( np.asarray( _mask,dtype=np.uint8, order= 'F') )
+            annoDict['segmentation'] = _RLE
+            
+            returnDict['annotations'].append(annoDict)
+            #_vis = np.asarray(_mask * 255 / _mask.max()).astype(np.uint8)
+            #Image.fromarray(_vis, 'L').filter(ImageFilter.DETAIL).convert('1').save(os.path.join('.','imgseg',f'{img_id}_{k}.png'))
+
+
         return masks
+
+    def mask2BBox(mask):
+        rows       = np.any(mask,axis=0)
+        cols       = np.any(mask,axis=1)
+        rmin, rmax = np.where(rows)[0][[0,-1]]
+        cmin, cmax = np.where(cols)[0][[0,-1]]
+        return [rmin,cmin, rmax, cmax]
 
 class VisualManager():
     def __init__(
