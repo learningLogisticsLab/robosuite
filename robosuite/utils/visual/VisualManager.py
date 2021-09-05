@@ -378,25 +378,29 @@ class ImageSaver():
 
             annoDict['category_id'] = 1
             # annoDict['category_id'] = mapGeomIDtoCategoryID(_ids)
-            raise Exception('Insert Map function form geom ID to category ID here ')
+
+
+            _vis  = np.asarray(_mask * 255 / _mask.max()).astype(np.uint8)
+            _vis  = Image.fromarray(_vis, 'L').filter(ImageFilter.MinFilter(3)).convert('1')
+            _mask = np.asarray(_vis)
 
             _RLE = Mask2RLE( np.asarray( _mask,dtype=np.uint8, order= 'F') )
             annoDict['segmentation'] = _RLE
             
             
             returnDict['annotations'].append(annoDict)
-            #_vis = np.asarray(_mask * 255 / _mask.max()).astype(np.uint8)
-            #Image.fromarray(_vis, 'L').filter(ImageFilter.DETAIL).convert('1').save(os.path.join('.','imgseg',f'{img_id}_{k}.png'))
 
+            #_vis = Image.fromarray(_vis, 'L').convert('1')
+            _vis.save(os.path.join('.','imgseg',f'{img_id}_{k}.png'))
 
         return returnDict
 
-    def mask2BBox(mask):
+    def mask2BBox(self, mask):
         rows       = np.any(mask,axis=0)
         cols       = np.any(mask,axis=1)
         rmin, rmax = np.where(rows)[0][[0,-1]]
         cmin, cmax = np.where(cols)[0][[0,-1]]
-        return [rmin,cmin, rmax, cmax]
+        return [rmin, cmin, rmax, cmax]
 
 class VisualManager():
     def __init__(
