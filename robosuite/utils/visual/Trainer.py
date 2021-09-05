@@ -1,4 +1,3 @@
-from typing import Dict
 import torch
 
 from detectron2.utils.logger import setup_logger
