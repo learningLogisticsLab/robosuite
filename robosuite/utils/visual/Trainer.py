@@ -10,6 +10,7 @@ import os, json, pickle
 #import some common detectron2 utilities
 from detectron2.data.datasets import register_coco_instances
 from detectron2.engine import DefaultTrainer
+from detectron2.data import DatasetCatalog
 
 class Trainer():
     def __init__(
@@ -50,10 +51,25 @@ class Trainer():
 
     def set_hyperparam(self):
 
+        def VisualManager_Trainer_dataset_function():
+            returnList = []
+            for file in sorted(os.listdir(self.DATA_ROOT)):
+                if not file.endswith('.pickle'): continue
+                
+                f_path = os.path.join(self.DATA_ROOT,file)
+
+                with open(f_path,'rb') as f:
+                    returnList.append(pickle.load(f))
+            return returnList
+        
+        DatasetCatalog.register('VisualManager_Trainer_Dataset', VisualManager_Trainer_dataset_function)
+        
+
         with open(os.path.join(self.MODEL_ROOT[-1], 'model_cfg.pickle'), 'rb') as f:
             self.cfg = pickle.load(f)
 
-        self.cfg.DATASETS.TRAIN = ()
+        self.cfg.DATASETS.TRAIN = ('VisualManager_Trainer_Dataset',)
+
         self.cfg.MODEL.WEIGHTS = os.path.join(self.MODEL_ROOT[-1], "model_final.pth")
         
         # Detectron default 4
@@ -102,3 +118,4 @@ class Trainer():
         self.cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = 0.7   # set a custom testing threshold
 
         self.cfg.OUTPUT_DIR = os.path.join(self.NEW_MODEL_ROOT, self.current_dir)
+
