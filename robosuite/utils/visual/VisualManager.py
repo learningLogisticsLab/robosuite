@@ -389,7 +389,7 @@ class ImageSaver():
             
             
             returnDict['annotations'].append(annoDict)
-            _vis.save(os.path.join('.','imgseg',f'{img_id}_{k}.png'))
+            #_vis.save(os.path.join('.','imgseg',f'{img_id}_{k}.png'))
 
 
         return returnDict
