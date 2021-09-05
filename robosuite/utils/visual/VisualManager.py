@@ -335,7 +335,7 @@ class ImageSaver():
         # mask.squeeze()[np.newaxis]                 ==> ( 1, 256, 256)
         # ids[:, np.newaxis, np.newaxis, np.newaxis] ==> ( M,   1,   1)
         #                                                 L Broadcastable to
-                                                        #( M, 256, 256 ,1)
+                                                        #( M, 256, 256)
         # masks  ==> (M, 256, 256, 1) 
         masks = (mask.squeeze()[np.newaxis] == ids[:, np.newaxis, np.newaxis]).astype(np.uint8)
         #masks = np.asarray(masks)  
