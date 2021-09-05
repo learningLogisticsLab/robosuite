@@ -387,7 +387,7 @@ class ImageSaver():
             #Image.fromarray(_vis, 'L').filter(ImageFilter.DETAIL).convert('1').save(os.path.join('.','imgseg',f'{img_id}_{k}.png'))
 
 
-        return masks
+        return returnDict
 
     def mask2BBox(mask):
         rows       = np.any(mask,axis=0)
