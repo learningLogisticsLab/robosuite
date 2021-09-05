@@ -335,7 +335,7 @@ class ImageSaver():
         # mask.squeeze()[np.newaxis]                 ==> ( 1, 256, 256)
         # ids[:, np.newaxis, np.newaxis, np.newaxis] ==> ( M,   1,   1)
         #                                                 L Broadcastable to
-                                                        #( M, 256, 256 ,1)
+                                                        #( M, 256, 256)
         # masks  ==> (M, 256, 256, 1) 
         masks = (mask.squeeze()[np.newaxis] == ids[:, np.newaxis, np.newaxis]).astype(np.uint8)
         #masks = np.asarray(masks)  
@@ -370,24 +370,26 @@ class ImageSaver():
 
         for k,v in sorted(name2idMask.items()):
             _mask, _ids = v
-
+            #if not this_Instance_Should_be_Saved(_ids): continue
             annoDict = {}
 
             annoDict['bbox']        = self.mask2BBox(_mask)
             annoDict['bbox_mode']   = BoxMode.XYXY_ABS
 
             annoDict['category_id'] = 1
+            # annoDict['category_id'] = mapGeomIDtoCategoryID(_ids)
             raise Exception('Insert Map function form geom ID to category ID here ')
 
             _RLE = Mask2RLE( np.asarray( _mask,dtype=np.uint8, order= 'F') )
             annoDict['segmentation'] = _RLE
+            
             
             returnDict['annotations'].append(annoDict)
             #_vis = np.asarray(_mask * 255 / _mask.max()).astype(np.uint8)
             #Image.fromarray(_vis, 'L').filter(ImageFilter.DETAIL).convert('1').save(os.path.join('.','imgseg',f'{img_id}_{k}.png'))
 
 
-        return masks
+        return returnDict
 
     def mask2BBox(mask):
         rows       = np.any(mask,axis=0)
