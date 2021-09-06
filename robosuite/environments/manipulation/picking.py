@@ -1257,7 +1257,7 @@ class Picking(SingleArmEnv):
             self.object_names += [self.not_yet_considered_object_names.pop()
                                   for name in range ( self.num_blocks - len(self.object_names) ) ]
 
-        # if there is a fallen obj and obj names is not empty
+        # if there is a fallen obj and we model >= 2 objects
         # get new goal, other_objs than goals if there is a fallen object
         # if there is no fallen objs, do nothing
         # if there is a fallen goal obj, call get goal obj
@@ -1708,6 +1708,7 @@ class Picking(SingleArmEnv):
 
         # TODO: sorted_objects should be updated when an object is successfully picked. Such that when there is one object less, 
         # the new dimensionality is reflected in these observations as well.
+    
         for i in range( len(self.sorted_objects_to_model )):
 
             name_list = list(self.sorted_objects_to_model) 
@@ -1923,7 +1924,7 @@ class Picking(SingleArmEnv):
 
         # 07 Process Done: 
         # If (i) time_step is past horizon OR (ii) we have succeeded, set to true.
-        done = (self.timestep >= self.horizon) and not self.ignore_done or info['is_success'] or self.fallen_objs_flag
+        done = (self.timestep >= self.horizon) and not self.ignore_done or info['is_success'] or self.all_objs_fallen_flag
     
         # 08 Process Reward
         reward = self.compute_reward(env_obs['achieved_goal'], env_obs['desired_goal'], info)
