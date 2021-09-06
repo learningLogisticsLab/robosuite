@@ -361,12 +361,31 @@ class RobotEnv(MujocoEnv):
                 height=cam_h,
                 depth=cam_d,
             )
+            ######################################################################################
+            # Added to get render images as segmentation also
+            img_seg = self.sim.render(
+                camera_name=cam_name,
+                width=cam_w,
+                height=cam_h,
+                depth=cam_d,
+                segmentation=True
+            )
+            img_seg = np.concatenate( (img_seg, np.zeros( (256,256,1), dtype=np.uint8) ), axis=2 )
+            ######################################################################################
             if cam_d:
                 rgb, depth = img
                 obs_cache[depth_sensor_name] = np.expand_dims(depth[::convention], axis=-1)
-                return rgb[::convention]
+
+                ##################################################################################
+                
+                return (rgb[::convention], img_seg[::convention])
+                ##################################################################################
             else:
-                return img[::convention]
+
+                ##################################################################################
+                # Modified to return (2, 256, 256, 3) (rgb, seg)
+                return (img[::convention], img_seg[::convention])
+                ##################################################################################
 
         sensors.append(camera_rgb)
         names.append(rgb_sensor_name)
