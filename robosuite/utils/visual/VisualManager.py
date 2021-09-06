@@ -269,6 +269,7 @@ class Preprocessor(nn.Module):
 
         self.predictor = DefaultPredictor(cfg)
 
+
 class ImageSaver():
     def __init__(
         self,
@@ -377,11 +378,12 @@ class ImageSaver():
             annoDict['bbox_mode']   = BoxMode.XYXY_ABS
 
             annoDict['category_id'] = 1
-            # annoDict['category_id'] = mapGeomIDtoCategoryID(_ids)
-
+            #annoDict['category_id'] = mapGeomIDtoCategoryID(_ids[0])
 
             _vis  = np.asarray(_mask * 255 / _mask.max()).astype(np.uint8)
-            _vis  = Image.fromarray(_vis, mode='L').filter(ImageFilter.MinFilter(3)).convert('1')
+            #_vis = Image.fromarray(_vis, mode='L').convert('1')
+            _vis = Image.fromarray(_vis, mode='L').filter(ImageFilter.MinFilter(3)).filter(ImageFilter.MaxFilter(3)).convert('1')
+            
             _mask = np.asarray(_vis)
 
             _RLE = Mask2RLE( np.asarray( _mask,dtype=np.uint8, order= 'F') )
@@ -389,7 +391,7 @@ class ImageSaver():
             
             
             returnDict['annotations'].append(annoDict)
-            #_vis.save(os.path.join('.','imgseg',f'{img_id}_{k}.png'))
+            _vis.save(os.path.join('.','filter_3',f'{img_id}_{k}.png'))
 
 
         return returnDict
@@ -399,7 +401,8 @@ class ImageSaver():
         cols       = np.any(mask,axis=1)
         rmin, rmax = np.where(rows)[0][[0,-1]]
         cmin, cmax = np.where(cols)[0][[0,-1]]
-        return [rmin,cmin, rmax, cmax]
+        return [rmin, cmin, rmax, cmax]
+
 
 class VisualManager():
     def __init__(
