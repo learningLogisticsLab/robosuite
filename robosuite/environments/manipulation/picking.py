@@ -325,7 +325,7 @@ class Picking(SingleArmEnv):
         self.goal_pos_error_thresh  = goal_pos_error_thresh  # set threshold to determine if current pos of object is at goal.
 
         # Fallen objects flag
-        self.fallen_objs_flag       = False
+        self.all_objs_fallen_flag   = False
 
         ## Organize object information
 
@@ -464,7 +464,6 @@ class Picking(SingleArmEnv):
         goal_obj = {}
         
         if len(self.object_names) > 0: 
-
             # Select a goal obj
             goal_obj['name'] = np.random.choice(self.object_names)
 
@@ -481,8 +480,8 @@ class Picking(SingleArmEnv):
         else:
             print("Picking.get_goal_object(): cannot choose goal as self.object_names list is empty")
             goal_obj['name'] = []
-            goal_obj['pos']  = np.array([0,0,0])
-            goal_obj['quat'] = np.array([1,0,0,0])
+            goal_obj['pos']  = np.array([0, 0, 0])
+            goal_obj['quat'] = np.array([1, 0, 0, 0])
 
             other_objs_to_consider = []
 
@@ -1109,7 +1108,10 @@ class Picking(SingleArmEnv):
             
             elif not self.first_reset and self.object_randomization:                
                 super()._reset_internal()
-                
+            
+            # elif self.all_objs_fallen_flag:
+            #     super()._reset_internal()
+            #     self.all_objs_fallen_flag = False
 
             # II. Not Object Randomizations. 
             # Continuing Reset. 
@@ -1141,6 +1143,16 @@ class Picking(SingleArmEnv):
                             print(f'{obj} ')
 
                     # Proceed to place objects at the self.object_placements location.
+                
+            if self.all_objs_fallen_flag:
+                
+                # Copy names from fallen objs back to obj names, then clear fallen objs list
+                self.object_names += self.fallen_objs[:self.num_objects]
+                self.not_yet_considered_object_names += self.fallen_objs[self.num_objects:]
+                self.fallen_objs.clear()
+
+                # C> Turn off flag
+                self.all_objs_fallen_flag = False
                 
             # Sample from the "placement initializer" for all objects (regular and visual objects)
             self.object_placements = self.placement_initializer.sample()
@@ -1243,35 +1255,59 @@ class Picking(SingleArmEnv):
         fallen_objs = []
         if self.object_names == []:
             return []
-        for name in self.object_names+self.not_yet_considered_object_names:
-            # Get real-time pos from observables
-            obj_pos = self._observables[name + '_pos'].obs
 
-            # check if obj has fallen below bin
-            if obj_pos[2] < self.bin1_pos[2] + self.bin_thickness[2] and name in self.object_names:
-                print("new fallen obj !!! {}, pos is {}".format(name, obj_pos))
-                fallen_objs.append(name)
-
-                # if fallen obj, remove from list under two conditions: (i) doing self.object_randomization and (ii) this is not the last object in the bin
-                if name in self.object_names:
-                    self.object_names.remove(name)
-                    
-                elif name in self.not_yet_considered_object_names:
-                    self.not_yet_considered_object_names.remove(name)
+        # for name in self.object_names + self.not_yet_considered_object_names:
+        #     # Get real-time pos from observables
+        #     obj_pos = self._observables[name + '_pos'].obs
+        #
+        #     # check if obj has fallen below bin
+        #     if obj_pos[2] < self.bin1_pos[2] + self.bin_thickness[2]:
+        #         print("new fallen obj !!! {}, pos is {}".format(name, obj_pos))
+        #         fallen_objs.append(name)
+        #
+        #         # if fallen obj, remove from list under two conditions: (i) doing self.object_randomization and (ii) this is not the last object in the bin
+        #         if name in self.object_names:
+        #             # if we only load 1 and model 1 then remove goal obj here
+        #             # otherwise goal obj will not be removed
+        #             if len(self.object_names+self.not_yet_considered_object_names) == 1:
+        #                 self.goal_object['name']=[]
+        #                 self.goal_object['pos']=np.array([0, 0, 0])
+        #                 self.goal_object['quat']=np.array([1, 0, 0, 0])
+        #             self.object_names.remove(name)
+        #
+        #         elif name in self.not_yet_considered_object_names:
+        #             self.not_yet_considered_object_names.remove(name)
         
+        # Refactor for loop into list comp
+        # 1. Check for fallen objs if obj height is less than table surface
+        # 2. Remove fallen objs from obj names
+        # 3. Remove fallen objs from not yet considered obj names
+        fallen_objs = [name for name in self.object_names + self.not_yet_considered_object_names
+                       if self._observables[name+'_pos'].obs[2] < self.bin1_pos[2] + self.bin_thickness[2]]
+        self.object_names = [name for name in self.object_names if name not in fallen_objs]
+        self.not_yet_considered_object_names = [name for name in self.not_yet_considered_object_names if name not in fallen_objs]
+
         # Debug
         # print("obj names {}, not yet cons obj names{}".format(self.object_names,self.not_yet_considered_object_names))
+        
+        # If there is a fallen obj and we model 1 obj
+        if self.num_objs_to_load == 1:
+            self.goal_object['name']=[]
+            self.goal_object['pos']=np.array([0, 0, 0])
+            self.goal_object['quat']=np.array([1, 0, 0, 0])
 
+        # if there is a fallen obj and we model >= 2 objects
         # get new goal, other_objs than goals if there is a fallen object
         # if there is no fallen objs, do nothing
         # if there is a fallen goal obj, call get goal obj
         # if there is a fallen not goal obj, keep goal obj, remove fallen obj from self other obj than goal
-        if fallen_objs and self.object_names!=[]:
+        if fallen_objs and self.object_names != []:
+
             if self.goal_object['name'] in fallen_objs:
                 self.goal_object, self.other_objs_than_goals = self.get_goal_object()
             elif self.goal_object['name'] not in fallen_objs:
-                self.other_objs_than_goals = list(set(self.other_objs_than_goals) - set(fallen_objs)) + \
-                                             list(set(fallen_objs) - set(self.other_objs_than_goals))
+                self.other_objs_than_goals = [name for name in self.other_objs_than_goals if name not in fallen_objs]
+
             # Add one new unmodeled object to self.object_names, the closest one to the goal, if available from the self.not_yet_considered_object_names
             sorted_non_modeled_elems = self.return_sorted_objs_to_model(self.goal_object,
                                                                         self.not_yet_considered_object_names)  # returns dict of sorted objects
@@ -1280,6 +1316,11 @@ class Picking(SingleArmEnv):
             self.sorted_objects_to_model[closest_obj_to_goal[0]] = closest_obj_to_goal[1]
             print("fallen is {}, goal is {}, other obj is {}".format(fallen_objs, self.goal_object,
                                                                      self.other_objs_than_goals))
+
+        # when all objs has fallen turn on flag
+        if fallen_objs and self.object_names + self.not_yet_considered_object_names == []:
+            self.all_objs_fallen_flag = True
+
         return fallen_objs
 
     def _is_success(self, achieved_goal, desired_goal):
@@ -1655,19 +1696,22 @@ class Picking(SingleArmEnv):
 
         # Check, remove & update fallen objs list/dicts
         self.fallen_objs = self.return_fallen_objs() # remove obj from self.obj_names
+        if self.fallen_objs:
+            print("fallen obj {}".format(self.fallen_objs))
 
         # when all objs fell turn on flag to reset later in 07 Process Done in step
         if self.object_names==[] and self.not_yet_considered_object_names==[]:
-            self.fallen_objs_flag = True
+            self.all_objs_fallen_flag = True
 
         # Place goal object at the front
         self.sorted_objects_to_model = self.return_sorted_objs_to_model(self.goal_object, self.other_objs_than_goals)
 
         # TODO: sorted_objects should be updated when an object is successfully picked. Such that when there is one object less, 
         # the new dimensionality is reflected in these observations as well.
+    
         for i in range( len(self.sorted_objects_to_model )):
 
-            name_list = list(self.sorted_objects_to_model)
+            name_list = list(self.sorted_objects_to_model) 
 
             # Pose: pos and orientation            
             object_i_pos  = obs[name_list[i] + '_pos'] 
@@ -1880,7 +1924,7 @@ class Picking(SingleArmEnv):
 
         # 07 Process Done: 
         # If (i) time_step is past horizon OR (ii) we have succeeded, set to true.
-        done = (self.timestep >= self.horizon) and not self.ignore_done or info['is_success'] or self.fallen_objs_flag
+        done = (self.timestep >= self.horizon) and not self.ignore_done or info['is_success'] or self.all_objs_fallen_flag
     
         # 08 Process Reward
         reward = self.compute_reward(env_obs['achieved_goal'], env_obs['desired_goal'], info)
