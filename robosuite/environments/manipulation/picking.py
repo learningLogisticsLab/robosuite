@@ -1291,7 +1291,7 @@ class Picking(SingleArmEnv):
         # print("obj names {}, not yet cons obj names{}".format(self.object_names,self.not_yet_considered_object_names))
         
         # If there is a fallen obj and we model 1 obj
-        if self.num_objs_to_load == 1:
+        if fallen_objs and self.num_objs_to_load == 1:
             self.goal_object['name']=[]
             self.goal_object['pos']=np.array([0, 0, 0])
             self.goal_object['quat']=np.array([1, 0, 0, 0])
@@ -1695,9 +1695,9 @@ class Picking(SingleArmEnv):
         # We only consider the relative position between the goal object and end-effector, all the rest are set to 0.
 
         # Check, remove & update fallen objs list/dicts
-        self.fallen_objs = self.return_fallen_objs() # remove obj from self.obj_names
-        if self.fallen_objs:
-            print("fallen obj {}".format(self.fallen_objs))
+        # self.fallen_objs = self.return_fallen_objs() # remove obj from self.obj_names
+        # if self.fallen_objs:
+        #     print("fallen obj {}".format(self.fallen_objs))
 
         # when all objs fell turn on flag to reset later in 07 Process Done in step
         if self.object_names==[] and self.not_yet_considered_object_names==[]:
