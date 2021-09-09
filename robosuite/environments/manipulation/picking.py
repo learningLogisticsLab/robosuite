@@ -236,10 +236,10 @@ class Picking(SingleArmEnv):
         # bin1_pos = (0.1, -0.25, 0.8),           # Follows xml
         # bin2_pos = (0.1, 0.28, 0.8),
 
-        # move bins
-        bin1_pos=(-0.1, -0.25, 0.8),  # Follows xml
-        bin2_pos=(-0.1, 0.28, 0.8),
-        bin_thickness=(0, 0, 0.02),
+        # # move bins
+        # bin1_pos=(-0.1, -0.25, 0.8),  # Follows xml
+        # bin2_pos=(-0.1, 0.28, 0.8),
+        # bin_thickness=(0, 0, 0.02),
         
         # Observations
         use_camera_obs = True,                  # TODO: Currently these two options are setup to work in oposition it seems. Can we have both to True?
@@ -374,18 +374,6 @@ class Picking(SingleArmEnv):
 
         self.first_reset = True
         self.do_reset_internal = True
-
-        # (D) Arena: bins_arena.xml
-
-        # Table---
-        # settings for table top
-        self.table_full_size = table_full_size
-        self.table_friction  = table_friction
-
-        # settings for bin position
-        self.bin1_pos = np.array(bin1_pos)
-        self.bin2_pos = np.array(bin2_pos)
-        self.bin_thickness = np.array(bin_thickness)
 
         # Variant dictionary
         self.variant = variant
@@ -705,7 +693,7 @@ class Picking(SingleArmEnv):
                     rotation_axis                   = 'z',                          # Currently only accepts one axis. TODO: extend to multiple axes.
                     ensure_object_boundary_in_range = True,
                     ensure_valid_placement          = True,
-                    reference_pos                   = self.bin1_pos + self.bin_thickness,
+                    reference_pos                   = self.bin1_pos + self.bin1_surface,
                     z_offset                        = 0.,
                 )
             )
@@ -728,7 +716,7 @@ class Picking(SingleArmEnv):
                     rotation_axis                   = 'z',                              # Currently only accepts one axis. TODO: extend to multiple axes.
                     ensure_object_boundary_in_range = True,
                     ensure_valid_placement          = True,
-                    reference_pos                   = self.bin1_pos + self.bin_thickness,
+                    reference_pos                   = self.bin1_pos + self.bin1_surface,
                     z_offset                        = 0.,
                 )
             )
@@ -752,7 +740,7 @@ class Picking(SingleArmEnv):
                     rotation_axis                   = 'z',                              # Currently only accepts one axis. TODO: extend to multiple axes.
                     ensure_object_boundary_in_range = True,
                     ensure_valid_placement          = True,
-                    reference_pos                   = self.bin1_pos + self.bin_thickness,
+                    reference_pos                   = self.bin1_pos + self.bin1_surface,
                     z_offset                        = 0.,
                 )
             )
@@ -767,7 +755,7 @@ class Picking(SingleArmEnv):
                 rotation_axis                   = 'z',                              # Currently only accepts one axis. TODO: extend to multiple axes.
                 ensure_object_boundary_in_range = True,
                 ensure_valid_placement          = True,
-                reference_pos                   = self.bin1_pos + self.bin_thickness,
+                reference_pos                   = self.bin1_pos + self.bin1_surface,
                 z_offset                        = 0.10,                             # Set a vertical offset of XXcm above the bin
                 z_offset_prob                   = 0.50,                             # probability with which to set the z_offset
             )
@@ -790,7 +778,7 @@ class Picking(SingleArmEnv):
             z_range=[min_z, max_z],
             rotation=None,
             rotation_axis='z',
-            reference_pos=self.bin1_pos + self.bin_thickness,
+            reference_pos=self.bin1_pos + self.bin1_surface,
             )
 
     def _load_model(self):
@@ -808,18 +796,20 @@ class Picking(SingleArmEnv):
         self.robots[0].robot_model.set_base_xpos(xpos)
 
         # load model for table top/bins workspace
-        mujoco_arena = BinsArena(
-                                bin1_pos        = self.bin1_pos,
-                                table_full_size = self.table_full_size,
-                                table_friction  = self.table_friction
-        )
+        mujoco_arena = BinsArena()
 
         # Arena always gets set to zero origin
         mujoco_arena.set_origin([0, 0, 0])
 
         # store some arena attributes
-        self.bin_size = mujoco_arena.table_full_size # bin_size is really the area covered by the two bins
-
+        self.bin_size       = mujoco_arena.table_full_size # bin_size is really the area covered by the two bins
+        self.bin1_pos       = mujoco_arena.bin1_pos
+        self.bin2_pos       = mujoco_arena.bin2_pos
+        self.bin1_surface   = mujoco_arena.bin1_surface
+        self.bin2_surface   = mujoco_arena.bin2_surface
+        self.bin1_friction  = mujoco_arena.bin1_friction
+        self.bin2_friction  = mujoco_arena.bin2_friction
+        
         # Given the available objects, randomly pick num_objs_to_load and return: names, visual names, and not_yet_modelled_equivalents and name_to_id
         (self.object_names, self.visual_object_names, 
         self.not_yet_considered_object_names, self.not_yet_considered_visual_object_names, 
