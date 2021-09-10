@@ -809,7 +809,7 @@ class Picking(SingleArmEnv):
         self.bin2_surface   = mujoco_arena.bin2_surface
         self.bin1_friction  = mujoco_arena.bin1_friction
         self.bin2_friction  = mujoco_arena.bin2_friction
-        
+
         # Given the available objects, randomly pick num_objs_to_load and return: names, visual names, and not_yet_modelled_equivalents and name_to_id
         (self.object_names, self.visual_object_names, 
         self.not_yet_considered_object_names, self.not_yet_considered_visual_object_names, 
@@ -1095,15 +1095,13 @@ class Picking(SingleArmEnv):
                 # After first reset, if object_randomization is true, turn on the self.hard_reset flag to be used in the next reset
                 if self.object_randomization:
                     self.hard_reset = True
-            
+
+            # if not first reset but on obj rand, clear fallen_objs, and turn off flag
             elif not self.first_reset and self.object_randomization:
                 super()._reset_internal()
+                self.objects_in_target_bin.clear()
                 self.fallen_objs.clear()    
                 self.fallen_objs_flag = False
-            
-            # elif self.fallen_objs_flag:
-            #     super()._reset_internal()
-            #     self.fallen_objs_flag = False
 
             # II. Not Object Randomizations. 
             # Continuing Reset. 
@@ -1339,8 +1337,7 @@ class Picking(SingleArmEnv):
         # If successfully placed
         if target_dist_error <= self.goal_pos_error_thresh and check_grasp:
 
-            print("Successfully picked {}". format(self.goal_object['name'])) 
-            
+            print("Successfully picked {}". format(self.goal_object['name']))
             # 02 Object Handling
             # Add the current goal object to the list of target bin objects
             assert self.goal_object != {}, 'checking Picking._is_successful(). Your goal_object is empty.'
@@ -1910,7 +1907,6 @@ class Picking(SingleArmEnv):
         self.cur_time += self.control_timestep        
 
         # 06 Process info
-        # print(env_obs['achieved_goal'], env_obs['desired_goal'])
         info = { 'is_success': self._is_success(env_obs['achieved_goal'], env_obs['desired_goal']) }
 
         # 06b Process Reward * Info
