@@ -132,9 +132,9 @@ class SingleArm(Manipulator):
 
     def load_model(self):
         """
-        Loads robot and optionally add grippers.
+        Loads (1) robot and optionally (2) grippers.
         """
-        # First, run the superclass method to load the relevant model
+        # First, run the superclass method to load robot
         super().load_model()
 
         # Verify that the loaded model is of the correct type for this robot
@@ -154,8 +154,10 @@ class SingleArm(Manipulator):
         else:
             # Load null gripper
             self.gripper = gripper_factory(None, idn=self.idn)
+        
         # Grab eef rotation offset
         self.eef_rot_offset = T.quat_multiply(self.robot_model.hand_rotation_offset, self.gripper.rotation_offset)
+        
         # Add gripper to this robot model
         self.robot_model.add_gripper(self.gripper)
 
