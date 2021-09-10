@@ -351,6 +351,9 @@ class UniformRandomSampler(ObjectPositionSampler):
         """
         if self.ensure_valid_placement:
             for (x, y, z), _, other_obj in placed_objects.values():
+                # make sure we are sampling collision objs w collision objs and vis with vis objs, and not between same objs
+                if obj.name[5:] != other_obj.name[5:] or obj.name == other_obj.name:
+                    continue
                 # if (
                 #         np.linalg.norm((object_x - x,
                 #                         object_y - y))  # Compute the norm between current object and each of the other objects
