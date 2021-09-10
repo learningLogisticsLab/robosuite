@@ -1259,30 +1259,6 @@ class Picking(SingleArmEnv):
         fallen_objs = []
         if self.object_names == []:
             return []
-<<<<<<< ours
-
-        # for name in self.object_names + self.not_yet_considered_object_names:
-        #     # Get real-time pos from observables
-        #     obj_pos = self._observables[name + '_pos'].obs
-        #
-        #     # check if obj has fallen below bin
-        #     if obj_pos[2] < self.bin1_pos[2] + self.bin_thickness[2]:
-        #         print("new fallen obj !!! {}, pos is {}".format(name, obj_pos))
-        #         fallen_objs.append(name)
-        #
-        #         # if fallen obj, remove from list under two conditions: (i) doing self.object_randomization and (ii) this is not the last object in the bin
-        #         if name in self.object_names:
-        #             # if we only load 1 and model 1 then remove goal obj here
-        #             # otherwise goal obj will not be removed
-        #             if len(self.object_names+self.not_yet_considered_object_names) == 1:
-        #                 self.goal_object['name']=[]
-        #                 self.goal_object['pos']=np.array([0, 0, 0])
-        #                 self.goal_object['quat']=np.array([1, 0, 0, 0])
-        #             self.object_names.remove(name)
-        #
-        #         elif name in self.not_yet_considered_object_names:
-        #             self.not_yet_considered_object_names.remove(name)
-=======
         for name in self.object_names+self.not_yet_considered_object_names:
             # Get real-time pos from observables
             obj_pos = self._observables[name + '_pos'].obs
@@ -1298,7 +1274,6 @@ class Picking(SingleArmEnv):
                     
                 elif name in self.not_yet_considered_object_names:
                     self.not_yet_considered_object_names.remove(name)
->>>>>>> theirs
         
         # Refactor for loop into list comp
         # 1. Check for fallen objs if obj height is less than table surface
