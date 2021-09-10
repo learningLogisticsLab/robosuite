@@ -454,7 +454,10 @@ class Picking(SingleArmEnv):
         Plays the role of selecting a desired object for order fulfillment (name,pose). Selected when: (i) starting, or (ii) a previous goal has been picked successfully.
         Currently, randomly choose an object from the list of self.object_names which has num_objs_to_load.
 
-        Assumes that (visual) object placements from reset_sim() are available: 
+        Assumes that modeled objects are available in self.object_names. 
+        We then extract the position and quat of these from self.object_placements[]. 
+        
+        Recall object placements are obtained when calling _Get_placement_initializer. 
         self.object_placements = self.placement_initializer.sample()
 
         Returns:
@@ -666,7 +669,7 @@ class Picking(SingleArmEnv):
 
     def _get_placement_initializer(self):
         """
-        Helper function to define placement initializers that sample object poses within bounds.
+        Returns a pointer to self.placement_initializers that sample object poses within bounds.
 
         Create 3 samplers: 
         - picking, placing (i.e. goals) and for setting the robot(s) eef upon a reset according to a strategy. 
@@ -756,6 +759,7 @@ class Picking(SingleArmEnv):
                     z_offset                        = 0.,
                 )
             )
+        
         # placeObjectSamplers: each visual object receives a sampler that places it in the TARGET bin
         self.placement_initializer.append_sampler(
             sampler=UniformRandomSampler(
@@ -1255,28 +1259,21 @@ class Picking(SingleArmEnv):
         fallen_objs = []
         if self.object_names == []:
             return []
+        for name in self.object_names+self.not_yet_considered_object_names:
+            # Get real-time pos from observables
+            obj_pos = self._observables[name + '_pos'].obs
 
-        # for name in self.object_names + self.not_yet_considered_object_names:
-        #     # Get real-time pos from observables
-        #     obj_pos = self._observables[name + '_pos'].obs
-        #
-        #     # check if obj has fallen below bin
-        #     if obj_pos[2] < self.bin1_pos[2] + self.bin_thickness[2]:
-        #         print("new fallen obj !!! {}, pos is {}".format(name, obj_pos))
-        #         fallen_objs.append(name)
-        #
-        #         # if fallen obj, remove from list under two conditions: (i) doing self.object_randomization and (ii) this is not the last object in the bin
-        #         if name in self.object_names:
-        #             # if we only load 1 and model 1 then remove goal obj here
-        #             # otherwise goal obj will not be removed
-        #             if len(self.object_names+self.not_yet_considered_object_names) == 1:
-        #                 self.goal_object['name']=[]
-        #                 self.goal_object['pos']=np.array([0, 0, 0])
-        #                 self.goal_object['quat']=np.array([1, 0, 0, 0])
-        #             self.object_names.remove(name)
-        #
-        #         elif name in self.not_yet_considered_object_names:
-        #             self.not_yet_considered_object_names.remove(name)
+            # check if obj has fallen below bin
+            if obj_pos[2] < self.bin1_pos[2] + self.bin_thickness[2] and name in self.object_names:
+                print("new fallen obj !!! {}, pos is {}".format(name, obj_pos))
+                fallen_objs.append(name)
+
+                # if modelled or unmodelled object remove from corresponding list
+                if name in self.object_names:
+                    self.object_names.remove(name)
+                    
+                elif name in self.not_yet_considered_object_names:
+                    self.not_yet_considered_object_names.remove(name)
         
         # Refactor for loop into list comp
         # 1. Check for fallen objs if obj height is less than table surface
@@ -1299,7 +1296,7 @@ class Picking(SingleArmEnv):
         # if there is a fallen obj and we model >= 2 objects
         # get new goal, other_objs than goals if there is a fallen object
         # if there is no fallen objs, do nothing
-        # if there is a fallen goal obj, call get goal obj
+        # if there is a fallen goal obj, call get goal obj (may return empty if no more available objects)
         # if there is a fallen not goal obj, keep goal obj, remove fallen obj from self other obj than goal
         if fallen_objs and self.object_names != []:
 
