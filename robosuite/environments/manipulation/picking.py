@@ -1260,10 +1260,6 @@ class Picking(SingleArmEnv):
         fallen_objs = []
         if self.object_names == []:
             return []
-<<<<<<< HEAD
-
-=======
->>>>>>> 8bbee3f69e6bf5b2a77acb0871ee04203c1bd951
         for name in self.object_names+self.not_yet_considered_object_names:
             # Get real-time pos from observables
             obj_pos = self._observables[name + '_pos'].obs
@@ -1279,11 +1275,7 @@ class Picking(SingleArmEnv):
                     
                 elif name in self.not_yet_considered_object_names:
                     self.not_yet_considered_object_names.remove(name)
-<<<<<<< HEAD
-
-=======
         
->>>>>>> 8bbee3f69e6bf5b2a77acb0871ee04203c1bd951
         # Refactor for loop into list comp
         # 1. Check for fallen objs if obj height is less than table surface
         # 2. Remove fallen objs from obj names
