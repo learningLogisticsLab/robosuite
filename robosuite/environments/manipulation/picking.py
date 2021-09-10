@@ -1692,7 +1692,6 @@ class Picking(SingleArmEnv):
                     object_i_pos.copy(),  # 3      # Try pos only first.           
                     # object_i_quat.copy(), # 4
                 ])
-
                 # Augment observations      Dims:
                 env_obs = np.concatenate([  # 17 + (20 * num_objects)
                     env_obs,
@@ -1708,7 +1707,6 @@ class Picking(SingleArmEnv):
 
         # TODO: sorted_objects should be updated when an object is successfully picked. Such that when there is one object less, 
         # the new dimensionality is reflected in these observations as well.
-    
         for i in range( len(self.sorted_objects_to_model )):
 
             name_list = list(self.sorted_objects_to_model) 
@@ -1924,7 +1922,7 @@ class Picking(SingleArmEnv):
 
         # 07 Process Done: 
         # If (i) time_step is past horizon OR (ii) we have succeeded, set to true.
-        done = (self.timestep >= self.horizon) and not self.ignore_done or info['is_success'] or self.all_objs_fallen_flag
+        done = (self.timestep >= self.horizon) and not self.ignore_done or info['is_success'] or self.fallen_objs_flag
     
         # 08 Process Reward
         reward = self.compute_reward(env_obs['achieved_goal'], env_obs['desired_goal'], info)
