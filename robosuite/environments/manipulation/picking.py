@@ -325,7 +325,7 @@ class Picking(SingleArmEnv):
         self.goal_pos_error_thresh  = goal_pos_error_thresh  # set threshold to determine if current pos of object is at goal.
 
         # Fallen objects flag
-        self.fallen_objs_flag   = False
+        self.all_objs_fallen_flag   = False
 
         ## Organize object information
 
@@ -822,7 +822,13 @@ class Picking(SingleArmEnv):
         mujoco_arena.set_origin([0, 0, 0])
 
         # store some arena attributes
-        self.bin_size = mujoco_arena.table_full_size # bin_size is really the area covered by the two bins
+        self.bin_size       = mujoco_arena.table_full_size # bin_size is really the area covered by the two bins
+        self.bin1_pos       = mujoco_arena.bin1_pos
+        self.bin2_pos       = mujoco_arena.bin2_pos
+        self.bin1_surface   = mujoco_arena.bin1_surface
+        self.bin2_surface   = mujoco_arena.bin2_surface
+        self.bin1_friction  = mujoco_arena.bin1_friction
+        self.bin2_friction  = mujoco_arena.bin2_friction
 
         # Given the available objects, randomly pick num_objs_to_load and return: names, visual names, and not_yet_modelled_equivalents and name_to_id
         (self.object_names, self.visual_object_names, 
@@ -1109,15 +1115,13 @@ class Picking(SingleArmEnv):
                 # After first reset, if object_randomization is true, turn on the self.hard_reset flag to be used in the next reset
                 if self.object_randomization:
                     self.hard_reset = True
-            
+
+            # if not first reset but on obj rand, clear fallen_objs, and turn off flag
             elif not self.first_reset and self.object_randomization:
                 super()._reset_internal()
+                self.objects_in_target_bin.clear()
                 self.fallen_objs.clear()    
                 self.fallen_objs_flag = False
-            
-            # elif self.fallen_objs_flag:
-            #     super()._reset_internal()
-            #     self.fallen_objs_flag = False
 
             # II. Not Object Randomizations. 
             # Continuing Reset. 
@@ -1150,14 +1154,15 @@ class Picking(SingleArmEnv):
 
                     # Proceed to place objects at the self.object_placements location.
                 
-            if not self.object_randomization and self.fallen_objs_flag:
-
-                self.object_names += self.fallen_objs[:self.num_objects-len(self.object_names)]
-                self.not_yet_considered_object_names += self.fallen_objs[self.num_objects-len(self.object_names):]
+            if self.all_objs_fallen_flag:
+                
+                # Copy names from fallen objs back to obj names, then clear fallen objs list
+                self.object_names += self.fallen_objs[:self.num_objects]
+                self.not_yet_considered_object_names += self.fallen_objs[self.num_objects:]
                 self.fallen_objs.clear()
 
                 # C> Turn off flag
-                self.fallen_objs_flag = False
+                self.all_objs_fallen_flag = False
                 
             # Sample from the "placement initializer" for all objects (regular and visual objects)
             self.object_placements = self.placement_initializer.sample()
@@ -1281,40 +1286,43 @@ class Picking(SingleArmEnv):
         # 2. Remove fallen objs from obj names
         # 3. Remove fallen objs from not yet considered obj names
         fallen_objs = [name for name in self.object_names + self.not_yet_considered_object_names
-                       if self._observables[name+'_pos'].obs[2] < self.bin1_pos[2]]
+                       if self._observables[name+'_pos'].obs[2] < self.bin1_pos[2] + self.bin_thickness[2]]
         self.object_names = [name for name in self.object_names if name not in fallen_objs]
         self.not_yet_considered_object_names = [name for name in self.not_yet_considered_object_names if name not in fallen_objs]
 
-        # if there is a fallen obj and obj names is not empty
+        # Debug
+        # print("obj names {}, not yet cons obj names{}".format(self.object_names,self.not_yet_considered_object_names))
+        
+        # If there is a fallen obj and we model 1 obj
+        if fallen_objs and self.num_objs_to_load == 1:
+            self.goal_object['name']=[]
+            self.goal_object['pos']=np.array([0, 0, 0])
+            self.goal_object['quat']=np.array([1, 0, 0, 0])
+
+        # if there is a fallen obj and we model >= 2 objects
         # get new goal, other_objs than goals if there is a fallen object
         # if there is no fallen objs, do nothing
         # if there is a fallen goal obj, call get goal obj (may return empty if no more available objects)
         # if there is a fallen not goal obj, keep goal obj, remove fallen obj from self other obj than goal
-        if fallen_objs:
+        if fallen_objs and self.object_names != []:
 
             if self.goal_object['name'] in fallen_objs:
                 self.goal_object, self.other_objs_than_goals = self.get_goal_object()
             elif self.goal_object['name'] not in fallen_objs:
                 self.other_objs_than_goals = [name for name in self.other_objs_than_goals if name not in fallen_objs]
 
-            # bring goal obj to front
-            self.sorted_objects_to_model = self.return_sorted_objs_to_model(self.goal_object, self.other_objs_than_goals)
-
-            # If there is an unmodelled obj and modelled objs < num blocks, Add one new unmodeled object to self.object_names, the closest one to the goal, if available from the self.not_yet_considered_object_names
-            if self.not_yet_considered_object_names and len(self.object_names) < self.num_blocks:
-                sorted_non_modeled_elems = self.return_sorted_objs_to_model(self.goal_object,
-                                                                            self.not_yet_considered_object_names)  # returns dict of sorted objects
-                closest_obj_to_goal = list(sorted_non_modeled_elems.items())[1] # Extract first dict item
-                self.object_names.append(closest_obj_to_goal[0])  # Only pass the name
-                self.sorted_objects_to_model[closest_obj_to_goal[0]] = closest_obj_to_goal[1]
-                self.not_yet_considered_object_names.remove(closest_obj_to_goal[0])
-                
-            print("fallen is {}, pos is {}, goal is {}, other obj is {}".format(fallen_objs, self._observables[fallen_objs[0]+'_pos'].obs, self.goal_object,
+            # Add one new unmodeled object to self.object_names, the closest one to the goal, if available from the self.not_yet_considered_object_names
+            sorted_non_modeled_elems = self.return_sorted_objs_to_model(self.goal_object,
+                                                                        self.not_yet_considered_object_names)  # returns dict of sorted objects
+            closest_obj_to_goal = next(iter(sorted_non_modeled_elems.items()))  # Extract first dict item
+            self.object_names.append(closest_obj_to_goal[0])  # Only pass the name
+            self.sorted_objects_to_model[closest_obj_to_goal[0]] = closest_obj_to_goal[1]
+            print("fallen is {}, goal is {}, other obj is {}".format(fallen_objs, self.goal_object,
                                                                      self.other_objs_than_goals))
 
         # when all objs has fallen turn on flag
-        if fallen_objs:
-            self.fallen_objs_flag = True
+        if fallen_objs and self.object_names + self.not_yet_considered_object_names == []:
+            self.all_objs_fallen_flag = True
 
         return fallen_objs
 
@@ -1368,8 +1376,7 @@ class Picking(SingleArmEnv):
         # If successfully placed
         if target_dist_error <= self.goal_pos_error_thresh and check_grasp:
 
-            print("Successfully picked {}". format(self.goal_object['name'])) 
-            
+            print("Successfully picked {}". format(self.goal_object['name']))
             # 02 Object Handling
             # Add the current goal object to the list of target bin objects
             assert self.goal_object != {}, 'checking Picking._is_successful(). Your goal_object is empty.'
@@ -1694,30 +1701,13 @@ class Picking(SingleArmEnv):
         # We only consider the relative position between the goal object and end-effector, all the rest are set to 0.
 
         # Check, remove & update fallen objs list/dicts
-        self.fallen_objs = self.return_fallen_objs() # remove obj from self.obj_names
+        # self.fallen_objs = self.return_fallen_objs() # remove obj from self.obj_names
+        # if self.fallen_objs:
+        #     print("fallen obj {}".format(self.fallen_objs))
 
-        # # Place goal object at the front
-        if self.fallen_objs == []:
-            self.sorted_objects_to_model = self.return_sorted_objs_to_model(self.goal_object, self.other_objs_than_goals)
-        
-        # update obs if self.sorted_objects_to_model is 0 to prevent value error in _is_success
-        if self.sorted_objects_to_model == {}:
-            # update obs from fallen objs
-            for name in self.fallen_objs:
-
-                # Pose: pos and orientation
-                object_i_pos = obs[name + '_pos']
-                object_i_quat = obs[name + '_quat']
-
-                # Vel: linear and angular
-                object_velp = obs[name + '_velp'] * dt
-                object_velp = object_velp - grip_velp  # relative velocity between object and gripper
-
-                object_velr = obs[name + '_velr'] * dt
-
-                # Fill these rel data with fixed nondata
-                object_rel_pos = np.zeros(3)
-                object_rel_rot = np.zeros(4)
+        # when all objs fell turn on flag to reset later in 07 Process Done in step
+        if self.object_names==[] and self.not_yet_considered_object_names==[]:
+            self.all_objs_fallen_flag = True
 
                 # achieved goal
                 achieved_goal = np.concatenate([  # 3          # 7                
@@ -1740,6 +1730,7 @@ class Picking(SingleArmEnv):
 
         # TODO: sorted_objects should be updated when an object is successfully picked. Such that when there is one object less, 
         # the new dimensionality is reflected in these observations as well.
+    
         for i in range( len(self.sorted_objects_to_model )):
 
             name_list = list(self.sorted_objects_to_model) 
@@ -1956,7 +1947,7 @@ class Picking(SingleArmEnv):
 
         # 07 Process Done: 
         # If (i) time_step is past horizon OR (ii) we have succeeded, set to true.
-        done = (self.timestep >= self.horizon) and not self.ignore_done or info['is_success'] or self.fallen_objs_flag
+        done = (self.timestep >= self.horizon) and not self.ignore_done or info['is_success'] or self.all_objs_fallen_flag
     
         # 08 Process Reward
         reward = self.compute_reward(env_obs['achieved_goal'], env_obs['desired_goal'], info)
