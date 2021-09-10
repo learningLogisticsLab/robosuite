@@ -236,10 +236,10 @@ class Picking(SingleArmEnv):
         # bin1_pos = (0.1, -0.25, 0.8),           # Follows xml
         # bin2_pos = (0.1, 0.28, 0.8),
 
-        # move bins
-        bin1_pos=(-0.1, -0.25, 0.8),  # Follows xml
-        bin2_pos=(-0.1, 0.28, 0.8),
-        bin_thickness=(0, 0, 0.02),
+        # # move bins
+        # bin1_pos=(-0.1, -0.25, 0.8),  # Follows xml
+        # bin2_pos=(-0.1, 0.28, 0.8),
+        # bin_thickness=(0, 0, 0.02),
         
         # Observations
         use_camera_obs = True,                  # TODO: Currently these two options are setup to work in oposition it seems. Can we have both to True?
@@ -375,18 +375,6 @@ class Picking(SingleArmEnv):
         self.first_reset = True
         self.do_reset_internal = True
 
-        # (D) Arena: bins_arena.xml
-
-        # Table---
-        # settings for table top
-        self.table_full_size = table_full_size
-        self.table_friction  = table_friction
-
-        # settings for bin position
-        self.bin1_pos = np.array(bin1_pos)
-        self.bin2_pos = np.array(bin2_pos)
-        self.bin_thickness = np.array(bin_thickness)
-
         # Variant dictionary
         self.variant = variant
 
@@ -454,10 +442,7 @@ class Picking(SingleArmEnv):
         Plays the role of selecting a desired object for order fulfillment (name,pose). Selected when: (i) starting, or (ii) a previous goal has been picked successfully.
         Currently, randomly choose an object from the list of self.object_names which has num_objs_to_load.
 
-        Assumes that modeled objects are available in self.object_names. 
-        We then extract the position and quat of these from self.object_placements[]. 
-        
-        Recall object placements are obtained when calling _Get_placement_initializer. 
+        Assumes that (visual) object placements from reset_sim() are available: 
         self.object_placements = self.placement_initializer.sample()
 
         Returns:
@@ -669,7 +654,7 @@ class Picking(SingleArmEnv):
 
     def _get_placement_initializer(self):
         """
-        Returns a pointer to self.placement_initializers that sample object poses within bounds.
+        Helper function to define placement initializers that sample object poses within bounds.
 
         Create 3 samplers: 
         - picking, placing (i.e. goals) and for setting the robot(s) eef upon a reset according to a strategy. 
@@ -708,7 +693,7 @@ class Picking(SingleArmEnv):
                     rotation_axis                   = 'z',                          # Currently only accepts one axis. TODO: extend to multiple axes.
                     ensure_object_boundary_in_range = True,
                     ensure_valid_placement          = True,
-                    reference_pos                   = self.bin1_pos + self.bin_thickness,
+                    reference_pos                   = self.bin1_pos + self.bin1_surface,
                     z_offset                        = 0.,
                 )
             )
@@ -731,7 +716,7 @@ class Picking(SingleArmEnv):
                     rotation_axis                   = 'z',                              # Currently only accepts one axis. TODO: extend to multiple axes.
                     ensure_object_boundary_in_range = True,
                     ensure_valid_placement          = True,
-                    reference_pos                   = self.bin1_pos + self.bin_thickness,
+                    reference_pos                   = self.bin1_pos + self.bin1_surface,
                     z_offset                        = 0.,
                 )
             )
@@ -755,11 +740,10 @@ class Picking(SingleArmEnv):
                     rotation_axis                   = 'z',                              # Currently only accepts one axis. TODO: extend to multiple axes.
                     ensure_object_boundary_in_range = True,
                     ensure_valid_placement          = True,
-                    reference_pos                   = self.bin1_pos + self.bin_thickness,
+                    reference_pos                   = self.bin1_pos + self.bin1_surface,
                     z_offset                        = 0.,
                 )
             )
-        
         # placeObjectSamplers: each visual object receives a sampler that places it in the TARGET bin
         self.placement_initializer.append_sampler(
             sampler=UniformRandomSampler(
@@ -771,7 +755,7 @@ class Picking(SingleArmEnv):
                 rotation_axis                   = 'z',                              # Currently only accepts one axis. TODO: extend to multiple axes.
                 ensure_object_boundary_in_range = True,
                 ensure_valid_placement          = True,
-                reference_pos                   = self.bin1_pos + self.bin_thickness,
+                reference_pos                   = self.bin1_pos + self.bin1_surface,
                 z_offset                        = 0.10,                             # Set a vertical offset of XXcm above the bin
                 z_offset_prob                   = 0.50,                             # probability with which to set the z_offset
             )
@@ -794,7 +778,7 @@ class Picking(SingleArmEnv):
             z_range=[min_z, max_z],
             rotation=None,
             rotation_axis='z',
-            reference_pos=self.bin1_pos + self.bin_thickness,
+            reference_pos=self.bin1_pos + self.bin1_surface,
             )
 
     def _load_model(self):
@@ -812,11 +796,7 @@ class Picking(SingleArmEnv):
         self.robots[0].robot_model.set_base_xpos(xpos)
 
         # load model for table top/bins workspace
-        mujoco_arena = BinsArena(
-                                bin1_pos        = self.bin1_pos,
-                                table_full_size = self.table_full_size,
-                                table_friction  = self.table_friction
-        )
+        mujoco_arena = BinsArena()
 
         # Arena always gets set to zero origin
         mujoco_arena.set_origin([0, 0, 0])
@@ -1264,22 +1244,7 @@ class Picking(SingleArmEnv):
         fallen_objs = []
         if self.object_names == []:
             return []
-        for name in self.object_names+self.not_yet_considered_object_names:
-            # Get real-time pos from observables
-            obj_pos = self._observables[name + '_pos'].obs
 
-            # check if obj has fallen below bin
-            if obj_pos[2] < self.bin1_pos[2] + self.bin_thickness[2] and name in self.object_names:
-                print("new fallen obj !!! {}, pos is {}".format(name, obj_pos))
-                fallen_objs.append(name)
-
-                # if modelled or unmodelled object remove from corresponding list
-                if name in self.object_names:
-                    self.object_names.remove(name)
-                    
-                elif name in self.not_yet_considered_object_names:
-                    self.not_yet_considered_object_names.remove(name)
-        
         # Refactor for loop into list comp
         # 1. Check for fallen objs if obj height is less than table surface
         # 2. Remove fallen objs from obj names
@@ -1292,7 +1257,7 @@ class Picking(SingleArmEnv):
         # if there is a fallen obj and obj names is not empty
         # get new goal, other_objs than goals if there is a fallen object
         # if there is no fallen objs, do nothing
-        # if there is a fallen goal obj, call get goal obj (may return empty if no more available objects)
+        # if there is a fallen goal obj, call get goal obj
         # if there is a fallen not goal obj, keep goal obj, remove fallen obj from self other obj than goal
         if fallen_objs:
 
@@ -1942,7 +1907,6 @@ class Picking(SingleArmEnv):
         self.cur_time += self.control_timestep        
 
         # 06 Process info
-        # print(env_obs['achieved_goal'], env_obs['desired_goal'])
         info = { 'is_success': self._is_success(env_obs['achieved_goal'], env_obs['desired_goal']) }
 
         # 06b Process Reward * Info
