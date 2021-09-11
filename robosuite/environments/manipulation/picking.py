@@ -1907,7 +1907,6 @@ class Picking(SingleArmEnv):
         self.cur_time += self.control_timestep        
 
         # 06 Process info
-        # print(env_obs['achieved_goal'], env_obs['desired_goal'])
         info = { 'is_success': self._is_success(env_obs['achieved_goal'], env_obs['desired_goal']) }
 
         # 06b Process Reward * Info
