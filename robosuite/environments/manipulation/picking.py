@@ -1273,8 +1273,10 @@ class Picking(SingleArmEnv):
             if self.not_yet_considered_object_names and len(self.object_names) < self.num_blocks:
                 sorted_non_modeled_elems = self.return_sorted_objs_to_model(self.goal_object,
                                                                             self.not_yet_considered_object_names)  # returns dict of sorted objects
-                closest_obj_to_goal = list(sorted_non_modeled_elems.items())[1] # Extract first dict item
-                self.object_names.append(closest_obj_to_goal[0])  # Only pass the name
+                if len(sorted_non_modeled_elems) == 2:
+                    closest_obj_to_goal = list(sorted_non_modeled_elems.items())[1] # Extract first dict item
+                else:
+                    closest_obj_to_goal = list(sorted_non_modeled_elems.items())[0] # Extract first dict item                self.object_names.append(closest_obj_to_goal[0])  # Only pass the name
                 self.sorted_objects_to_model[closest_obj_to_goal[0]] = closest_obj_to_goal[1]
                 self.not_yet_considered_object_names.remove(closest_obj_to_goal[0])
                 
