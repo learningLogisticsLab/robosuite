@@ -1013,7 +1013,6 @@ class Picking(SingleArmEnv):
             # print("Original object pos is {}".format(HER_pos))
             # print("Original obj_quat is {}".format(HER_quat))
             min_longitude = min(obj.x_radius * 2, obj.y_radius * 2, obj.vertical_radius)
-
             # Gripping strategy if horizontal radius is the shorter side
             if min_longitude == (obj.x_radius * 2) or min_longitude == (obj.y_radius * 2):
                 # Check for offset
