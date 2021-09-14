@@ -1135,14 +1135,12 @@ class Picking(SingleArmEnv):
                     # Proceed to place objects at the self.object_placements location.
                 
             if not self.object_randomization and self.fallen_objs_flag:
-
-                self.object_names += self.fallen_objs[:self.num_objects-len(self.object_names)]
-                self.not_yet_considered_object_names += self.fallen_objs[self.num_objects-len(self.object_names):]
+                self.object_names = [name[:5]+'Object' for name in self.visual_object_names]
+                self.not_yet_considered_object_names = [name[:5]+'Object' for name in self.not_yet_considered_visual_object_names]
                 self.fallen_objs.clear()
-
                 # C> Turn off flag
                 self.fallen_objs_flag = False
-                
+
             # Sample from the "placement initializer" for all objects (regular and visual objects)
             self.object_placements = self.placement_initializer.sample()
             
@@ -1655,7 +1653,7 @@ class Picking(SingleArmEnv):
 
         # Check, remove & update fallen objs list/dicts
         self.fallen_objs = self.return_fallen_objs() # remove obj from self.obj_names
-
+        
         # # Place goal object at the front
         if self.fallen_objs == []:
             self.sorted_objects_to_model = self.return_sorted_objs_to_model(self.goal_object, self.other_objs_than_goals)
