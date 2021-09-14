@@ -1262,6 +1262,7 @@ class Picking(SingleArmEnv):
         # if there is no fallen objs, do nothing
         # if there is a fallen goal obj, call get goal obj
         # if there is a fallen not goal obj, keep goal obj, remove fallen obj from self other obj than goal
+        if fallen_objs:
 
             if self.goal_object['name'] in fallen_objs:
                 self.goal_object, self.other_objs_than_goals = self.get_goal_object()
