@@ -1257,7 +1257,7 @@ class Picking(SingleArmEnv):
             self.object_names += [self.not_yet_considered_object_names.pop()
                                   for name in range ( self.num_blocks - len(self.object_names) ) ]
 
-        # if there is a fallen obj and we model >= 2 objects
+        # if there is a fallen obj
         # get new goal, other_objs than goals if there is a fallen object
         # if there is no fallen objs, do nothing
         # if there is a fallen goal obj, call get goal obj
@@ -1271,14 +1271,6 @@ class Picking(SingleArmEnv):
 
             # bring goal obj to front
             self.sorted_objects_to_model = self.return_sorted_objs_to_model(self.goal_object, self.other_objs_than_goals)
-
-            # If there is an unmodelled obj and modelled objs < num blocks, Add one new unmodeled object to self.object_names, the closest one to the goal, if available from the self.not_yet_considered_object_names
-            if self.not_yet_considered_object_names and len(self.object_names) < self.num_blocks:
-                sorted_non_modeled_elems = self.return_sorted_objs_to_model(self.goal_object,
-                                                                            self.not_yet_considered_object_names)  # returns dict of sorted objects
-                closest_obj_to_goal = list(sorted_non_modeled_elems.items())[1] # Extract second dict item
-                self.sorted_objects_to_model[closest_obj_to_goal[0]] = closest_obj_to_goal[1]
-                self.not_yet_considered_object_names.remove(closest_obj_to_goal[0])
                 
             print("fallen is {}, pos is {}, goal is {}, other obj is {}".format(fallen_objs, self._observables[fallen_objs[0]+'_pos'].obs, self.goal_object,
                                                                      self.other_objs_than_goals))
