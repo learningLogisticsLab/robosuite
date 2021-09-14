@@ -451,7 +451,7 @@ class Picking(SingleArmEnv):
         '''
         goal_obj = {}
         
-        if len(self.object_names) > 0: 
+        if len(self.object_names) > 0:
             # Select a goal obj
             goal_obj['name'] = np.random.choice(self.object_names)
 
@@ -1241,25 +1241,27 @@ class Picking(SingleArmEnv):
         -if goal obj fell get new goal obj
         -if other_obj_than_goals fell keep same goal obj and remove obj from other_obj_than_goals list
         """
-        fallen_objs = []
         if self.object_names == []:
             return []
+        fallen_objs = []
 
-        # Refactor for loop into list comp
         # 1. Check for fallen objs if obj height is less than table surface
         # 2. Remove fallen objs from obj names
         # 3. Remove fallen objs from not yet considered obj names
+        # 4. Move unmodelled objs to modelled names if any until obj names is full
         fallen_objs = [name for name in self.object_names + self.not_yet_considered_object_names
                        if self._observables[name+'_pos'].obs[2] < self.bin1_pos[2]]
         self.object_names = [name for name in self.object_names if name not in fallen_objs]
         self.not_yet_considered_object_names = [name for name in self.not_yet_considered_object_names if name not in fallen_objs]
+        if self.not_yet_considered_object_names != []:
+            self.object_names += [self.not_yet_considered_object_names.pop()
+                                  for name in range ( self.num_blocks - len(self.object_names) ) ]
 
         # if there is a fallen obj and obj names is not empty
         # get new goal, other_objs than goals if there is a fallen object
         # if there is no fallen objs, do nothing
         # if there is a fallen goal obj, call get goal obj
         # if there is a fallen not goal obj, keep goal obj, remove fallen obj from self other obj than goal
-        if fallen_objs:
 
             if self.goal_object['name'] in fallen_objs:
                 self.goal_object, self.other_objs_than_goals = self.get_goal_object()
@@ -1273,18 +1275,13 @@ class Picking(SingleArmEnv):
             if self.not_yet_considered_object_names and len(self.object_names) < self.num_blocks:
                 sorted_non_modeled_elems = self.return_sorted_objs_to_model(self.goal_object,
                                                                             self.not_yet_considered_object_names)  # returns dict of sorted objects
-                if len(sorted_non_modeled_elems) == 2:
-                    closest_obj_to_goal = list(sorted_non_modeled_elems.items())[1] # Extract first dict item
-                else:
-                    closest_obj_to_goal = list(sorted_non_modeled_elems.items())[0] # Extract first dict item                self.object_names.append(closest_obj_to_goal[0])  # Only pass the name
+                closest_obj_to_goal = list(sorted_non_modeled_elems.items())[1] # Extract second dict item
                 self.sorted_objects_to_model[closest_obj_to_goal[0]] = closest_obj_to_goal[1]
                 self.not_yet_considered_object_names.remove(closest_obj_to_goal[0])
                 
             print("fallen is {}, pos is {}, goal is {}, other obj is {}".format(fallen_objs, self._observables[fallen_objs[0]+'_pos'].obs, self.goal_object,
                                                                      self.other_objs_than_goals))
-
-        # when all objs has fallen turn on flag
-        if fallen_objs:
+            # Turn on flag if we detect 1 fallen obj
             self.fallen_objs_flag = True
 
         return fallen_objs
