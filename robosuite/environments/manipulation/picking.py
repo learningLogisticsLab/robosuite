@@ -1005,7 +1005,7 @@ class Picking(SingleArmEnv):
         # maximum gripping space
         longitude_max = 0.07
         # HER flag for activating HER 100% all the time
-        HER = True
+        # HER = True
         if HER:
             # Rename goal object pos as eef pos, goal object quat
             HER_pos = self._eef_xpos
