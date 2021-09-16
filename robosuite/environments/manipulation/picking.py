@@ -1243,32 +1243,15 @@ class Picking(SingleArmEnv):
         fallen_objs = []
 
         # 1. Check for fallen objs if obj height is less than table surface
-        # 2. Remove fallen objs from obj names
-        # 3. Remove fallen objs from not yet considered obj names
-        # 4. Move unmodelled objs to modelled names if any until obj names is full
         fallen_objs = [name for name in self.object_names + self.not_yet_considered_object_names
                        if self._observables[name+'_pos'].obs[2] < self.bin1_pos[2]]
-        # self.object_names = [name for name in self.object_names if name not in fallen_objs]
-        # self.not_yet_considered_object_names = [name for name in self.not_yet_considered_object_names if name not in fallen_objs]
-        # if self.not_yet_considered_object_names != []:
-        #     self.object_names += [self.not_yet_considered_object_names.pop()
-        #                           for name in range ( self.num_blocks - len(self.object_names) ) ]
 
-        # if there is a fallen obj
-        # get new goal, other_objs than goals if there is a fallen object
-        # if there is no fallen objs, do nothing
-        # if there is a fallen goal obj, call get goal obj
-        # if there is a fallen not goal obj, keep goal obj, remove fallen obj from self other obj than goal
+        # if there is a fallen obj:
+        # 1. Sort objects
+        # 2. Turn on fallen objs flag to reset
         if fallen_objs:
-
-            # if self.goal_object['name'] in fallen_objs:
-            #     self.goal_object, self.other_objs_than_goals = self.get_goal_object()
-            # elif self.goal_object['name'] not in fallen_objs:
-            #     self.other_objs_than_goals = [name for name in self.other_objs_than_goals if name not in fallen_objs]
-
             # bring goal obj to front
             self.sorted_objects_to_model = self.return_sorted_objs_to_model(self.goal_object, self.other_objs_than_goals)
-
             print("fallen is {}, pos is {}, goal is {}, other obj is {}".format(fallen_objs, self._observables[fallen_objs[0]+'_pos'].obs, self.goal_object,
                                                                      self.other_objs_than_goals))
             # Turn on flag if we detect 1 fallen obj
