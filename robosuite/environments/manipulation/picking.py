@@ -325,6 +325,7 @@ class Picking(SingleArmEnv):
         self.goal_pos_error_thresh  = goal_pos_error_thresh  # set threshold to determine if current pos of object is at goal.
 
         # Fallen objects flag
+        self.fallen_objs        = []
         self.fallen_objs_flag   = False
 
         ## Organize object information
@@ -672,7 +673,7 @@ class Picking(SingleArmEnv):
         TODO: 1) extend this function to place objects according to strategy: organized.
         %---------------------------------------------------------------------------------------------------------
         """
-
+        # init eef [-0.02423557, -0.09839531,  1.02317629]
         if self.object_reset_strategy == 'random':
             self.object_reset_strategy = random.choice(object_reset_strategy_cases[0:3]) # Do not include random in selection
 
@@ -687,13 +688,16 @@ class Picking(SingleArmEnv):
                 sampler = UniformRandomSampler(
                     name                            = "pickObjectSampler",
                     mujoco_objects                  = self.objects+self.not_yet_considered_objects,
-                    x_range                         = [-bin_x_half, bin_x_half],    # This (+ve,-ve) range goes from center to the walls on each side of the bin
-                    y_range                         = [-bin_y_half, bin_y_half],
+                    # x_range                         = [0, bin_x_half],    # This (+ve,-ve) range goes from center to the walls on each side of the bin
+                    # y_range                         = [-0.5*bin_y_half, 0.5*bin_y_half],
+                    x_range                         = [-0.05, 0.02],                # 5 cm from ref
+                    y_range                         = [-0.05, 0.05],
                     rotation                        = None,                         # Add uniform random rotation
                     rotation_axis                   = 'z',                          # Currently only accepts one axis. TODO: extend to multiple axes.
                     ensure_object_boundary_in_range = True,
                     ensure_valid_placement          = True,
-                    reference_pos                   = self.bin1_pos + self.bin1_surface,
+                    # reference_pos                   = self.bin1_pos + self.bin1_surface,
+                    reference_pos                   = [-0.02423557, -0.09839531,  self.bin1_pos[2]+self.bin1_surface[2]],
                     z_offset                        = 0.,
                 )
             )
@@ -710,13 +714,16 @@ class Picking(SingleArmEnv):
                 sampler = UniformWallSampler(
                     name                            = "pickObjectSampler",
                     mujoco_objects                  = self.objects+self.not_yet_considered_objects,
-                    x_range                         = [-bin_x_half, bin_x_half],        # This (+ve,-ve) range goes from center to the walls on each side of the bin
-                    y_range                         = [-bin_y_half, bin_y_half],
+                    # x_range                         = [-bin_x_half, bin_x_half],        # This (+ve,-ve) range goes from center to the walls on each side of the bin
+                    # y_range                         = [-bin_y_half, bin_y_half],
+                    x_range                         =[-0.05, 0.02],  # 5 cm from ref
+                    y_range                         =[-0.05, 0.05],
                     rotation                        = None,                             # Add uniform random rotation
                     rotation_axis                   = 'z',                              # Currently only accepts one axis. TODO: extend to multiple axes.
                     ensure_object_boundary_in_range = True,
                     ensure_valid_placement          = True,
-                    reference_pos                   = self.bin1_pos + self.bin1_surface,
+                    # reference_pos                   = self.bin1_pos + self.bin1_surface,
+                    reference_pos                   =[-0.02423557, -0.09839531, self.bin1_pos[2] + self.bin1_surface[2]],
                     z_offset                        = 0.,
                 )
             )
@@ -809,7 +816,7 @@ class Picking(SingleArmEnv):
         self.bin2_surface   = mujoco_arena.bin2_surface
         self.bin1_friction  = mujoco_arena.bin1_friction
         self.bin2_friction  = mujoco_arena.bin2_friction
-
+        
         # Given the available objects, randomly pick num_objs_to_load and return: names, visual names, and not_yet_modelled_equivalents and name_to_id
         (self.object_names, self.visual_object_names, 
         self.not_yet_considered_object_names, self.not_yet_considered_visual_object_names, 
@@ -1114,7 +1121,6 @@ class Picking(SingleArmEnv):
                     print('Current objects in target bin are: ')
                     for obj in self.objects_in_target_bin:
                         print(f'{obj}    ')
-
                     # Bring back objects from target bin to object_names and not_yet_consiered_object_names
                     # Use slicing so that you create new objects (no need to copy)
                     self.object_names += self.objects_in_target_bin[:self.num_objects]
@@ -1173,7 +1179,6 @@ class Picking(SingleArmEnv):
             # Set the bins to the desired position
             self.sim.model.body_pos[self.sim.model.body_name2id("bin1")] = self.bin1_pos
             self.sim.model.body_pos[self.sim.model.body_name2id("bin2")] = self.bin2_pos
-
 
         return True
 
@@ -1240,14 +1245,14 @@ class Picking(SingleArmEnv):
         """
         if self.object_names == []:
             return []
-        fallen_objs = []
+        # fallen_objs = []
 
         # 1. Check for fallen objs if obj height is less than table surface
         # 2. Remove fallen objs from obj names
         # 3. Remove fallen objs from not yet considered obj names
         # 4. Move unmodelled objs to modelled names if any until obj names is full
         fallen_objs = [name for name in self.object_names + self.not_yet_considered_object_names
-                       if self._observables[name+'_pos'].obs[2] < self.bin1_pos[2]]
+                       if self._observables[name+'_pos'].obs[2] < self.bin1_pos[2] and name not in self.fallen_objs]
         # self.object_names = [name for name in self.object_names if name not in fallen_objs]
         # self.not_yet_considered_object_names = [name for name in self.not_yet_considered_object_names if name not in fallen_objs]
         # if self.not_yet_considered_object_names != []:
@@ -1265,7 +1270,7 @@ class Picking(SingleArmEnv):
             #     self.goal_object, self.other_objs_than_goals = self.get_goal_object()
             # elif self.goal_object['name'] not in fallen_objs:
             #     self.other_objs_than_goals = [name for name in self.other_objs_than_goals if name not in fallen_objs]
-
+            
             # bring goal obj to front
             self.sorted_objects_to_model = self.return_sorted_objs_to_model(self.goal_object, self.other_objs_than_goals)
 
@@ -1880,7 +1885,6 @@ class Picking(SingleArmEnv):
         
         # 08 Process Reward
         reward = self.compute_reward(env_obs['achieved_goal'], env_obs['desired_goal'], info)
-
         return env_obs, reward, done, info       
 
     # def __reduce__(self):
