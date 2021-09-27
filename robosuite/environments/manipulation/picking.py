@@ -500,8 +500,13 @@ class Picking(SingleArmEnv):
         # Sparse reward calculation: negative format
         # - If you do not reach your target, a -1 will be assigned as the reward, otherwise zero.
         # - a perfect policy would get returns equivalent to 0        
-        reward = -(dist > self.distance_threshold).astype(np.float32)
+        # reward = -(dist > self.distance_threshold).astype(np.float32)
         # reward = np.min([-(dist > self.distance_threshold).astype(np.float32) for d in dist], axis=0)
+
+        # Sparse reward calculation: positive format
+        # - If we do not reach target, a 0 will be assigned as the reard, otherwise 1.
+        # - a perfect policy would get returns equivalent to 1
+        reward = (dist < self.distance_threshold).astype(np.float32)
 
         reward = np.asarray(reward)            
         return reward          
