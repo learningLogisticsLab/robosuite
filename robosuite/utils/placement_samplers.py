@@ -317,7 +317,7 @@ class UniformRandomSampler(ObjectPositionSampler):
                     break
                 else:
                     # We cannot find a good location, so raise it by 10cm the air and drop it.
-                    object_z += 0.10
+                    object_z += 0.04
                     quat = self._sample_quat()
                     pos = (object_x, object_y, object_z)
                     placed_objects[obj.name] = (pos, quat, obj)
@@ -352,8 +352,11 @@ class UniformRandomSampler(ObjectPositionSampler):
         if self.ensure_valid_placement:
             for (x, y, z), _, other_obj in placed_objects.values():
                 # make sure we are sampling collision objs w collision objs and vis with vis objs, and not between same objs
-                if obj.name[5:] != other_obj.name[5:] or obj.name == other_obj.name:
+                # if obj.name[5:] != other_obj.name[5:] or obj.name == other_obj.name:
+                #     continue
+                if obj.name == other_obj.name:
                     continue
+
                 # if (
                 #         np.linalg.norm((object_x - x,
                 #                         object_y - y))  # Compute the norm between current object and each of the other objects
@@ -375,6 +378,22 @@ class UniformRandomSampler(ObjectPositionSampler):
                     # print(f'Could find a location to place object {obj.name} without collision in the placement_sampler')
                     # print(f'position is ({object_x},{object_y},{object_z}), norm is {np.linalg.norm((object_x - x, object_y - y))}, and the sum of horizontal raidii between the two objects is {other_obj.horizontal_radius + horizontal_radius}')
                     break
+
+                # sample vis obj relative to collision obj
+                # if obj.name[5:].lower() == 'visualobject' and other_obj.name[5:].lower() == 'object':
+                if obj.name[:5] == other_obj.name[:5] and obj.name[5:].lower() == 'visualobject':
+                    if (
+                            np.linalg.norm((object_x - x,
+                                            object_y - y,
+                                            object_z - z))  # Compute the norm between current object and each of the other objects
+                            >= 0.15
+                            # If the norm is less than the sum of the horizontal radius of both objects it means collision
+                    ):
+                        location_valid = False
+                        # if location_valid is False:
+                        # print(f'Could find a location to place object {obj.name} without collision in the placement_sampler')
+                        # print(f'position is ({object_x},{object_y},{object_z}), norm is {np.linalg.norm((object_x - x, object_y - y))}, and the sum of horizontal raidii between the two objects is {other_obj.horizontal_radius + horizontal_radius}')
+                        break
 
             if location_valid:
                 # random rotation
