@@ -28,6 +28,7 @@ class GymWrapper(Wrapper, Env):
     def __init__(self, env, rlkit_relational=True, keys=None):
         # Run super method
         super().__init__(env=env)
+        
         # Create name for gym
         robots = "".join([type(robot.robot_model).__name__ for robot in self.env.robots])
         self.name = robots + "_" + type(self.env).__name__
@@ -60,18 +61,22 @@ class GymWrapper(Wrapper, Env):
             obs                 = self.env.reset()                              # dictionary of observables
             self.modality_dims  = {key: obs[key].shape for key in self.keys}
             flat_ob             = self._flatten_obs(obs)    # flatten's images... double check this
+            
             self.obs_dim        = flat_ob.size              # concatenantes proprio, object, and image info into one long contiguous array
             high                = np.inf * np.ones(self.obs_dim)
             low                 = -high
+            
             self.observation_space = spaces.Box(low=low, high=high)
             low, high           = self.env.action_spec
             self.action_space   = spaces.Box(low=low, high=high)
 
         if self.rlkit_relational:
             self.env.first_reset = True # If true, picking.py:Picking.reset_internal() goes through a standard reset path. otherwise skips due to our formalism in dealing with objects in the picking environment. 
+            
             # set up observation and action spaces
             obs                 = self.env.reset()                              # dictionary of observables
             self.modality_dims  = {key: obs[key].shape for key in self.keys}
+            
             # No flattening
             self.obs_dim        = obs['observation'].size                      # dict of obs contains the following keys: 'observations', 'achieved_goal', 'desired_goal'
             
@@ -92,7 +97,8 @@ class GymWrapper(Wrapper, Env):
             # Action specs set in robot environ and depend on controller (gripper + robot)
             # i.e. if 2 gripper fingers => gripper is dim(1), if OSC controller 'fixed' dim is xyz rpy
             low, high           = self.env.action_spec
-            self.action_space   = spaces.Box(low=low, high=high)        
+            self.action_space   = spaces.Box(low=low, high=high)  
+    
 
     def _flatten_obs(self, obs_dict, verbose=False):
         """
@@ -184,3 +190,18 @@ class GymWrapper(Wrapper, Env):
             return self.env.compute_reward(achieved_goal, desired_goal, info)
         else:
             return self.env.reward()
+
+# # Temporary fix: not using NormalizedBoxEnv, but code assumed unwrapped.
+# # adding unwrapped def from NormalizedboxEnv may remove later if we can serialize with NormalizedBoxEnv
+#     @property
+#     def unwrapped(self):
+#         """
+#         Grabs unwrapped environment
+
+#         Returns:
+#             env (MujocoEnv): Unwrapped environment
+#         """
+#         if hasattr(self.env, "unwrapped"):
+#             return self.env.unwrapped
+#         else:
+#             return self.env

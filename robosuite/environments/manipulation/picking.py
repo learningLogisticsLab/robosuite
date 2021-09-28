@@ -47,12 +47,15 @@ import mujoco_py
 # 07 Gym Spaces
 from gym import spaces
 
+# 08 Serializable to resolve pickle
+from rlkit.core.serializable import Serializable
+
 # Globals
 object_reset_strategy_cases = ['organized', 'jumbled', 'wall', 'random']
 _reset_internal_after_picking_all_objs = True
 
 
-class Picking(SingleArmEnv):
+class Picking(SingleArmEnv, Serializable):
     """
     This class corresponds to a pick and place task for a single PANDA robot arm as defined in robosuite assets and trained via Richard Li's RelationalRL. 
     Currently, the task is modelled as a bin-picking task, but maybe extended to include putwalls. 
@@ -407,6 +410,10 @@ class Picking(SingleArmEnv):
 
             initialization_noise    = initialization_noise,                     
         )
+
+        # Serializable Class
+        self._serializable_initialized = False
+        Serializable.quick_init(self, locals()) # Save locals
 
     def clear_object_strucs(self):
 
@@ -1265,7 +1272,7 @@ class Picking(SingleArmEnv):
         HER-Specific check success method comparing achieved and desired positions .
         Currently the achieved_goal (current position of goal object) and desired_goal are numpy arrays with [pos] shape (3,) 
             TODO: currently we do not analyze orientation. Test good performance with position only first. 
-            TODO: Should also add an additional check to see if the object is in fact touching the fingers. This check is done in standard robosuite and should be integrated here. 
+            TODO: improve check_grasp construction. Currently finger geometries include the whole pad, which can lead to push behaviors vs picks. 
         
         02 Object handling 
             Assuming that there are n objects in a bin and m modelled objects where m<=n then if success, do:
@@ -1866,6 +1873,21 @@ class Picking(SingleArmEnv):
 
         return env_obs, reward, done, info       
 
+    
+    def __getstate__(self):
+        '''
+         Retrieves args/kwargs. Called on pickle.dumps.
+         No need to explicitly save the environment. We will re-instantiate in Serializable.__setstate__ 
+        '''
+        d = Serializable.__getstate__(self)
+        return d 
+    
+    def __setstate__(self, d):
+        '''
+        __setstate_ will properly extract all args/kwargs and then pass them to the environment's constructure to re-insantiate the object.
+        '''
+        Serializable.__setstate__(self, d)        
+    
     # def __reduce__(self):
         
     # # #     # Return the object’s local name relative to its module; 
@@ -1900,20 +1922,20 @@ class Picking(SingleArmEnv):
 #-------------------------------------------------------------
 
 #-------------------------------------------------------------    
-# for num_blocks in range(1, 25): # use of num_blocks indicates objects. kept for historical reasons.
-#     for num_relational_blocks in [3]: # currently only testin with 3 relational blocks (message passing)
-#         for num_query_heads in [1]: # number of query heads (multi-head attention) currently fixed at 1
-#             for reward_type in ['incremental','sparse']: #could add sparse
-#                 for obs_type in ['dictstate','dictimage','np']: #['dictimage', 'np', 'dictstate']:
+for num_blocks in range(1, 20):                             # use of num_blocks indicates objects. kept for historical reasons.
+    for num_relational_blocks in [3]:                       # currently only testin with 3 relational blocks (message passing)
+        for num_query_heads in [1]:                         # number of query heads (multi-head attention) currently fixed at 1
+            for reward_type in ['incremental','sparse']:    # could add sparse
+                for obs_type in ['dictstate','dictimage','np']: #['dictimage', 'np', 'dictstate']:
 
-#                     # Generate the class name 
-#                     className = F"picking_blocks{num_blocks}_numrelblocks{num_relational_blocks}_nqh{num_query_heads}_reward{reward_type}_{obs_type}Obs"
+                    # Generate the class name 
+                    className = F"picking_blocks{num_blocks}_numrelblocks{num_relational_blocks}_nqh{num_query_heads}_reward{reward_type}_{obs_type}Obs"
 
-#                     # Add necessary attributes
+                    # Add necessary attributes
 
-#                     # Generate the class type using type and set parent class to Picking
-#                     pickingReNN = type(className, (Picking,), {}) # args: (i) class name, (ii) tuple of base class, (iii) dictionary of attributes
+                    # Generate the class type using type and set parent class to Picking
+                    pickingReNN = type(className, (Picking,), {}) # args: (i) class name, (ii) tuple of base class, (iii) dictionary of attributes
 
-#                     # Customize the class name
-#                     globals()[className] = pickingReNN
+                    # Customize the class name
+                    globals()[className] = pickingReNN
 
