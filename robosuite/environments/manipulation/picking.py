@@ -376,6 +376,8 @@ class Picking(SingleArmEnv):
         self.first_reset = True
         self.do_reset_internal = True
 
+        self.curr_learn_dist = 0.05                             # curr learn threshold
+
         # Variant dictionary
         self.variant = variant
 
@@ -693,10 +695,10 @@ class Picking(SingleArmEnv):
                 sampler = UniformRandomSampler(
                     name                            = "pickObjectSampler",
                     mujoco_objects                  = self.objects+self.not_yet_considered_objects,
-                    # x_range                         = [0, bin_x_half],    # This (+ve,-ve) range goes from center to the walls on each side of the bin
-                    # y_range                         = [-0.5*bin_y_half, 0.5*bin_y_half],
-                    x_range                         = [-0.05, 0.02],                # 5 cm from ref
-                    y_range                         = [-0.05, 0.05],
+                    # x_range                         = [-binx_half, bin_x_half],    # This (+ve,-ve) range goes from center to the walls on each side of the bin
+                    # y_range                         = [-bin_y_half, bin_y_half],
+                    x_range                         = [-self.curr_learn_dist, self.curr_learn_dist],                # 5 cm from ref
+                    y_range                         = [-self.curr_learn_dist, self.curr_learn_dist],
                     rotation                        = None,                         # Add uniform random rotation
                     rotation_axis                   = 'z',                          # Currently only accepts one axis. TODO: extend to multiple axes.
                     ensure_object_boundary_in_range = True,
@@ -769,7 +771,7 @@ class Picking(SingleArmEnv):
                 ensure_valid_placement          = True,
                 reference_pos                   = self.bin1_pos + self.bin1_surface,
                 z_offset                        = 0.10,                             # Set a vertical offset of XXcm above the bin
-                z_offset_prob                   = 0.50,                             # probability with which to set the z_offset
+                z_offset_prob                   = 1.0,  # probability with which to set the z_offset
             )
         )
 
@@ -1861,7 +1863,7 @@ class Picking(SingleArmEnv):
             env_obs = self._get_obs()
             
             policy_step = False
-                                           
+
         # Note: this is done all at once to avoid floating point inaccuracies
         self.cur_time += self.control_timestep        
 
