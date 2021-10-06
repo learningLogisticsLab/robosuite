@@ -386,6 +386,8 @@ class Picking(SingleArmEnv, Serializable):
         self.first_reset = first_reset
         self.do_reset_internal = True
 
+        self.curr_learn_dist = 0.05                             # curr learn threshold
+
         # Variant dictionary
         self.variant = variant
 
@@ -514,8 +516,13 @@ class Picking(SingleArmEnv, Serializable):
         # Sparse reward calculation: negative format
         # - If you do not reach your target, a -1 will be assigned as the reward, otherwise zero.
         # - a perfect policy would get returns equivalent to 0        
-        reward = -(dist > self.distance_threshold).astype(np.float32)
+        # reward = -(dist > self.distance_threshold).astype(np.float32)
         # reward = np.min([-(dist > self.distance_threshold).astype(np.float32) for d in dist], axis=0)
+
+        # Sparse reward calculation: positive format
+        # - If we do not reach target, a 0 will be assigned as the reard, otherwise 1.
+        # - a perfect policy would get returns equivalent to 1
+        reward = (dist < self.distance_threshold).astype(np.float32)
 
         reward = np.asarray(reward)            
         return reward          
@@ -702,10 +709,10 @@ class Picking(SingleArmEnv, Serializable):
                 sampler = UniformRandomSampler(
                     name                            = "pickObjectSampler",
                     mujoco_objects                  = self.objects+self.not_yet_considered_objects,
-                    # x_range                         = [0, bin_x_half],    # This (+ve,-ve) range goes from center to the walls on each side of the bin
-                    # y_range                         = [-0.5*bin_y_half, 0.5*bin_y_half],
-                    x_range                         = [-0.05, 0.02],                # 5 cm from ref
-                    y_range                         = [-0.05, 0.05],
+                    # x_range                         = [-binx_half, bin_x_half],    # This (+ve,-ve) range goes from center to the walls on each side of the bin
+                    # y_range                         = [-bin_y_half, bin_y_half],
+                    x_range                         = [-self.curr_learn_dist, self.curr_learn_dist],                # 5 cm from ref
+                    y_range                         = [-self.curr_learn_dist, self.curr_learn_dist],
                     rotation                        = None,                         # Add uniform random rotation
                     rotation_axis                   = 'z',                          # Currently only accepts one axis. TODO: extend to multiple axes.
                     ensure_object_boundary_in_range = True,
@@ -778,7 +785,7 @@ class Picking(SingleArmEnv, Serializable):
                 ensure_valid_placement          = True,
                 reference_pos                   = self.bin1_pos + self.bin1_surface,
                 z_offset                        = 0.10,                             # Set a vertical offset of XXcm above the bin
-                z_offset_prob                   = 0.50,                             # probability with which to set the z_offset
+                z_offset_prob                   = 1.0,  # probability with which to set the z_offset
             )
         )
 
@@ -1276,7 +1283,7 @@ class Picking(SingleArmEnv, Serializable):
         # if there is a fallen goal obj, call get goal obj
         # if there is a fallen not goal obj, keep goal obj, remove fallen obj from self other obj than goal
         if fallen_objs:
-
+            
             # if self.goal_object['name'] in fallen_objs:
             #     self.goal_object, self.other_objs_than_goals = self.get_goal_object()
             # elif self.goal_object['name'] not in fallen_objs:
@@ -1871,7 +1878,7 @@ class Picking(SingleArmEnv, Serializable):
             env_obs = self._get_obs()
             
             policy_step = False
-                                           
+
         # Note: this is done all at once to avoid floating point inaccuracies
         self.cur_time += self.control_timestep        
 
@@ -1896,21 +1903,21 @@ class Picking(SingleArmEnv, Serializable):
         
         # 08 Process Reward
         reward = self.compute_reward(env_obs['achieved_goal'], env_obs['desired_goal'], info)
+    
         return env_obs, reward, done, info       
 
-    
+    # -----Serialization------
     def __getstate__(self):
         '''
-         Saves key attributes needed to reinstantiate the class. Called on pickle.dumps.
-         
-         Method ideally would save object. Could do via the Serializable class. 
-         However, there is an offending class; namely, self.robots. If you try to pickle this class an exception occurs stating that in mujoco_py/mjbatchrenderer.pyx, L2 import pycuda.driver as drv, no default __reduce__ is found due to a non-trivial __cinit__
-
-         Below, in the commented out section, we tried include the offending class but deleting sub classes... have not yet succeeded. 
-         It would be desirable to solve this as it facilitates the re-use of the environment. 
-         
-         Right now, we save everything except self.robots but then actually need to re-construct the class. 
-         Note that the reconstruction is not done directly in __setstate__, we do it outside in a script like rlkit-relational/scripts/sim_goal_conditional_policy.py to allow for customization needed for simulation         
+        Saves key attributes needed to reinstantiate the class. Called on pickle.dumps.
+        
+        Method ideally would save object. Could do via the Serializable class. 
+        However, there is an offending class; namely, self.robots. If you try to pickle this class an exception occurs stating that in mujoco_py/mjbatchrenderer.pyx, L2 import pycuda.driver as drv, no default __reduce__ is found due to a non-trivial __cinit__
+        Below, in the commented out section, we tried include the offending class but deleting sub classes... have not yet succeeded. 
+        It would be desirable to solve this as it facilitates the re-use of the environment. 
+        
+        Right now, we save everything except self.robots but then actually need to re-construct the class. 
+        Note that the reconstruction is not done directly in __setstate__, we do it outside in a script like rlkit-relational/scripts/sim_goal_conditional_policy.py to allow for customization needed for simulation         
         '''
         # Extract all kwargs        
         d = dict()        
@@ -1990,31 +1997,4 @@ class Picking(SingleArmEnv, Serializable):
         # Remake the picking environment via make in base.py? 
         # No. Opted to rebuild outside to allow to customize some params.    
         #env = suite.make(env_name, *(), **d) 
-        #self = env # NormalizedBoxEnv(GymWrapper(env))  
-     
-
-#-------------------------------------------------------------
-# Define new permutation of classes to register based on picking for relationalRL code
-# *This was my original sol. in following rlkit-relational FetchBlockConstruction. However it breaks, pickle.dumps/loads used in relationalRL. 
-# *Moved this to the base.py:MakeEnv and then added a __reduce__ method below to solve a __reduce__ related error, but could not. 
-#  For these reasons, currently giving up on registerin different classes. Will just go with 1 class Picking.
-#-------------------------------------------------------------
-
-#-------------------------------------------------------------    
-# for num_blocks in range(1, 20):                             # use of num_blocks indicates objects. kept for historical reasons.
-#     for num_relational_blocks in [3]:                       # currently only testin with 3 relational blocks (message passing)
-#         for num_query_heads in [1]:                         # number of query heads (multi-head attention) currently fixed at 1
-#             for reward_type in ['incremental','sparse']:    # could add sparse
-#                 for obs_type in ['dictstate','dictimage','np']: #['dictimage', 'np', 'dictstate']:
-
-#                     # Generate the class name 
-#                     className = F"picking_blocks{num_blocks}_numrelblocks{num_relational_blocks}_nqh{num_query_heads}_reward{reward_type}_{obs_type}Obs"
-
-#                     # Add necessary attributes
-
-#                     # Generate the class type using type and set parent class to Picking
-#                     pickingReNN = type(className, (Picking,), {}) # args: (i) class name, (ii) tuple of base class, (iii) dictionary of attributes
-
-#                     # Customize the class name
-#                     globals()[className] = pickingReNN
-
+        #self = env # NormalizedBoxEnv(GymWrapper(env)) 
