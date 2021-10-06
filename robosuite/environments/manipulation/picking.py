@@ -47,12 +47,19 @@ import mujoco_py
 # 07 Gym Spaces
 from gym import spaces
 
+# 08 Serializable to resolve pickle
+from rlkit.core.serializable import Serializable
+# Used in Reconstructing the original object
+import robosuite as suite                                                           # will call all __init__ inside suite loading all relevant classes
+from robosuite.wrappers import GymWrapper  
+from rlkit.envs.wrappers import NormalizedBoxEnv 
+
 # Globals
 object_reset_strategy_cases = ['organized', 'jumbled', 'wall', 'random']
 _reset_internal_after_picking_all_objs = True
 
 
-class Picking(SingleArmEnv):
+class Picking(SingleArmEnv, Serializable):
     """
     This class corresponds to a pick and place task for a single PANDA robot arm as defined in robosuite assets and trained via Richard Li's RelationalRL. 
     Currently, the task is modelled as a bin-picking task, but maybe extended to include putwalls. 
@@ -288,6 +295,9 @@ class Picking(SingleArmEnv):
 
         # Variant dictionary
         variant                 = {},           # Can be filled in when the class is instantiated in drl algo side.    
+
+        # Reset
+        first_reset             = True,
     ):
         print('Generating Picking class.\n')
         # Task settings
@@ -373,7 +383,7 @@ class Picking(SingleArmEnv):
         self.reward_scale   = reward_scale                      # Sets a scale for final reward
         self.reward_shaping = reward_shaping
 
-        self.first_reset = True
+        self.first_reset = first_reset
         self.do_reset_internal = True
 
         # Variant dictionary
@@ -408,6 +418,10 @@ class Picking(SingleArmEnv):
 
             initialization_noise    = initialization_noise,                     
         )
+
+        # Serializable Class
+        self._serializable_initialized = False
+        Serializable.quick_init(self, locals()) # Save this classes args/kwargs
 
     def clear_object_strucs(self):
 
@@ -1288,7 +1302,7 @@ class Picking(SingleArmEnv):
         HER-Specific check success method comparing achieved and desired positions .
         Currently the achieved_goal (current position of goal object) and desired_goal are numpy arrays with [pos] shape (3,) 
             TODO: currently we do not analyze orientation. Test good performance with position only first. 
-            TODO: Should also add an additional check to see if the object is in fact touching the fingers. This check is done in standard robosuite and should be integrated here. 
+            TODO: improve check_grasp construction. Currently finger geometries include the whole pad, which can lead to push behaviors vs picks. 
         
         02 Object handling 
             Assuming that there are n objects in a bin and m modelled objects where m<=n then if success, do:
@@ -1784,7 +1798,7 @@ class Picking(SingleArmEnv):
             compute sensor data that dpeends on force/acceleration
             
         02 Clip action 
-            Note: not necessary when we wrap the env with the NormalizedBoxEnv class)
+            Note: not necessary when we wrap the env with the NormalizedBoxEnv class). TODO NormalizedBoxEnv currently clips at [-1,+1] and all the same for eef and fingers. Need to fix.
 
         03 Set data to mujoco sim.data.ctrl
 
@@ -1838,6 +1852,7 @@ class Picking(SingleArmEnv):
             # 01. sim.forward()
             self.sim.forward()
 
+            # Action Clipping
             # Not necessary to clip actions within robosuite as we wrap with the NormalizedBoxEnv. 
             # -->Set (clipped) action in mujoco
             # action = np.clip(action, 
@@ -1888,32 +1903,101 @@ class Picking(SingleArmEnv):
         reward = self.compute_reward(env_obs['achieved_goal'], env_obs['desired_goal'], info)
         return env_obs, reward, done, info       
 
-    # def __reduce__(self):
-        
-    # # #     # Return the object’s local name relative to its module; 
-    # # #     #return "picking_blocks1_numrelblocks3_nqh1_rewardsparse_dictstateObs" #self.__module__
-    #     return 'Picking'
     
-    # def __getnewargs_ex__(self):
-    #     '''
-    #     The arguments needed to pass in are those used in base.py to create the new meta classes, i.e.
-    #     def __new__(meta, name, bases, class_dict):
+    def __getstate__(self):
+        '''
+         Saves key attributes needed to reinstantiate the class. Called on pickle.dumps.
+         
+         Method ideally would save object. Could do via the Serializable class. 
+         However, there is an offending class; namely, self.robots. If you try to pickle this class an exception occurs stating that in mujoco_py/mjbatchrenderer.pyx, L2 import pycuda.driver as drv, no default __reduce__ is found due to a non-trivial __cinit__
 
-    #     Where, 
-    #     - meta is the MujocoEnv class isntance
-    #     - name is the name of the class, i.e. Picking
-    #     - bases is a tuple with the <class 'robosuite.environments.manipulation.single_arm_env.SingleArmEnv'>
-    #     - classes_dict is a dict with all the class method names and associated method objects
-    #     '''
-    #     args = tuple()
-    #     meta, name, bases = None, None, None
+         Below, in the commented out section, we tried include the offending class but deleting sub classes... have not yet succeeded. 
+         It would be desirable to solve this as it facilitates the re-use of the environment. 
+         
+         Right now, we save everything except self.robots but then actually need to re-construct the class. 
+         Note that the reconstruction is not done directly in __setstate__, we do it outside in a script like rlkit-relational/scripts/sim_goal_conditional_policy.py to allow for customization needed for simulation         
+        '''
+        # Extract all kwargs        
+        d = dict()        
+        d['robots'] = self.robot_names                       
+        d['reward_scale'] = self.reward_scale
+        d['hard_reset'] = self.hard_reset
+        d['ignore_done'] = self.ignore_done
+        d['object_reset_strategy'] = self.object_reset_strategy
+        d['num_blocks'] = self.num_blocks
+        d['num_objs_to_load'] = self.num_objs_to_load
+        d['object_randomization'] = self.object_randomization
+        d['use_object_obs'] = self.use_object_obs
+        d['use_camera_obs'] = self.use_camera_obs
+        d['reward_shaping'] = self.reward_shaping
         
-    #     kwargs = {}
-    #     kwargs['meta']  = self
-    #     kwargs['name']  = suite.environments.base.EnvMeta
-    #     kwargs['bases'] = (suite.environments.manipulation.single_arm_env.SingleArmEnv,) #(<class 'robosuite.environments.manipulation.single_arm_env.SingleArmEnv'>,)
-    #     kwargs          = picking_dict['picking_dict'] # self.__dict__
-    #     return (args,kwargs)
+        # Controller configuration
+        d['controller_config'] = self.robot_configs[0]['controller_config']
+
+        d['variant'] = self.variant
+        # d['control_freq'] = self.robot_configs[0]['control_freq'] # not needed. inside robot_configs[0]
+
+        # May not need these as you will select custom values to display policy
+        d['horizon'] = self.horizon
+        d['has_renderer'] = self.has_renderer
+
+        # d = self.__dict__.copy()
+        # Keep the last portion of the module string name as the name of the environment
+        d['env_name'] = type(self).__name__
+
+        # Note:
+        # This pickling fails if we save self.robots, i.e.:
+        # d['robots'] = self.robots               # list containing robot objects
+        # I have not been able to solve this even if I:
+        # - immediately later del objects within self.robots
+        # - immeidately later del d['robots'] itself
+
+        # Try to remove offending class
+        # del d['robots'] 
+
+
+        return d 
+    
+    def __setstate__(self, d):
+        '''
+        __setstate_ will properly extract all args/kwargs and then pass them to the environment's constructure to re-insantiate the object.
+        '''
+        #Serializable.__setstate__(self, d)   
+         
+        #self.robot_names                        = d['robots']
+        self.robots                             = d['robots']
+        # self.robot_configs = list()
+        # self.robot_configs.append( d['controller_configs] ) 
+
+        self.reward_scale                       = d['reward_scale']
+        self.hard_reset                         = d['hard_reset']
+        self.ignore_done                        = d['ignore_done']
+        self.object_reset_strategy              = d['object_reset_strategy']
+        self.num_blocks                         = d['num_blocks']
+        self.num_objs_to_load                   = d['num_objs_to_load']
+        self.object_randomization               = d['object_randomization']
+        self.use_object_obs                     = d['use_object_obs']
+        self.use_camera_obs                     = d['use_camera_obs']
+        self.reward_shaping                     = d['reward_shaping']        
+        self.variant                            = d['variant']
+
+        # May not need these as you will select custom values to display policy
+        self.horizon                            = d['horizon']
+        self.has_renderer                       = d['has_renderer']
+
+        # Controller Configs (need the 's' below)
+        self.controller_configs                  = d['controller_config']
+
+        # environment name
+        env_name = d['env_name']
+        del d['env_name'] # without deleting it shows up as a double attribute
+
+        # Remake the picking environment via make in base.py? 
+        # No. Opted to rebuild outside to allow to customize some params.    
+        #env = suite.make(env_name, *(), **d) 
+        #self = env # NormalizedBoxEnv(GymWrapper(env))  
+     
+
 #-------------------------------------------------------------
 # Define new permutation of classes to register based on picking for relationalRL code
 # *This was my original sol. in following rlkit-relational FetchBlockConstruction. However it breaks, pickle.dumps/loads used in relationalRL. 
@@ -1922,10 +2006,10 @@ class Picking(SingleArmEnv):
 #-------------------------------------------------------------
 
 #-------------------------------------------------------------    
-# for num_blocks in range(1, 25): # use of num_blocks indicates objects. kept for historical reasons.
-#     for num_relational_blocks in [3]: # currently only testin with 3 relational blocks (message passing)
-#         for num_query_heads in [1]: # number of query heads (multi-head attention) currently fixed at 1
-#             for reward_type in ['incremental','sparse']: #could add sparse
+# for num_blocks in range(1, 20):                             # use of num_blocks indicates objects. kept for historical reasons.
+#     for num_relational_blocks in [3]:                       # currently only testin with 3 relational blocks (message passing)
+#         for num_query_heads in [1]:                         # number of query heads (multi-head attention) currently fixed at 1
+#             for reward_type in ['incremental','sparse']:    # could add sparse
 #                 for obs_type in ['dictstate','dictimage','np']: #['dictimage', 'np', 'dictstate']:
 
 #                     # Generate the class name 

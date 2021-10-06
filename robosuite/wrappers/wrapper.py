@@ -2,9 +2,9 @@
 This file contains the base wrapper class for Mujoco environments.
 Wrappers are useful for data collection and logging. Highly recommended.
 """
+from numpy import isin
 
-
-class Wrapper:
+class Wrapper():
     """
     Base class for all wrappers in robosuite.
 
@@ -123,8 +123,10 @@ class Wrapper:
         # using getattr ensures that both __getattribute__ and __getattr__ (fallback) get called
         # (see https://stackoverflow.com/questions/3278077/difference-between-getattr-vs-getattribute)
         orig_attr = getattr(self.env, attr)
-        if callable(orig_attr):
 
+
+        if callable(orig_attr):
+            # If the attribute is a function, pass in args and kwargs
             def hooked(*args, **kwargs):
                 result = orig_attr(*args, **kwargs)
                 # prevent wrapped_class from becoming unwrapped

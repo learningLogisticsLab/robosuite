@@ -14,9 +14,9 @@ picking_dict = {}
 
 def register_env(target_class):
 
-    # Is there a better way to register these variable environments? 
+    # # Register permutations of class names to later be instantiated 
     # if target_class.__name__ == 'Picking':
-    #     for num_blocks in range(1, 25): # use of num_blocks indicates objects. kept for historical reasons.
+    #     for num_blocks in range(1, 20): # use of num_blocks indicates objects. kept for historical reasons.
     #         for num_relational_blocks in [3]: # currently only testin with 3 relational blocks (message passing)
     #             for num_query_heads in [1]: # number of query heads (multi-head attention) currently fixed at 1
     #                 for reward_type in ['incremental','sparse']: #could add sparse
@@ -26,7 +26,7 @@ def register_env(target_class):
     #                         className = F"picking_blocks{num_blocks}_numrelblocks{num_relational_blocks}_nqh{num_query_heads}_reward{reward_type}_{obs_type}Obs"
     #                         REGISTERED_ENVS[className] = target_class
     # else:
-        REGISTERED_ENVS[target_class.__name__] = target_class
+    REGISTERED_ENVS[target_class.__name__] = target_class
 
 
 def make(env_name, *args, **kwargs):
@@ -69,9 +69,9 @@ class EnvMeta(type):
         # List all environments that should not be registered here.
         _unregistered_envs = ["MujocoEnv", "RobotEnv", "ManipulationEnv", "SingleArmEnv", "TwoArmEnv"]
 
-        # Enable Pickling:
-        # Try to save this class_dict to enable pickling by using it during the setting of picking.Picking.def __getnewargs_ex__(self):
-        # TOOD: or should we do something like setattr to make it an attribute of the class and access it in a child class?
+        # If prefer a simple class name instead of the registered permutations above, can activate this. 
+        # Also, try to save this class_dict to enable pickling by using it during the setting of picking.Picking.def __getnewargs_ex__(self):
+        # TODO: or should we do something like setattr to make it an attribute of the class and access it in a child class?
         if name == 'Picking':            
             picking_dict['picking_dict'] = class_dict
 
