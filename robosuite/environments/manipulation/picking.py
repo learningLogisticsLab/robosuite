@@ -1903,21 +1903,21 @@ class Picking(SingleArmEnv, Serializable):
         
         # 08 Process Reward
         reward = self.compute_reward(env_obs['achieved_goal'], env_obs['desired_goal'], info)
+    
         return env_obs, reward, done, info       
 
-    
+    # -----Serialization------
     def __getstate__(self):
         '''
-         Saves key attributes needed to reinstantiate the class. Called on pickle.dumps.
-         
-         Method ideally would save object. Could do via the Serializable class. 
-         However, there is an offending class; namely, self.robots. If you try to pickle this class an exception occurs stating that in mujoco_py/mjbatchrenderer.pyx, L2 import pycuda.driver as drv, no default __reduce__ is found due to a non-trivial __cinit__
-
-         Below, in the commented out section, we tried include the offending class but deleting sub classes... have not yet succeeded. 
-         It would be desirable to solve this as it facilitates the re-use of the environment. 
-         
-         Right now, we save everything except self.robots but then actually need to re-construct the class. 
-         Note that the reconstruction is not done directly in __setstate__, we do it outside in a script like rlkit-relational/scripts/sim_goal_conditional_policy.py to allow for customization needed for simulation         
+        Saves key attributes needed to reinstantiate the class. Called on pickle.dumps.
+        
+        Method ideally would save object. Could do via the Serializable class. 
+        However, there is an offending class; namely, self.robots. If you try to pickle this class an exception occurs stating that in mujoco_py/mjbatchrenderer.pyx, L2 import pycuda.driver as drv, no default __reduce__ is found due to a non-trivial __cinit__
+        Below, in the commented out section, we tried include the offending class but deleting sub classes... have not yet succeeded. 
+        It would be desirable to solve this as it facilitates the re-use of the environment. 
+        
+        Right now, we save everything except self.robots but then actually need to re-construct the class. 
+        Note that the reconstruction is not done directly in __setstate__, we do it outside in a script like rlkit-relational/scripts/sim_goal_conditional_policy.py to allow for customization needed for simulation         
         '''
         # Extract all kwargs        
         d = dict()        
@@ -1945,7 +1945,8 @@ class Picking(SingleArmEnv, Serializable):
 
         # d = self.__dict__.copy()
         # Keep the last portion of the module string name as the name of the environment
-        d['env_name'] = type(self).__name__
+        #d['env_name'] = type(self).__name__
+        d['env_name'] = self.variant['expl_environment_kwargs']['env_name']
 
         # Note:
         # This pickling fails if we save self.robots, i.e.:
@@ -1997,31 +1998,4 @@ class Picking(SingleArmEnv, Serializable):
         # Remake the picking environment via make in base.py? 
         # No. Opted to rebuild outside to allow to customize some params.    
         #env = suite.make(env_name, *(), **d) 
-        #self = env # NormalizedBoxEnv(GymWrapper(env))  
-     
-
-#-------------------------------------------------------------
-# Define new permutation of classes to register based on picking for relationalRL code
-# *This was my original sol. in following rlkit-relational FetchBlockConstruction. However it breaks, pickle.dumps/loads used in relationalRL. 
-# *Moved this to the base.py:MakeEnv and then added a __reduce__ method below to solve a __reduce__ related error, but could not. 
-#  For these reasons, currently giving up on registerin different classes. Will just go with 1 class Picking.
-#-------------------------------------------------------------
-
-#-------------------------------------------------------------    
-# for num_blocks in range(1, 20):                             # use of num_blocks indicates objects. kept for historical reasons.
-#     for num_relational_blocks in [3]:                       # currently only testin with 3 relational blocks (message passing)
-#         for num_query_heads in [1]:                         # number of query heads (multi-head attention) currently fixed at 1
-#             for reward_type in ['incremental','sparse']:    # could add sparse
-#                 for obs_type in ['dictstate','dictimage','np']: #['dictimage', 'np', 'dictstate']:
-
-#                     # Generate the class name 
-#                     className = F"picking_blocks{num_blocks}_numrelblocks{num_relational_blocks}_nqh{num_query_heads}_reward{reward_type}_{obs_type}Obs"
-
-#                     # Add necessary attributes
-
-#                     # Generate the class type using type and set parent class to Picking
-#                     pickingReNN = type(className, (Picking,), {}) # args: (i) class name, (ii) tuple of base class, (iii) dictionary of attributes
-
-#                     # Customize the class name
-#                     globals()[className] = pickingReNN
-
+        #self = env # NormalizedBoxEnv(GymWrapper(env)) 
