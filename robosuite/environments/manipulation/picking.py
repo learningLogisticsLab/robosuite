@@ -1945,7 +1945,8 @@ class Picking(SingleArmEnv, Serializable):
 
         # d = self.__dict__.copy()
         # Keep the last portion of the module string name as the name of the environment
-        d['env_name'] = type(self).__name__
+        #d['env_name'] = type(self).__name__
+        d['env_name'] = self.variant['expl_environment_kwargs']['env_name']
 
         # Note:
         # This pickling fails if we save self.robots, i.e.:
