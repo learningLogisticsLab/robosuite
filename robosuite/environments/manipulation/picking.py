@@ -925,6 +925,8 @@ class Picking(SingleArmEnv, Serializable):
             enableds = [True]
             actives  = [False]
 
+            # convert obj name from string to obj
+
             # Create sensors for objects
             for i, obj in enumerate(self.objects+self.not_yet_considered_objects):
                 # Create object sensors
@@ -1144,9 +1146,10 @@ class Picking(SingleArmEnv, Serializable):
                         print(f'{obj}    ')
                     # Bring back objects from target bin to object_names and not_yet_consiered_object_names
                     # Use slicing so that you create new objects (no need to copy)
-                    self.object_names += self.objects_in_target_bin[:self.num_objects]
-                    self.not_yet_considered_object_names += self.objects_in_target_bin[self.num_objects:]
-                    self.objects_in_target_bin.clear()
+                    if self.object_names == []:
+                        self.object_names += self.objects_in_target_bin[:self.num_objects]
+                        self.not_yet_considered_object_names += self.objects_in_target_bin[self.num_objects:]
+                        self.objects_in_target_bin.clear()
 
                     # Print object info after the reset
                     print('After the reset, the modeled object names are: ')
@@ -1680,56 +1683,75 @@ class Picking(SingleArmEnv, Serializable):
         
         # TODO: sorted_objects should be updated when an object is successfully picked. Such that when there is one object less, 
         # the new dimensionality is reflected in these observations as well.
-        # Include fallen objs in the observations to prevent obs dimensionality error
-        for i in range( len(self.sorted_objects_to_model ) ):
+
+        # Initialize obj observations with dim 20 3 pos, 4 quat, 3 velp, 3 velr, 3 obj rel pos, 4 obj rel quat
+        object_i_pos = np.zeros(3*self.num_blocks)
+        object_i_quat = np.zeros(4*self.num_blocks)
+        object_velp = np.zeros(3*self.num_blocks)
+        object_velr = np.zeros(3*self.num_blocks)
+        object_rel_pos = np.zeros(3*self.num_blocks)
+        object_rel_rot = np.zeros(4*self.num_blocks)
+        achieved_goal = np.zeros(3)
+
+        for i in range(self.num_blocks) :
 
             name_list = list(self.sorted_objects_to_model)
-            # make sure len of modelled obj name list is the same as num blocks
-            # otherwise we will break obs dimensionality in training
-            assert len(name_list) == self.num_blocks
-            # Pose: pos and orientation            
-            object_i_pos  = obs[name_list[i] + '_pos'] 
-            object_i_quat = obs[name_list[i] + '_quat'] 
+            # if not empty fill from obs, else leave entries as zeros
+            if i <= len(name_list)-1:
+                # Pose: pos and orientation
+                object_i_pos[3*i:3*(i+1)]  = obs[name_list[i] + '_pos']
+                object_i_quat[4*i:4*(i+1)] = obs[name_list[i] + '_quat']
 
-            # Vel: linear and angular
-            object_velp = obs[name_list[i] +'_velp'] * dt
-            object_velp = object_velp - grip_velp # relative velocity between object and gripper
+                # Vel: linear and angular
+                object_velp[3*i:3*(i+1)] = obs[name_list[i] +'_velp'] * dt
+                object_velp[3*i:3*(i+1)] = object_velp[3*i:3*(i+1)] - grip_velp # relative velocity between object and gripper
 
-            object_velr = obs[name_list[i] +'_velr'] * dt
+                object_velr[3*i:3*(i+1)] = obs[name_list[i] +'_velr'] * dt
 
-            # Relative position wrt to gripper: 
-            # *Note: we will only do this for the goal object and set the rest to 0. 
-            # By setting to 0 all calculations in the network will be cancelled. Robot should reach only to the goal object.
-            # Goal object to be modified if successful (without repeat)
-            if i == 0: 
-                 object_rel_pos = object_i_pos - grip_pos
-                 object_rel_rot = T.quat_distance(object_i_quat,grip_quat) # quat_dist returns the difference
-                 
-                # 02) Achieved Goal: the achieved state will be the object(s) pose(s) of the goal (1st) object         
-                #--------------------------------------------------------------------------
-                # TODO: double check if this works effectively for our context + HER. Otherwise can add objects and grip pose.
-                #--------------------------------------------------------------------------                                 
-                 achieved_goal = np.concatenate([    # 3          # 7                
-                    object_i_pos.copy(),    # 3      # Try pos only first.           
-                    # object_i_quat.copy(), # 4
-                ])
+                # Relative position wrt to gripper:
+                # *Note: we will only do this for the goal object and set the rest to 0.
+                # By setting to 0 all calculations in the network will be cancelled. Robot should reach only to the goal object.
+                # Goal object to be modified if successful (without repeat)
+                if i == 0:
+                     object_rel_pos[3*i:3*(i+1)] = object_i_pos[:3] - grip_pos
+                     object_rel_rot[4*i:4*(i+1)] = T.quat_distance(object_i_quat[:4] ,grip_quat) # quat_dist returns the difference
 
-            else:
-                # Fill these rel data with fixed nondata
-                object_rel_pos = np.zeros(3)
-                object_rel_rot = np.zeros(4)
-            
-            # Augment observations      Dims:
+                    # 02) Achieved Goal: the achieved state will be the object(s) pose(s) of the goal (1st) object
+                    #--------------------------------------------------------------------------
+                    # TODO: double check if this works effectively for our context + HER. Otherwise can add objects and grip pose.
+                    #--------------------------------------------------------------------------
+                     achieved_goal = np.concatenate([    # 3          # 7
+                        object_i_pos[:3].copy(),    # 3      # Try pos only first.
+                        # object_i_quat.copy(), # 4
+                    ])
+
+                else:
+                    # Fill these rel data with fixed nondata
+                    object_rel_pos[3*i:3*(i+1)] = np.zeros(3)
+                    object_rel_rot[4*i:4*(i+1)] = np.zeros(4)
+
+            # # Augment observations      Dims:
+            # env_obs = np.concatenate([  # 17 + (20 * num_objects)
+            #     env_obs,
+            #     object_i_pos.ravel(),   # 3
+            #     object_i_quat.ravel(),  # 4
+            #
+            #     object_velp.ravel(),    # 3
+            #     object_velr.ravel(),    # 3
+            #
+            #     object_rel_pos.ravel(), # 3
+            #     object_rel_rot.ravel()  # 4
+            # ])
             env_obs = np.concatenate([  # 17 + (20 * num_objects)
-                env_obs,                
-                object_i_pos.ravel(),   # 3
-                object_i_quat.ravel(),  # 4
+                env_obs,
+                object_i_pos[3*i:3*(i+1)].ravel(),  # 3
+                object_i_quat[4*i:4*(i+1)].ravel(),  # 4
 
-                object_velp.ravel(),    # 3
-                object_velr.ravel(),    # 3
+                object_velp[3*i:3*(i+1)].ravel(),  # 3
+                object_velr[3*i:3*(i+1)].ravel(),  # 3
 
-                object_rel_pos.ravel(), # 3
-                object_rel_rot.ravel()  # 4
+                object_rel_pos[3*i:3*(i+1)].ravel(),  # 3
+                object_rel_rot[4*i:4*(i+1)].ravel()  # 4
             ])
 
             ## TODO: Additional observations
