@@ -1132,6 +1132,7 @@ class Picking(SingleArmEnv, Serializable):
                 self.fallen_objs.clear()    
                 self.fallen_objs_flag = False
 
+
             # II. Not Object Randomizations. 
             # Continuing Reset. 
             # Copy objects in target bin back to object names and then clear the former. 
@@ -1921,7 +1922,8 @@ class Picking(SingleArmEnv, Serializable):
 
         # 07 Process Done: 
         # If (i) time_step is past horizon OR (ii) we have succeeded, set to true.
-        done = (self.timestep >= self.horizon) and not self.ignore_done or info['is_success'] or self.fallen_objs_flag
+        done = (self.timestep >= self.horizon) and not self.ignore_done or info['is_success'] and self.object_names == [] \
+               or self.fallen_objs_flag
         
         # 08 Process Reward
         reward = self.compute_reward(env_obs['achieved_goal'], env_obs['desired_goal'], info)
