@@ -520,7 +520,7 @@ class Picking(SingleArmEnv, Serializable):
         # reward = np.min([-(dist > self.distance_threshold).astype(np.float32) for d in dist], axis=0)
 
         # Sparse reward calculation: positive format
-        # - If we do not reach target, a 0 will be assigned as the reard, otherwise 1.
+        # - If we do not reach target, a 0 will be assigned as the reward, otherwise 1.
         # - a perfect policy would get returns equivalent to 1
         reward = (dist < self.distance_threshold).astype(np.float32)
 
@@ -1595,8 +1595,8 @@ class Picking(SingleArmEnv, Serializable):
     def _get_obs(self, force_update=False):
         '''
         This declaration comes from the Fetch Block Construction environment in rlkit_relational. In our top class: MujocoEnv
-        we have the _get_observations declaration. It returns an Ordered dictionary of observables. 
-        This method will get such dict of observations and manipulate them to return a formate amenable to rlkit_relational+HER,
+        we have the _get_observations declaration. It returns an Ordered dictionary of Observables. 
+        This method will get such dict of observations and manipulate them to return a format amenable to rlkit_relational+HER,
         namely return a dictionay with keys: 'obsevations', 'achieved_goals', and 'desired_goals' composed of numpy arrays.
 
         We keep this declaration as is for two reasons:
@@ -1606,7 +1606,7 @@ class Picking(SingleArmEnv, Serializable):
         Method executes the following:
         1. Compute observations as np arrays [grip_xyz, f1x, f2x, grip_vxyz, f1v, f2v, obj1_pos, rel_pos_wrt_gripp_obj, obj1_theta, obj1_vxyz, obj1_dtheta obj2... ]
         2. Achieved goal: [goal_obj.pos]                        # First iteration, testing placing only with pos and w/out orientation.
-        3. Desired goal: goal pos obtained in ._sample_goal()   # same as achieved_goal 
+        3. Desired goal: goal pos obtained in ._sample_goal()   # i.e. the robosuite visual object 
 
         Notes: 
 
@@ -1686,13 +1686,13 @@ class Picking(SingleArmEnv, Serializable):
         # the new dimensionality is reflected in these observations as well.
 
         # Initialize obj observations with dim 20 3 pos, 4 quat, 3 velp, 3 velr, 3 obj rel pos, 4 obj rel quat
-        object_i_pos = np.zeros(3*self.num_blocks)
-        object_i_quat = np.zeros(4*self.num_blocks)
-        object_velp = np.zeros(3*self.num_blocks)
-        object_velr = np.zeros(3*self.num_blocks)
+        object_i_pos   = np.zeros(3*self.num_blocks)
+        object_i_quat  = np.zeros(4*self.num_blocks)
+        object_velp    = np.zeros(3*self.num_blocks)
+        object_velr    = np.zeros(3*self.num_blocks)
         object_rel_pos = np.zeros(3*self.num_blocks)
         object_rel_rot = np.zeros(4*self.num_blocks)
-        achieved_goal = np.zeros(3)
+        achieved_goal  = np.zeros(3)
 
         for i in range(self.num_blocks) :
 
@@ -1700,7 +1700,7 @@ class Picking(SingleArmEnv, Serializable):
             # if not empty fill from obs, else leave entries as zeros
             if i <= len(name_list)-1:
                 # Pose: pos and orientation
-                object_i_pos[3*i:3*(i+1)]  = obs[name_list[i] + '_pos']
+                object_i_pos[3*i:3*(i+1)]  = obs[name_list[i] + '_pos']     # Fills them in contiguously [1 | 2 | 3 | ... | n]
                 object_i_quat[4*i:4*(i+1)] = obs[name_list[i] + '_quat']
 
                 # Vel: linear and angular
@@ -1709,7 +1709,7 @@ class Picking(SingleArmEnv, Serializable):
 
                 object_velr[3*i:3*(i+1)] = obs[name_list[i] +'_velr'] * dt
 
-                # Relative position wrt to gripper:
+                # Relative position between the goal object and the gripper:
                 # *Note: we will only do this for the goal object and set the rest to 0.
                 # By setting to 0 all calculations in the network will be cancelled. Robot should reach only to the goal object.
                 # Goal object to be modified if successful (without repeat)
@@ -1717,14 +1717,14 @@ class Picking(SingleArmEnv, Serializable):
                      object_rel_pos[3*i:3*(i+1)] = object_i_pos[:3] - grip_pos
                      object_rel_rot[4*i:4*(i+1)] = T.quat_distance(object_i_quat[:4] ,grip_quat) # quat_dist returns the difference
 
-                    # 02) Achieved Goal: the achieved state will be the object(s) pose(s) of the goal (1st) object
+                    # 02) Achieved Goal: the achieved state will be the goal object's pose (i.e of the goal 1st object)
                     #--------------------------------------------------------------------------
-                    # TODO: double check if this works effectively for our context + HER. Otherwise can add objects and grip pose.
+                    # TODO: double check if this works effectively for our context + HER. Otherwise we can also add the grip pose and other objects
                     #--------------------------------------------------------------------------
-                     achieved_goal = np.concatenate([    # 3          # 7
-                        object_i_pos[:3].copy(),    # 3      # Try pos only first.
-                        # object_i_quat.copy(), # 4
-                    ])
+                     achieved_goal = np.concatenate([                # 3          # 7
+                                    object_i_pos[:3].copy(),         # 3          # Try pos only first.
+                                    # object_i_quat.copy(),          # 4
+                                    ])
 
                 else:
                     # Fill these rel data with fixed nondata
@@ -1743,16 +1743,16 @@ class Picking(SingleArmEnv, Serializable):
             #     object_rel_pos.ravel(), # 3
             #     object_rel_rot.ravel()  # 4
             # ])
-            env_obs = np.concatenate([  # 17 + (20 * num_objects)
+            env_obs = np.concatenate([                  # 17 + (20 * num_objects)
                 env_obs,
-                object_i_pos[3*i:3*(i+1)].ravel(),  # 3
-                object_i_quat[4*i:4*(i+1)].ravel(),  # 4
+                object_i_pos[3*i:3*(i+1)].ravel(),      # 3
+                object_i_quat[4*i:4*(i+1)].ravel(),     # 4
 
-                object_velp[3*i:3*(i+1)].ravel(),  # 3
-                object_velr[3*i:3*(i+1)].ravel(),  # 3
+                object_velp[3*i:3*(i+1)].ravel(),       # 3
+                object_velr[3*i:3*(i+1)].ravel(),       # 3
 
-                object_rel_pos[3*i:3*(i+1)].ravel(),  # 3
-                object_rel_rot[4*i:4*(i+1)].ravel()  # 4
+                object_rel_pos[3*i:3*(i+1)].ravel(),    # 3
+                object_rel_rot[4*i:4*(i+1)].ravel()     # 4
             ])
 
             ## TODO: Additional observations

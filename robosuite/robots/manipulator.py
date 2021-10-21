@@ -23,10 +23,11 @@ class Manipulator(Robot):
         """
         actuator_idxs = [self.sim.model.actuator_name2id(actuator) for actuator in gripper.actuators]
 
-        # Formats actions to be binary. TODO: Seems behaving differently?
-        gripper_action_actual = gripper.format_action(gripper_action)   # TODO: Juan: not so sure about the efficacy of this call. Supposed to yield a binary output, it is not doing that....
+        # Next block of code will generates incremental OPEN/CLOSE commands from single action.
+        # https://gocuhk-my.sharepoint.com/:w:/g/personal/juan_rojas_cuhk_edu_hk/EcO_q8xpETJBiDzyIC8boxQBuU6kmFsPCtExKko24WKKxQ?e=aGWQPl
+        gripper_action_actual = gripper.format_action(gripper_action)   
        
-        # Rescale normalized gripper action to control ranges
+        # Rescale normalized gripper action to control range ~ \pm 0.04cm
         ctrl_range = self.sim.model.actuator_ctrlrange[actuator_idxs]   
         bias = 0.5 * (ctrl_range[:, 1] + ctrl_range[:, 0])
         weight = 0.5 * (ctrl_range[:, 1] - ctrl_range[:, 0])
