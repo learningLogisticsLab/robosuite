@@ -785,7 +785,7 @@ class Picking(SingleArmEnv, Serializable):
                 ensure_valid_placement          = True,
                 reference_pos                   = self.bin1_pos + self.bin1_surface,
                 z_offset                        = 0.10,                             # Set a vertical offset of XXcm above the bin
-                z_offset_prob                   = 1.0,  # probability with which to set the z_offset
+                z_offset_prob                   = 0.50,  # probability with which to set the z_offset
             )
         )
 
@@ -1040,8 +1040,6 @@ class Picking(SingleArmEnv, Serializable):
             # Rename goal object pos as eef pos, goal object quat
             HER_pos = self._eef_xpos
             HER_quat = obj_quat
-            # print("Original object pos is {}".format(HER_pos))
-            # print("Original obj_quat is {}".format(HER_quat))
             min_longitude = min(obj.x_radius * 2, obj.y_radius * 2, obj.vertical_radius)
             # Gripping strategy if horizontal radius is the shorter side
             if min_longitude == (obj.x_radius * 2) or min_longitude == (obj.y_radius * 2):
@@ -1079,8 +1077,6 @@ class Picking(SingleArmEnv, Serializable):
             self.goal_object['pos'] = HER_pos
             self.goal_object['quat'] = HER_quat
             self.sim.data.set_joint_qpos(obj.joints[0], np.concatenate([np.array(HER_pos), np.array(HER_quat)]))
-            # print("Update HER pos for {} to {}".format(self.goal_object['name'], HER_pos))
-            # print("Update HER pose for {} to {}".format(self.goal_object['name'], HER_quat))
         else:
             self.sim.data.set_joint_qpos(obj.joints[0], np.concatenate([np.array(obj_pos), np.array(obj_quat)]))
 
@@ -1196,8 +1192,8 @@ class Picking(SingleArmEnv, Serializable):
                             self.goal_object['quat'] = obj_quat
 
                 # Set the position of 'collision' objects:
-                elif obj.name.lower() == self.goal_object['name'].lower():
-                    self._activate_her(obj_pos=obj_pos, obj_quat=obj_quat, obj=obj)
+                # elif obj.name.lower() == self.goal_object['name'].lower():
+                    # self._activate_her(obj_pos=obj_pos, obj_quat=obj_quat, obj=obj)
                 else:
                     self.sim.data.set_joint_qpos(obj.joints[0], np.concatenate([np.array(obj_pos), np.array(obj_quat)]))
 
@@ -1340,17 +1336,15 @@ class Picking(SingleArmEnv, Serializable):
         target_dist_error = np.linalg.norm(achieved_goal - desired_goal)
 
         # while not check_grasp:
-        if self.goal_object['name'] == [] or self.goal_object == {}:
-            check_grasp = False
-        else:
-            check_grasp = self._check_grasp(
-                gripper=self.robots[0].gripper,
-                object_geoms=[g for g in self.object_placements[self.goal_object['name']][2].contact_geoms])
-            # print("obj geoms {}".format([g for g in self.object_placements[self.goal_object['name']][2].contact_geoms]))
-            # print("debug check grasp {}".format(check_grasp))
+        # if self.goal_object['name'] == [] or self.goal_object == {}:
+        #     check_grasp = False
+        # else:
+        #     check_grasp = self._check_grasp(
+        #         gripper=self.robots[0].gripper,
+        #         object_geoms=[g for g in self.object_placements[self.goal_object['name']][2].contact_geoms])
 
         # If successfully placed
-        if target_dist_error <= self.goal_pos_error_thresh and check_grasp:
+        if target_dist_error <= self.goal_pos_error_thresh:
 
             print("Successfully picked {}". format(self.goal_object['name']))
             # 02 Object Handling
