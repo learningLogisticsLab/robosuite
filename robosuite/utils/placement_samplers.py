@@ -293,7 +293,7 @@ class UniformRandomSampler(ObjectPositionSampler):
 
                 # Place the object in the air with z_offset with probability z_offset_prob
                 if np.random.uniform() < self.z_offset_prob:
-                    object_z = self.z_offset + base_offset[2] + obj.vertical_radius / 2
+                    object_z = np.random.uniform(0, self.z_offset) + base_offset[2] + obj.vertical_radius / 2
                 else:
                     object_z = base_offset[2] + obj.vertical_radius / 2
 
