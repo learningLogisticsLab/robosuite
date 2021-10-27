@@ -153,8 +153,8 @@ from .xml_objects import(
     o0066VisualObject,
     o0067Object,
     o0067VisualObject,
-    o0068Object,
-    o0068VisualObject,
+    # o0068Object,
+    # o0068VisualObject,
     o0069Object,
     o0069VisualObject,
 )
