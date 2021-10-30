@@ -1192,8 +1192,8 @@ class Picking(SingleArmEnv, Serializable):
                             self.goal_object['quat'] = obj_quat
 
                 # Set the position of 'collision' objects:
-                # elif obj.name.lower() == self.goal_object['name'].lower():
-                    # self._activate_her(obj_pos=obj_pos, obj_quat=obj_quat, obj=obj)
+                elif obj.name.lower() == self.goal_object['name'].lower():
+                    self._activate_her(obj_pos=obj_pos, obj_quat=obj_quat, obj=obj)
                 else:
                     self.sim.data.set_joint_qpos(obj.joints[0], np.concatenate([np.array(obj_pos), np.array(obj_quat)]))
 
