@@ -448,7 +448,32 @@ class Picking(SingleArmEnv, Serializable):
         self.other_objs_than_goals.clear()
         self.objects_in_target_bin.clear()
 
-        self.goal_object.clear()        
+        self.goal_object.clear()       
+
+    def gripper_pos_far_from_goals(self, achieved_goal, goal):
+        '''
+        Return true if gripper is farther than threshold*2 for all blocks. 
+        '''
+        gripper_pos = achieved_goal[..., -3:]   # Extract the grip position only, the last 3 values.
+
+        block_goals = goal[..., :-3]            # Get all the goals EXCEPT the zero'd out grip position
+
+        # Compute distances between gripper and blocks and place them in a list. 
+        distances = [
+            np.linalg.norm(gripper_pos - block_goals[..., i*3:(i+1)*3], axis=-1) for i in range(self.num_blocks)
+        ]
+
+        # Return true if gripper is above the distance threshold for all blocks. 
+        return np.all([d > self.distance_threshold * 2 for d in distances], axis=0)
+
+    def subgoal_distances(self, goal_a, goal_b):
+        assert goal_a.shape == goal_b.shape
+        for i in range(self.num_blocks - 1):
+            assert goal_a[..., i * 3:(i + 1) * 3].shape == goal_a[..., (i + 1) * 3:(i + 2) * 3].shape
+        return [
+            np.linalg.norm(goal_a[..., i * 3:(i + 1) * 3] - goal_b[..., i * 3:(i + 1) * 3], axis=-1) for i in
+            range(self.num_blocks) # returns the norm for each 3-element group subtraction
+        ]
 
     def goal_distance(self, goal_a, goal_b):
         assert goal_a.shape == goal_b.shape
@@ -511,20 +536,18 @@ class Picking(SingleArmEnv, Serializable):
         # Compute position subdistances
         ag_pos = achieved_goal[:3]
         dg_pos = desired_goal[:3]
-        dist   = self.goal_distance(ag_pos, dg_pos)
 
-        # Sparse reward calculation: negative format
-        # - If you do not reach your target, a -1 will be assigned as the reward, otherwise zero.
-        # - a perfect policy would get returns equivalent to 0        
-        # reward = -(dist > self.distance_threshold).astype(np.float32)
-        # reward = np.min([-(dist > self.distance_threshold).astype(np.float32) for d in dist], axis=0)
+        # Get distances between each object's achieved goal and the desired goal
+        dist   = self.subgoal_distances()(ag_pos, dg_pos)
 
-        # Sparse reward calculation: positive format
-        # - If we do not reach target, a 0 will be assigned as the reard, otherwise 1.
-        # - a perfect policy would get returns equivalent to 1
-        reward = (dist < self.distance_threshold).astype(np.float32)
+        # If any successes, keep them
+        reward = np.max([(d < self.distance_threshold).astype(np.float32) for d in dist], axis=0)
+        reward = np.asarray(reward)
 
-        reward = np.asarray(reward)            
+        # For successfull events (reward 1) modify [reward] from 1-->gripper_pos_far_from_goals
+        # TODO: examine the return value of gripper_pos_far_from_goals, is it bool or 1/0.
+        np.putmask(reward, reward == 1, self.gripper_pos_far_from_goals(ag_pos, dg_pos)) # iterable, condition, modification
+       
         return reward          
 
     def reward(self, action=None):
@@ -1332,8 +1355,8 @@ class Picking(SingleArmEnv, Serializable):
         global _reset_internal_after_picking_all_objs
 
         # 01 Check if Successfull
-        # Subtract obj_pos from goal and compute that error's norm:
-        target_dist_error = np.linalg.norm(achieved_goal - desired_goal)
+        subgoal_distances = self.subgoal_distances(achieved_goal, desired_goal)
+        
 
         # while not check_grasp:
         # if self.goal_object['name'] == [] or self.goal_object == {}:
@@ -1343,20 +1366,20 @@ class Picking(SingleArmEnv, Serializable):
         #         gripper=self.robots[0].gripper,
         #         object_geoms=[g for g in self.object_placements[self.goal_object['name']][2].contact_geoms])
 
-        # If successfully placed
-        if target_dist_error <= self.goal_pos_error_thresh:
+        # If any object is successfully placed
+        if np.max([(d < self.goal_pos_error_thresh).astype(np.float32) for d in subgoal_distances]) == 1:
 
             print("Successfully picked {}". format(self.goal_object['name']))
             # 02 Object Handling
             # Add the current goal object to the list of target bin objects
-            assert self.goal_object != {}, 'checking Picking._is_successful(). Your goal_object is empty.'
+            # assert self.goal_object != {}, 'checking Picking._is_successful(). Your goal_object is empty.'
 
             self.objects_in_target_bin.append(self.goal_object['name'])
             print("The current objects in the target bin are:")
             for object in self.objects_in_target_bin:
                 print(f"{object} ")    
                                    
-            # Remove goal from the list of modeled names for the next round            
+            # Remove goal from the list of modeled names for the next round                        
             self.object_names.remove(self.goal_object['name'])
             self.sorted_objects_to_model.popitem(self.goal_object['name'])
             self.goal_object.clear()
@@ -1680,13 +1703,16 @@ class Picking(SingleArmEnv, Serializable):
         # the new dimensionality is reflected in these observations as well.
 
         # Initialize obj observations with dim 20 3 pos, 4 quat, 3 velp, 3 velr, 3 obj rel pos, 4 obj rel quat
-        object_i_pos = np.zeros(3*self.num_blocks)
-        object_i_quat = np.zeros(4*self.num_blocks)
-        object_velp = np.zeros(3*self.num_blocks)
-        object_velr = np.zeros(3*self.num_blocks)
-        object_rel_pos = np.zeros(3*self.num_blocks)
-        object_rel_rot = np.zeros(4*self.num_blocks)
-        achieved_goal = np.zeros(3)
+        object_i_pos    = np.zeros(3*self.num_blocks)
+        object_i_quat   = np.zeros(4*self.num_blocks)
+        
+        object_velp     = np.zeros(3*self.num_blocks)
+        object_velr     = np.zeros(3*self.num_blocks)
+        
+        object_rel_pos  = np.zeros(3*self.num_blocks)
+        object_rel_rot  = np.zeros(4*self.num_blocks)
+        
+        achieved_goal   = np.zeros(3*self.num_blocks)
 
         for i in range(self.num_blocks) :
 
@@ -1704,26 +1730,23 @@ class Picking(SingleArmEnv, Serializable):
                 object_velr[3*i:3*(i+1)] = obs[name_list[i] +'_velr'] * dt
 
                 # Relative position wrt to gripper:
-                # *Note: we will only do this for the goal object and set the rest to 0.
-                # By setting to 0 all calculations in the network will be cancelled. Robot should reach only to the goal object.
-                # Goal object to be modified if successful (without repeat)
-                if i == 0:
-                     object_rel_pos[3*i:3*(i+1)] = object_i_pos[:3] - grip_pos
-                     object_rel_rot[4*i:4*(i+1)] = T.quat_distance(object_i_quat[:4] ,grip_quat) # quat_dist returns the difference
+                object_rel_pos[3*i:3*(i+1)] = object_i_pos[:3] - grip_pos
+                object_rel_rot[4*i:4*(i+1)] = T.quat_distance(object_i_quat[:4] ,grip_quat) # quat_dist returns the difference
 
-                    # 02) Achieved Goal: the achieved state will be the object(s) pose(s) of the goal (1st) object
-                    #--------------------------------------------------------------------------
-                    # TODO: double check if this works effectively for our context + HER. Otherwise can add objects and grip pose.
-                    #--------------------------------------------------------------------------
-                     achieved_goal = np.concatenate([    # 3          # 7
-                        object_i_pos[:3].copy(),    # 3      # Try pos only first.
-                        # object_i_quat.copy(), # 4
-                    ])
+                # 02) Achieved Goal: the achieved state will be the objects poses 
+                #--------------------------------------------------------------------------
+                # TODO: double check if this works effectively for our context + HER. Otherwise can add objects and grip pose.
+                #--------------------------------------------------------------------------
+                achieved_goal = np.concatenate([    
+                    achieved_goal, object_i_pos[:3].copy(),    # 3*num_blocks  
+                    # object_i_quat.copy(), # 4
+                ])
 
-                else:
-                    # Fill these rel data with fixed nondata
-                    object_rel_pos[3*i:3*(i+1)] = np.zeros(3)
-                    object_rel_rot[4*i:4*(i+1)] = np.zeros(4)
+                # Finally, append the robot's grip xyz 
+                # Achieved goal: why not differentiate between object in hand or not like original fetch?
+                achieved_goal = np.concatenate([achieved_goal, grip_pos.copy()])
+                achieved_goal = np.squeeze(achieved_goal)
+
 
             # # Augment observations      Dims:
             # env_obs = np.concatenate([  # 17 + (20 * num_objects)
