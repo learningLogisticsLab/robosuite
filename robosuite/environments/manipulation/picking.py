@@ -158,9 +158,15 @@ class Picking(SingleArmEnv, Serializable):
         self.other_objs_than_goals   
         self.objects_in_target_bin                          # list of object names (str) in target bin        
 
-        # Goal pose for HER setting
+        # Goal pose for HER setting**                       
         self.goal_object                                    # holds name, pos, quat
         self.goal_pos_error_thresh                          # set threshold to determine if current pos of object is at goal.
+
+        **multi-object variations:
+        In the multi-object setting 
+        - we must model all objects (all are always considered). 
+        - we don't have a goal object to pick up first. Whichever one happens to be closer to the manipulator will be picked up.
+        - the goal is fixed late in the process, i.e. when _is_success is true.         
 
 
         #--- Cameras --------------------------------------------------------------------------------------------
@@ -332,8 +338,7 @@ class Picking(SingleArmEnv, Serializable):
 
         # Goal pose for HER setting
         self.goal_object            = {}                     # holds name, pos, quat
-        self.goal_pos_error_thresh  = goal_pos_error_thresh  # set threshold to determine if current pos of object is at goal.
-
+    
         # Fallen objects flag
         self.fallen_objs        = []
         self.fallen_objs_flag   = False
@@ -378,7 +383,7 @@ class Picking(SingleArmEnv, Serializable):
         #-----------        
 
         # (C) reward/reset configuration
-        self.distance_threshold = 0.05                          # Determine whether obj reaches goal
+        self.goal_pos_error_thresh  = goal_pos_error_thresh  # set threshold to determine if current pos of object is at goal.    
 
         self.reward_scale   = reward_scale                      # Sets a scale for final reward
         self.reward_shaping = reward_shaping
@@ -464,7 +469,7 @@ class Picking(SingleArmEnv, Serializable):
         ]
 
         # Return true if gripper is above the distance threshold for all blocks. 
-        return np.all([d > self.distance_threshold * 2 for d in distances], axis=0)
+        return np.all([d > self.goal_pos_error_thresh * 2 for d in distances], axis=0)
 
     def subgoal_distances(self, goal_a, goal_b):
         assert goal_a.shape == goal_b.shape
@@ -541,7 +546,7 @@ class Picking(SingleArmEnv, Serializable):
         dist   = self.subgoal_distances()(ag_pos, dg_pos)
 
         # If any successes, keep them
-        reward = np.max([(d < self.distance_threshold).astype(np.float32) for d in dist], axis=0)
+        reward = np.max([(d < self.goal_pos_error_thresh).astype(np.float32) for d in dist], axis=0)
         reward = np.asarray(reward)
 
         # For successfull events (reward 1) modify [reward] from 1-->gripper_pos_far_from_goals
