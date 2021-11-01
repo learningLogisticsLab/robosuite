@@ -1337,11 +1337,10 @@ class Picking(SingleArmEnv, Serializable):
 
         # Include checking whether any pad of the fingers is touching the goal object
         check_grasp = False
-        while not check_grasp:
-            if self.goal_object['name'] == [] or self.goal_object == {}:
-                check_grasp = False
-            else:
-                check_grasp = self._check_grasp(
+        if self.goal_object['name'] == [] or self.goal_object == {}:
+            check_grasp = False
+        else:
+            check_grasp = self._check_grasp(
                     gripper=self.robots[0].gripper,
                     object_geoms=[g for g in self.object_placements[self.goal_object['name']][2].contact_geoms])
 
