@@ -1427,6 +1427,19 @@ class Picking(SingleArmEnv, Serializable):
 
         return True
 
+    def _is_inside_workspace(self, robot0_proprio_obs):
+
+        robot0_gripper_position = robot0_proprio_obs[21:24]
+
+        # bin size
+        bin_x_half = self.model.mujoco_arena.table_full_size[0] / 2 - 0.05  # half of bin - edges (2*0.025 half of each side of each wall so that we don't hit the wall)
+        bin_y_half = self.model.mujoco_arena.table_full_size[1] / 2 - 0.05
+
+        workspace_min = np.array([self.bin1_pos[0]-bin_x_half, self.bin1_pos[1]-bin_y_half, self.bin1_pos[2]+self.bin1_surface[2]])
+        workspace_max = np.array([self.bin1_pos[0]+bin_x_half, self.bin1_pos[1]+bin_y_half, self.bin1_pos[2]+self.bin1_surface[2]+0.5])
+
+        return np.all(np.greater(robot0_gripper_position, workspace_min)) and np.all(np.less(robot0_gripper_position, workspace_max))
+
     def visualize(self, vis_settings):
         """
         In addition to super call, visualize gripper site proportional to the distance to the closest object.
@@ -1901,7 +1914,8 @@ class Picking(SingleArmEnv, Serializable):
         self.cur_time += self.control_timestep        
 
         # 06 Process info
-        info = { 'is_success': self._is_success(env_obs['achieved_goal'], env_obs['desired_goal']) }
+        info = { 'is_success': self._is_success(env_obs['achieved_goal'], env_obs['desired_goal']),
+                 'is_inside_workspace': self._is_inside_workspace(env_obs['robot0_proprio-state']) }
 
         # 06b Process Reward * Info
             # TODO: design a manner to describe observations in our graph node setting. currently just 'state', but later will use images in nodes, and can extend beyond.
@@ -1918,7 +1932,7 @@ class Picking(SingleArmEnv, Serializable):
         # 07 Process Done: 
         # If (i) time_step is past horizon OR (ii) we have succeeded, set to true.
         done = (self.timestep >= self.horizon) and not self.ignore_done or info['is_success'] and self.object_names == [] \
-               or self.fallen_objs_flag
+               or self.fallen_objs_flag or not info['is_inside_workspace']
         
         # 08 Process Reward
         reward = self.compute_reward(env_obs['achieved_goal'], env_obs['desired_goal'], info)
