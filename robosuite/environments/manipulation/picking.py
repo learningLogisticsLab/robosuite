@@ -1428,8 +1428,18 @@ class Picking(SingleArmEnv, Serializable):
         return True
 
     def _is_inside_workspace(self, robot0_proprio_obs):
+        """
+        Check if the robot end-effector is inside a box-like workspace.
 
-        robot0_gripper_position = robot0_proprio_obs[21:24]
+        For x- and y-axes, the limits of the workspace match those of the bin.
+        For z-axes, the lower limit coincides with the bin's bottom surface and the upper limit is located 50cm above that.
+
+        Returns:
+            bool: True if robot end-effector is inside the workspace.
+
+        """
+
+        robot0_gripper_position = robot0_proprio_obs[21:24] # extract end-effector position for robot propoprioception observation vector
 
         # bin size
         bin_x_half = self.model.mujoco_arena.table_full_size[0] / 2 - 0.05  # half of bin - edges (2*0.025 half of each side of each wall so that we don't hit the wall)
@@ -1930,7 +1940,7 @@ class Picking(SingleArmEnv, Serializable):
             #     raise ("Obs_type not recognized")
 
         # 07 Process Done: 
-        # If (i) time_step is past horizon OR (ii) we have succeeded, set to true.
+        # If (i) time_step is past horizon OR (ii) we have succeeded, set to true OR (iii) end-effector moves outside the workspace
         done = (self.timestep >= self.horizon) and not self.ignore_done or info['is_success'] and self.object_names == [] \
                or self.fallen_objs_flag or not info['is_inside_workspace']
         
