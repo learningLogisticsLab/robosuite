@@ -1029,7 +1029,7 @@ class Picking(SingleArmEnv, Serializable):
             3. move gripper fingers and update gripper sim according to obj.y_radius
         """
         # Set HER 50% of the time
-        HER = np.random.uniform() < 0.50
+        HER = np.random.uniform() < 0.0#0.50
         # introduce offset between grip site and gripper mount to prevent collision
         offset = 0.03
         # maximum gripping space
