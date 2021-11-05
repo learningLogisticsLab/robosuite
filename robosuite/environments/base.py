@@ -302,10 +302,8 @@ class MujocoEnv(metaclass=EnvMeta):
         else:
             self.sim.reset()
         
-        # Reset necessary robosuite-centric variables
-        #if self.do_reset_internal: # done to avoid a circular loop when needing to change objects after a reset
-        self._reset_internal()
-        #self.do_reset_internal = True
+        # Reset necessary robosuite-centric variables        
+        self._reset_internal()        
         self.sim.forward()
         
         # Setup observables, reloading if hard reset

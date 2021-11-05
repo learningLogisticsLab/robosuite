@@ -151,7 +151,7 @@ class GymWrapper(Wrapper, Env, Serializable):
         Serializable.quick_init(self, locals()) # Save this classes args/kwargs             
     
 
-    def _flatten_obs(self, obs_dict, verbose=False):
+    def gym_wrapper_flatten_obs(self, obs_dict, verbose=False):
         """
         Filters keys of interest out and concatenate the information.
 

@@ -520,7 +520,7 @@ class Picking(SingleArmEnv, Serializable):
         # reward = np.min([-(dist > self.distance_threshold).astype(np.float32) for d in dist], axis=0)
 
         # Sparse reward calculation: positive format
-        # - If we do not reach target, a 0 will be assigned as the reard, otherwise 1.
+        # - If we do not reach target, a 0 will be assigned as the reward, otherwise 1.
         # - a perfect policy would get returns equivalent to 1
         reward = (dist < self.distance_threshold).astype(np.float32)
 
@@ -1877,7 +1877,7 @@ class Picking(SingleArmEnv, Serializable):
             # 01. sim.forward()
             self.sim.forward()
 
-            # Action Clipping
+            # 02 Action Clipping
             # Not necessary to clip actions within robosuite as we wrap with the NormalizedBoxEnv. 
             # -->Set (clipped) action in mujoco
             # action = np.clip(action, 
