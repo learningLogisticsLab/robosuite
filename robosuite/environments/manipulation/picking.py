@@ -55,7 +55,7 @@ from robosuite.wrappers import GymWrapper
 from rlkit.envs.wrappers import NormalizedBoxEnv 
 
 # Globals
-object_reset_strategy_cases = ['organized', 'jumbled', 'wall', 'random']
+object_reset_strategy_cases = ['jumbled', 'wall']# ['organized', 'jumbled', 'wall', 'random']
 _reset_internal_after_picking_all_objs = True
 
 
@@ -696,7 +696,7 @@ class Picking(SingleArmEnv, Serializable):
         """
         # init eef [-0.02423557, -0.09839531,  1.02317629]
         if self.object_reset_strategy == 'random':
-            self.object_reset_strategy = random.choice(object_reset_strategy_cases[0:3]) # Do not include random in selection
+            self.object_reset_strategy = random.choice(object_reset_strategy_cases[0:2]) # Do not include random in selection
 
         if self.object_reset_strategy == 'jumbled':
             self.placement_initializer = SequentialCompositeSampler(name="ObjectSampler")  # Samples position for each object sequentially. Allows chaining multiple placement initializers together - so that object locations can be sampled on top of other objects or relative to other object placements.
