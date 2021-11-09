@@ -298,6 +298,10 @@ class Picking(SingleArmEnv, Serializable):
 
         # Reset
         first_reset             = True,
+            
+        # curr learn
+        curr_learn_dist_col     = -0.5,
+        curr_learn_dist_vis     = -0.5
     ):
         print('Generating Picking class.\n')
         # Task settings
@@ -386,7 +390,9 @@ class Picking(SingleArmEnv, Serializable):
         self.first_reset = first_reset
         self.do_reset_internal = True
 
-        self.curr_learn_dist = 0.05                             # curr learn threshold
+        # curr learn
+        self.curr_learn_dist_col = curr_learn_dist_col
+        self.curr_learn_dist_vis = curr_learn_dist_vis
 
         # Variant dictionary
         self.variant = variant
@@ -522,7 +528,7 @@ class Picking(SingleArmEnv, Serializable):
         # Sparse reward calculation: positive format
         # - If we do not reach target, a 0 will be assigned as the reard, otherwise 1.
         # - a perfect policy would get returns equivalent to 1
-        reward = (dist < self.distance_threshold).astype(np.float32)
+        reward = (dist < self.goal_pos_error_thresh).astype(np.float32)
 
         reward = np.asarray(reward)            
         return reward          
@@ -695,6 +701,10 @@ class Picking(SingleArmEnv, Serializable):
         %---------------------------------------------------------------------------------------------------------
         """
         # init eef [-0.02423557, -0.09839531,  1.02317629]
+        if hasattr(NormalizedBoxEnv, "curr_learn_dist_col"):
+            self.curr_learn_dist_col = NormalizedBoxEnv.curr_learn_dist_col
+        if hasattr(NormalizedBoxEnv, "curr_learn_dist_vis"):
+            self.curr_learn_dist_vis = NormalizedBoxEnv.curr_learn_dist_vis
         if self.object_reset_strategy == 'random':
             self.object_reset_strategy = random.choice(object_reset_strategy_cases[0:2]) # Do not include random in selection
 
@@ -710,7 +720,7 @@ class Picking(SingleArmEnv, Serializable):
                     name                            = "pickObjectSampler",
                     mujoco_objects                  = self.objects+self.not_yet_considered_objects,
                     x_range                         = [-bin_x_half, bin_x_half],    # This (+ve,-ve) range goes from center to the walls on each side of the bin
-                    y_range                         = [-bin_y_half, bin_y_half],
+                    y_range                         = [-bin_y_half * self.curr_learn_dist_col, bin_y_half],
                     # x_range                         = [-self.curr_learn_dist, self.curr_learn_dist],                # 5 cm from ref
                     # y_range                         = [-self.curr_learn_dist, self.curr_learn_dist],
                     rotation                        = None,                         # Add uniform random rotation
@@ -773,19 +783,31 @@ class Picking(SingleArmEnv, Serializable):
                 )
             )
         # placeObjectSamplers: each visual object receives a sampler that places it in the TARGET bin
+        
+        # curr_learn switch vis goals to bin2 when 75% succ achieved in whole bin1
+        if self.curr_learn_dist_col == 1.0:
+            reference_pos = self.bin2_pos + self.bin2_surface
+            z_offset_prob = 1.0
+            bin_y_half_vis = self.curr_learn_dist_vis * bin_y_half
+        else:
+            reference_pos = self.bin1_pos + self.bin1_surface
+            z_offset_prob = 0.50
+            bin_y_half_vis = bin_y_half
+            
         self.placement_initializer.append_sampler(
             sampler=UniformRandomSampler(
                 name                            = "placeObjectSampler",             # name for object sampler for each object
                 mujoco_objects                  = self.visual_objects+self.not_yet_considered_visual_objects,
                 x_range                         = [-bin_x_half, bin_x_half],        # This (+ve,-ve) range goes from center to the walls on each side of the bin
-                y_range                         = [-bin_y_half, bin_y_half],
+                y_range                         = [-bin_y_half * self.curr_learn_dist_col,
+                                                   bin_y_half_vis],
                 rotation                        = None,                             # Add uniform random rotation
                 rotation_axis                   = 'z',                              # Currently only accepts one axis. TODO: extend to multiple axes.
                 ensure_object_boundary_in_range = True,
                 ensure_valid_placement          = True,
-                reference_pos                   = self.bin1_pos + self.bin1_surface,
+                reference_pos                   = reference_pos,
                 z_offset                        = 0.10,                             # Set a vertical offset of XXcm above the bin
-                z_offset_prob                   = 0.50,  # probability with which to set the z_offset
+                z_offset_prob                   = z_offset_prob,  # probability with which to set the z_offset
             )
         )
 
@@ -1167,6 +1189,9 @@ class Picking(SingleArmEnv, Serializable):
                 # C> Turn off flag
                 self.fallen_objs_flag = False
 
+            # Update sampler properties, update param for curr learn
+            self._get_placement_initializer()
+            
             # Sample from the "placement initializer" for all objects (regular and visual objects)
             self.object_placements = self.placement_initializer.sample()
             
