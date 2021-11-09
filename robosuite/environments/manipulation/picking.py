@@ -709,16 +709,16 @@ class Picking(SingleArmEnv, Serializable):
                 sampler = UniformRandomSampler(
                     name                            = "pickObjectSampler",
                     mujoco_objects                  = self.objects+self.not_yet_considered_objects,
-                    # x_range                         = [-binx_half, bin_x_half],    # This (+ve,-ve) range goes from center to the walls on each side of the bin
-                    # y_range                         = [-bin_y_half, bin_y_half],
-                    x_range                         = [-self.curr_learn_dist, self.curr_learn_dist],                # 5 cm from ref
-                    y_range                         = [-self.curr_learn_dist, self.curr_learn_dist],
+                    x_range                         = [-bin_x_half, bin_x_half],    # This (+ve,-ve) range goes from center to the walls on each side of the bin
+                    y_range                         = [-bin_y_half, bin_y_half],
+                    # x_range                         = [-self.curr_learn_dist, self.curr_learn_dist],                # 5 cm from ref
+                    # y_range                         = [-self.curr_learn_dist, self.curr_learn_dist],
                     rotation                        = None,                         # Add uniform random rotation
                     rotation_axis                   = 'z',                          # Currently only accepts one axis. TODO: extend to multiple axes.
                     ensure_object_boundary_in_range = True,
                     ensure_valid_placement          = True,
-                    # reference_pos                   = self.bin1_pos + self.bin1_surface,
-                    reference_pos                   = [-0.02423557, -0.09839531,  self.bin1_pos[2]+self.bin1_surface[2]],
+                    reference_pos                   = self.bin1_pos + self.bin1_surface,
+                    # reference_pos                   = [-0.1, -0.2, self.bin1_pos[2]+self.bin1_surface[2]], #[-0.02423557, -0.09839531,  self.bin1_pos[2]+self.bin1_surface[2]],
                     z_offset                        = 0.,
                 )
             )
