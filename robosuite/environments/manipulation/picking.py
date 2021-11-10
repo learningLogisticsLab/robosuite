@@ -301,7 +301,8 @@ class Picking(SingleArmEnv, Serializable):
             
         # curr learn
         curr_learn_dist_col     = -0.5,
-        curr_learn_dist_vis     = -0.5
+        curr_learn_dist_vis     = -0.5,
+        success_rate            = 0.0
     ):
         print('Generating Picking class.\n')
         # Task settings
@@ -393,6 +394,7 @@ class Picking(SingleArmEnv, Serializable):
         # curr learn
         self.curr_learn_dist_col = curr_learn_dist_col
         self.curr_learn_dist_vis = curr_learn_dist_vis
+        self.success_rate        = success_rate
 
         # Variant dictionary
         self.variant = variant
@@ -701,10 +703,6 @@ class Picking(SingleArmEnv, Serializable):
         %---------------------------------------------------------------------------------------------------------
         """
         # init eef [-0.02423557, -0.09839531,  1.02317629]
-        if hasattr(NormalizedBoxEnv, "curr_learn_dist_col"):
-            self.curr_learn_dist_col = NormalizedBoxEnv.curr_learn_dist_col
-        if hasattr(NormalizedBoxEnv, "curr_learn_dist_vis"):
-            self.curr_learn_dist_vis = NormalizedBoxEnv.curr_learn_dist_vis
         if self.object_reset_strategy == 'random':
             self.object_reset_strategy = random.choice(object_reset_strategy_cases[0:2]) # Do not include random in selection
 
@@ -714,6 +712,9 @@ class Picking(SingleArmEnv, Serializable):
             # can sample anywhere in bin
             bin_x_half = self.model.mujoco_arena.table_full_size[0] / 2 - 0.05 # half of bin - edges (2*0.025 half of each side of each wall so that we don't hit the wall)
             bin_y_half = self.model.mujoco_arena.table_full_size[1] / 2 - 0.05
+            # reduce bin full size to 90% to prevent bumping between wrist n wall
+            bin_x_half *= 0.9
+            bin_y_half *= 0.9
             # pickObjectSampler: (non-visual) objects are sampled within the bounds of the picking bin #1 (with some tolerance) and outside the object radiuses
             self.placement_initializer.append_sampler(
                 sampler = UniformRandomSampler(
@@ -785,7 +786,7 @@ class Picking(SingleArmEnv, Serializable):
         # placeObjectSamplers: each visual object receives a sampler that places it in the TARGET bin
         
         # curr_learn switch vis goals to bin2 when 75% succ achieved in whole bin1
-        if self.curr_learn_dist_col == 1.0:
+        if self.curr_learn_dist_col == 1.0 and self.success_rate > 0.75:
             reference_pos = self.bin2_pos + self.bin2_surface
             z_offset_prob = 1.0
             bin_y_half_vis = self.curr_learn_dist_vis * bin_y_half
@@ -1471,7 +1472,7 @@ class Picking(SingleArmEnv, Serializable):
         bin_y_half = self.model.mujoco_arena.table_full_size[1] / 2 - 0.05
 
         workspace_min = np.array([self.bin1_pos[0]-bin_x_half, self.bin1_pos[1]-bin_y_half, self.bin1_pos[2]+self.bin1_surface[2]])
-        workspace_max = np.array([self.bin1_pos[0]+bin_x_half, self.bin1_pos[1]+bin_y_half, self.bin1_pos[2]+self.bin1_surface[2]+0.3])
+        workspace_max = np.array([self.bin1_pos[0]+bin_x_half, self.bin1_pos[2]+bin_y_half, self.bin1_pos[2]+self.bin1_surface[2]+0.3])
 
         return np.all(np.greater(robot0_gripper_position, workspace_min)) and np.all(np.less(robot0_gripper_position, workspace_max))
 
