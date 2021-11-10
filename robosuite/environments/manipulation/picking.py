@@ -55,12 +55,7 @@ from robosuite.wrappers import GymWrapper
 from rlkit.envs.wrappers import NormalizedBoxEnv 
 
 # Globals
-<<<<<<< HEAD
-object_reset_strategy_cases = ['organized', 'jumbled', 'wall', 'random']
-=======
 object_reset_strategy_cases = ['jumbled', 'wall', 'random']# ['organized', 'jumbled', 'wall', 'random']
->>>>>>> 3700fd0... Adapted base.py to also include registered class names that take in sequential_transfer names. These will start with 'seqTransf' followed by -XXprevObjs-XXprevModel followed by standard class name like picking-XXobjs...
-_reset_internal_after_picking_all_objs = True
 
 
 class Picking(SingleArmEnv, Serializable):
