@@ -55,7 +55,7 @@ from robosuite.wrappers import GymWrapper
 from rlkit.envs.wrappers import NormalizedBoxEnv 
 
 # Globals
-object_reset_strategy_cases = ['jumbled', 'wall']# ['organized', 'jumbled', 'wall', 'random']
+object_reset_strategy_cases = ['jumbled', 'wall', 'random']# ['organized', 'jumbled', 'wall', 'random']
 _reset_internal_after_picking_all_objs = True
 
 
@@ -1517,7 +1517,7 @@ class Picking(SingleArmEnv, Serializable):
 
         all_objects = list(range(num_objs_in_db))
         objs_to_consider = random.sample( all_objects, num_objs_to_load) # i.e.objs_to_consider = [69, 66, 64, 55, 65]
-        objs_to_consider = [15]
+        # objs_to_consider = [15]
 
         # 01 Sample number of objects to load
         for idx, val in enumerate(objs_to_consider):
