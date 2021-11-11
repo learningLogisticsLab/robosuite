@@ -1373,7 +1373,11 @@ class Picking(SingleArmEnv, Serializable):
                                    
             # Remove goal from the list of modeled names for the next round            
             self.object_names.remove(self.goal_object['name'])
-            self.sorted_objects_to_model.popitem(self.goal_object['name'])
+            try:
+                self.sorted_objects_to_model.pop(self.goal_object['name']) # pop by key. if no key raises KeyError exception. 
+            except KeyError:
+                print(F"Could not find object {self.goal_object['name']} in the sorted_objects_to_model OrderedDictionary in Picking._is_success()")
+
             self.goal_object.clear()
 
             # Get new goal (method checks if objs available else returns empty)
