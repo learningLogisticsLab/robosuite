@@ -1394,7 +1394,7 @@ class Picking(SingleArmEnv, Serializable):
                     self.not_yet_considered_object_names.remove(closest_obj_to_goal[0])
                 print(f"Computing new object goal. New goal obj is {self.goal_object['name']} with location {self.goal_object['pos']}.")
 
-            else: # len(self.object_names) == 0 and len(self.objects_in_target_bin) == self.num_objs_to_load:
+            elif (self.object_names + self.not_yet_considered_object_names) == []: # len(self.object_names) == 0 and len(self.objects_in_target_bin) == self.num_objs_to_load:
                 _reset_internal_after_picking_all_objs = True                                
                 print("Finished picking and placing all objects, can call reset internal again")
 
