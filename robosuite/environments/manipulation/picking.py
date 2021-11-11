@@ -378,8 +378,6 @@ class Picking(SingleArmEnv, Serializable):
         #-----------        
 
         # (C) reward/reset configuration
-        self.distance_threshold = 0.05                          # Determine whether obj reaches goal
-
         self.reward_scale   = reward_scale                      # Sets a scale for final reward
         self.reward_shaping = reward_shaping
 
@@ -522,7 +520,7 @@ class Picking(SingleArmEnv, Serializable):
         # Sparse reward calculation: positive format
         # - If we do not reach target, a 0 will be assigned as the reard, otherwise 1.
         # - a perfect policy would get returns equivalent to 1
-        reward = (dist < self.distance_threshold).astype(np.float32)
+        reward = (dist < self.goal_pos_error_thresh).astype(np.float32)
 
         reward = np.asarray(reward)            
         return reward          
