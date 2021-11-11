@@ -1811,10 +1811,9 @@ class Picking(SingleArmEnv, Serializable):
         # 03 Desired Goal
         #--------------------------------------------------------------------------
         desired_goal = []
-        desired_goal = np.concatenate([ # 3             # 7
-            self.goal_object['pos'],    # 3             # Try pos only first.
-            # self.goal_object['quat']    # 4
-        ])
+        desired_goal = np.concatenate([                      
+            self.object_placements[self.goal_object['name'][:5]+'VisualObject'][0],        # 3  Extract desired_goal from the name of the latest goal_object. But we need the visual position. object_placements is a dict whose object key has a pos, quat, and obj
+            ])
         
         # Returns obs, ag, and also dg
         return_dict = {
@@ -1960,10 +1959,10 @@ class Picking(SingleArmEnv, Serializable):
 
         # 07 Process Done: 
         # If ( OR (ii) we have succeeded, set to true OR (iii) end-effector moves outside the workspace
-        done = ((self.timestep >= self.horizon)and not self.ignore_done  or     # 1. time_step is past horizon               
-               (info['is_success'] and self.object_names == [])                 # 2. Succeeded AND no more objects. important for multiple object settings when we are done after all objects picked up.
-               or self.fallen_objs_flag                                         # 3. If there is a fallen object, reset and start again. 
-               or not info['is_inside_workspace'])                              # 4. If robot end effector exits workspace, reset. 
+        done = ((self.timestep >= self.horizon)and not self.ignore_done or     # 1. time_step is past horizon               
+               (info['is_success'] and self.object_names == [])         or     # 2. Succeeded AND no more objects. important for multiple object settings when we are done after all objects picked up.
+               self.fallen_objs_flag                                    or     # 3. If there is a fallen object, reset and start again. 
+               not info['is_inside_workspace'])                              # 4. If robot end effector exits workspace, reset. 
         
         # 08 Process Reward
         reward = self.compute_reward(env_obs['achieved_goal'], env_obs['desired_goal'], info)
