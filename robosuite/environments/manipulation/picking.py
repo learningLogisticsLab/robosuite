@@ -393,6 +393,8 @@ class Picking(SingleArmEnv, Serializable):
         # (E) Curriculum Learning
         self.curr_learn_dist = 0.05                             # curriculum learning threshold
         
+        # (F) Open Gripper Flag
+        self.open_gripper_flag = False
 
         # Variant dictionary
         self.variant = variant
@@ -1946,8 +1948,7 @@ class Picking(SingleArmEnv, Serializable):
                  'is_inside_workspace': self._is_inside_workspace(env_obs['robot0_proprio-state']) }
 
         if info['is_success']:
-            self.sim.data.set_joint_qpos('gripper0_finger_joint1', 0.04)
-            self.sim.data.set_joint_qpos('gripper0_finger_joint2', -0.04)
+            self.open_gripper_flag = True          
 
         # 06b Process Reward * Info
             # TODO: design a manner to describe observations in our graph node setting. currently just 'state', but later will use images in nodes, and can extend beyond.
