@@ -283,6 +283,7 @@ class Picking(SingleArmEnv, Serializable):
 
         has_renderer            = False,
         has_offscreen_renderer  = True,
+        
         # "camera" names = ('frontview', 'birdview', 'agentview', 'robot0_robotview', 'robot0_eye_in_hand').
         render_camera           = "agentview", #TODO: may need to adjust here for better angle for our work
         render_collision_mesh   = False,
@@ -298,6 +299,9 @@ class Picking(SingleArmEnv, Serializable):
 
         # Reset
         first_reset             = True,
+
+        # Check Grasp
+        check_grasp_flag        = False,        # Flag enables checking whether gripper fingers touching object. Useful to confirm success turns computation on/off and used in _is_success
     ):
         print('Generating Picking class.\n')
         # Task settings
@@ -381,10 +385,14 @@ class Picking(SingleArmEnv, Serializable):
         self.reward_scale   = reward_scale                      # Sets a scale for final reward
         self.reward_shaping = reward_shaping
 
+        # (D) Resets
         self.first_reset = first_reset
         self.do_reset_internal = True
+        self.check_grasp_flag = check_grasp_flag                # Flag enables checking whether gripper fingers touching object. Useful to confirm success turns computation on/off and used in _is_success
 
-        self.curr_learn_dist = 0.05                             # curr learn threshold
+        # (E) Curriculum Learning
+        self.curr_learn_dist = 0.05                             # curriculum learning threshold
+        
 
         # Variant dictionary
         self.variant = variant
@@ -1335,15 +1343,23 @@ class Picking(SingleArmEnv, Serializable):
 
         # Include checking whether any pad of the fingers is touching the goal object
         check_grasp = False
-        if self.goal_object['name'] == [] or self.goal_object == {}:
-            check_grasp = False
-        else:
-            check_grasp = self._check_grasp(
-                    gripper=self.robots[0].gripper,
-                    object_geoms=[g for g in self.object_placements[self.goal_object['name']][2].contact_geoms])
+        
+        # If check_grasp_flag is ON, then test if fingers are touching goal object.
+        if self.check_grasp_flag:
+            if self.goal_object['name'] == [] or self.goal_object == {}:
+                check_grasp = False
+            else:
+                check_grasp = self._check_grasp(
+                        gripper=self.robots[0].gripper,
+                        object_geoms=[g for g in self.object_placements[self.goal_object['name']][2].contact_geoms])
 
         # If successfully placed
         if target_dist_error <= self.goal_pos_error_thresh:
+
+            # If check_grasp is activated and it is false, no success.
+            if self.check_grasp_flag:
+                if not check_grasp:
+                    return False
 
             print("Successfully picked {}". format(self.goal_object['name']))
             # 02 Object Handling
@@ -1939,9 +1955,11 @@ class Picking(SingleArmEnv, Serializable):
             #     raise ("Obs_type not recognized")
 
         # 07 Process Done: 
-        # If (i) time_step is past horizon OR (ii) we have succeeded, set to true OR (iii) end-effector moves outside the workspace
-        done = (self.timestep >= self.horizon) and not self.ignore_done or info['is_success'] and self.object_names == [] \
-               or self.fallen_objs_flag or not info['is_inside_workspace']
+        # If ( OR (ii) we have succeeded, set to true OR (iii) end-effector moves outside the workspace
+        done = ((self.timestep >= self.horizon)and not self.ignore_done  or     # 1. time_step is past horizon               
+               (info['is_success'] and self.object_names == [])                 # 2. Succeeded AND no more objects. important for multiple object settings when we are done after all objects picked up.
+               or self.fallen_objs_flag                                         # 3. If there is a fallen object, reset and start again. 
+               or not info['is_inside_workspace'])                              # 4. If robot end effector exits workspace, reset. 
         
         # 08 Process Reward
         reward = self.compute_reward(env_obs['achieved_goal'], env_obs['desired_goal'], info)
