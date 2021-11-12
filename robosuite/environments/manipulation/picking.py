@@ -1385,16 +1385,10 @@ class Picking(SingleArmEnv, Serializable):
         print("The current objects in the target bin are:")
         for object in self.objects_in_target_bin:
             print(f"{object} ")    
-                print(f"{object} ")    
-            print(f"{object} ")    
                                 
-        # Remove goal from the list of modeled names for the next round            
-            # Remove goal from the list of modeled names for the next round            
         # Remove goal from the list of modeled names for the next round            
         self.object_names.remove(self.goal_object['name'])
         try:
-            self.sorted_objects_to_model.pop(self.goal_object['name']) # pop by key. if no key raises KeyError exception. 
-                self.sorted_objects_to_model.pop(self.goal_object['name']) # pop by key. if no key raises KeyError exception. 
             self.sorted_objects_to_model.pop(self.goal_object['name']) # pop by key. if no key raises KeyError exception. 
         except KeyError:
             print(F"Could not find object {self.goal_object['name']} in the sorted_objects_to_model OrderedDictionary in Picking._is_success()")
@@ -1417,10 +1411,6 @@ class Picking(SingleArmEnv, Serializable):
 
         elif (self.object_names + self.not_yet_considered_object_names) == []: # len(self.object_names) == 0 and len(self.objects_in_target_bin) == self.num_objs_to_load:
             _reset_internal_after_picking_all_objs = True                                
-                _reset_internal_after_picking_all_objs = True                                
-            _reset_internal_after_picking_all_objs = True                                
-            print("Finished picking and placing all objects, can call reset internal again")            
-                print("Finished picking and placing all objects, can call reset internal again")
             print("Finished picking and placing all objects, can call reset internal again")            
 
     def check_success(self):
@@ -1967,7 +1957,7 @@ class Picking(SingleArmEnv, Serializable):
                  'is_inside_workspace': self._is_inside_workspace(env_obs['robot0_proprio-state']) }
 
         if info['is_success']:
-            self.open_gripper_flag = True          
+            self.add_remove_objects()
 
         # 06b Process Reward * Info
             # TODO: design a manner to describe observations in our graph node setting. currently just 'state', but later will use images in nodes, and can extend beyond.
