@@ -1327,19 +1327,11 @@ class Picking(SingleArmEnv, Serializable):
             TODO: currently we do not analyze orientation. Test good performance with position only first. 
             TODO: improve check_grasp construction. Currently finger geometries include the whole pad, which can lead to push behaviors vs picks. 
         
-        02 Object handling 
-            Assuming that there are n objects in a bin and m modelled objects where m<=n then if success, do:
-            - remove goal_object from self.object_names
-            - choose a new goal from the remaining modeled objects
-            - add a new object from the remaining non-modelled objects (if available)
-
-            - If no more objects anywhere set done to true. 
-        
-        03 Reactivity
+        02 Reactivity
         TODO: consider modifing the definition of is_success according to QT-OPTs criteria to increase reactivity
         requires reaching a certain height... see paper for more. also connected with one parameter in observations.
 
-        04 End-effector
+        03 End-effector
         TODO: after succeeding, in any occurrence, move the end-effector to a starting position
 
         Args:
@@ -1348,9 +1340,7 @@ class Picking(SingleArmEnv, Serializable):
         
         Returns:
             bool: True if object placed correctly
-            sorted dict: a dict of sorted objects. can be empty. 
         """
-        global _reset_internal_after_picking_all_objs
 
         # 01 Check if Successfull
         # Subtract obj_pos from goal and compute that error's norm:
@@ -1376,46 +1366,67 @@ class Picking(SingleArmEnv, Serializable):
                 if not check_grasp:
                     return False
 
-            print("\nSuccessfully picked {}". format(self.goal_object['name']))
-            # 02 Object Handling
-            # Add the current goal object to the list of target bin objects
-            assert self.goal_object != {}, 'checking Picking._is_successful(). Your goal_object is empty.'
-
-            self.objects_in_target_bin.append(self.goal_object['name'])
-            print("\nTarget bin objects:")
-            for object in self.objects_in_target_bin:
-                print(f"{object} ")    
-                                   
-            # Remove goal from the list of modeled names for the next round            
-            self.object_names.remove(self.goal_object['name'])
-            try:
-                self.sorted_objects_to_model.pop(self.goal_object['name']) # pop by key. if no key raises KeyError exception. 
-            except KeyError:
-                print(F"Could not find object {self.goal_object['name']} in the sorted_objects_to_model OrderedDictionary in Picking._is_success()")
-
-            self.goal_object.clear()
-
-            # Get new goal (method checks if objs available (from modeled and unmodeled objects) else returns empty)
-            if self.object_names + self.not_yet_considered_object_names != []:
-                self.goal_object, self.other_objs_than_goals = self.get_goal_object()
-                #self.sorted_objects_to_model.update(self.goal_object['name'])
-
-                # Add one new unmodeled object to self.object_names, the closest one to the goal, if available from the self.not_yet_considered_object_names
-                if self.not_yet_considered_object_names:
-                    sorted_non_modeled_elems = self.return_sorted_objs_to_model(self.goal_object, self.not_yet_considered_object_names) # returns dict of sorted objects
-                    closest_obj_to_goal = list(sorted_non_modeled_elems.items())[1]        # Extract first dict item
-                    self.object_names.append( closest_obj_to_goal[0] )                          # Only pass the name
-                    self.sorted_objects_to_model[closest_obj_to_goal[0]] = closest_obj_to_goal[1]
-                    self.not_yet_considered_object_names.remove(closest_obj_to_goal[0])
-                print(f"Computing new object goal. New goal obj is {self.goal_object['name']} with location {self.goal_object['pos']}.")
-
-            elif (self.object_names + self.not_yet_considered_object_names) == []: # len(self.object_names) == 0 and len(self.objects_in_target_bin) == self.num_objs_to_load:
-                _reset_internal_after_picking_all_objs = True                                
-                print("Finished picking and placing all objects, can call reset internal again")
-
             return True
         else:
             return False
+
+    def add_remove_objects(self):
+        """        
+        01 Object handling 
+            Assuming that there are n objects in a bin and m modelled objects where m<=n then if success, do:
+            - remove goal_object from self.object_names
+            - choose a new goal from the remaining modeled objects
+            - add a new object from the remaining non-modelled objects (if available)
+
+            - If no more objects anywhere set done to true.
+
+        other: dict with entries of other objects to be sorted.
+        
+        Returns:
+            bool: True if object placed correctly
+            sorted dict: a dict of sorted objects. can be empty.  
+        """
+
+        global _reset_internal_after_picking_all_objs
+
+        print("Successfully picked {}". format(self.goal_object['name']))
+        # 02 Object Handling
+        # Add the current goal object to the list of target bin objects
+        assert self.goal_object != {}, 'checking Picking._is_successful(). Your goal_object is empty.'
+
+        self.objects_in_target_bin.append(self.goal_object['name'])
+        print("The current objects in the target bin are:")
+        for object in self.objects_in_target_bin:
+            print(f"{object} ")     
+                                
+        # Remove goal from the list of modeled names for the next round            
+            # Remove goal from the list of modeled names for the next round            
+        # Remove goal from the list of modeled names for the next round            
+        self.object_names.remove(self.goal_object['name'])
+        try:
+            self.sorted_objects_to_model.pop(self.goal_object['name']) # pop by key. if no key raises KeyError exception.  
+        except KeyError:
+            print(F"Could not find object {self.goal_object['name']} in the sorted_objects_to_model OrderedDictionary in Picking._is_success()")
+
+        self.goal_object.clear()
+
+        # Get new goal (method checks if objs available else returns empty)
+        if self.object_names != []:
+            self.goal_object, self.other_objs_than_goals = self.get_goal_object()
+            #self.sorted_objects_to_model.update(self.goal_object['name'])
+
+            # Add one new unmodeled object to self.object_names, the closest one to the goal, if available from the self.not_yet_considered_object_names
+            if self.not_yet_considered_object_names:
+                sorted_non_modeled_elems = self.return_sorted_objs_to_model(self.goal_object, self.not_yet_considered_object_names) # returns dict of sorted objects
+                closest_obj_to_goal = list(sorted_non_modeled_elems.items())[1]        # Extract first dict item
+                self.object_names.append( closest_obj_to_goal[0] )                          # Only pass the name
+                self.sorted_objects_to_model[closest_obj_to_goal[0]] = closest_obj_to_goal[1]
+                self.not_yet_considered_object_names.remove(closest_obj_to_goal[0])
+            print(f"Computing new object goal. New goal obj is {self.goal_object['name']} with location {self.goal_object['pos']}.")
+
+        elif (self.object_names + self.not_yet_considered_object_names) == []: # len(self.object_names) == 0 and len(self.objects_in_target_bin) == self.num_objs_to_load:
+            _reset_internal_after_picking_all_objs = True                                                               
+            print("Finished picking and placing all objects, can call reset internal again")                       
 
     def check_success(self):
         """
