@@ -1475,7 +1475,7 @@ class Picking(SingleArmEnv, Serializable):
         bin_y_half = self.model.mujoco_arena.table_full_size[1] / 2 - 0.05
 
         workspace_min = np.array([self.bin1_pos[0]-bin_x_half, self.bin1_pos[1]-bin_y_half, self.bin1_pos[2]+self.bin1_surface[2]])
-        workspace_max = np.array([self.bin1_pos[0]+bin_x_half, self.bin1_pos[1]+bin_y_half, self.bin1_pos[2]+self.bin1_surface[2]+0.3])
+        workspace_max = np.array([self.bin1_pos[0]+bin_x_half, self.bin2_pos[1]+bin_y_half, self.bin1_pos[2]+self.bin1_surface[2]+0.3])
 
         return np.all(np.greater(robot0_gripper_position, workspace_min)) and np.all(np.less(robot0_gripper_position, workspace_max))
 
