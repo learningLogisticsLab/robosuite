@@ -1397,14 +1397,12 @@ class Picking(SingleArmEnv, Serializable):
         self.objects_in_target_bin.append(self.goal_object['name'])
         print("The current objects in the target bin are:")
         for object in self.objects_in_target_bin:
-            print(f"{object} ")     
+            print(f"{object} ")    
                                 
-        # Remove goal from the list of modeled names for the next round            
-            # Remove goal from the list of modeled names for the next round            
         # Remove goal from the list of modeled names for the next round            
         self.object_names.remove(self.goal_object['name'])
         try:
-            self.sorted_objects_to_model.pop(self.goal_object['name']) # pop by key. if no key raises KeyError exception.  
+            self.sorted_objects_to_model.pop(self.goal_object['name']) # pop by key. if no key raises KeyError exception. 
         except KeyError:
             print(F"Could not find object {self.goal_object['name']} in the sorted_objects_to_model OrderedDictionary in Picking._is_success()")
 
@@ -1425,8 +1423,8 @@ class Picking(SingleArmEnv, Serializable):
             print(f"Computing new object goal. New goal obj is {self.goal_object['name']} with location {self.goal_object['pos']}.")
 
         elif (self.object_names + self.not_yet_considered_object_names) == []: # len(self.object_names) == 0 and len(self.objects_in_target_bin) == self.num_objs_to_load:
-            _reset_internal_after_picking_all_objs = True                                                               
-            print("Finished picking and placing all objects, can call reset internal again")                       
+            _reset_internal_after_picking_all_objs = True                                
+            print("Finished picking and placing all objects, can call reset internal again")            
 
     def check_success(self):
         """
@@ -1980,17 +1978,18 @@ class Picking(SingleArmEnv, Serializable):
 
         if info['is_success']:
 
-            # If deployed a scripted policy-based learning and want to open fingers after place, turn on open_gripper_flag
-            self.open_gripper_flag = True          
+            # # If deployed a scripted policy-based learning and want to open fingers after place, turn on open_gripper_flag
+            # self.open_gripper_flag = True          
             
-            ## Experimental code to open fingers after place (no scripted polidy)
-            for _ in range(25):
-                action=np.array([0,0,0,0,0,0,-1]) # -1 action should open fingers
-                self._pre_action(action, policy_step=True)
-                self._update_observables()
-                #env_obs = self._get_obs()     # want to update goals but this will throw an error after all objects successfully placed with an empty self.goal_object and before a reset.
-                self.sim.step()
-                #self.render()                 # needs us to add a flag. 
+            # ## Experimental code to open fingers after place (no scripted polidy)
+            # for _ in range(25):
+            #     action=np.array([0,0,0,0,0,0,-1]) # -1 action should open fingers
+            #     self._pre_action(action, policy_step=True)
+            #     self._update_observables()
+            #     #env_obs = self._get_obs()     # want to update goals but this will throw an error after all objects successfully placed with an empty self.goal_object and before a reset.
+            #     self.sim.step()
+            #     #self.render()                 # needs us to add a flag. 
+            self.add_remove_objects()
 
         # 06b Process Reward * Info
             # TODO: design a manner to describe observations in our graph node setting. currently just 'state', but later will use images in nodes, and can extend beyond.
