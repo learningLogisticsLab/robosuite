@@ -1406,20 +1406,18 @@ class Picking(SingleArmEnv, Serializable):
         except KeyError:
             print(F"Could not find object {self.goal_object['name']} in the sorted_objects_to_model OrderedDictionary in Picking._is_success()")
 
+        # Add one new unmodeled object to self.object_names, the closest one to the goal, if available from the self.not_yet_considered_object_names
+        if self.not_yet_considered_object_names:
+            self.object_names.append( self.not_yet_considered_object_names[0] )                          # Only pass the name
+            self.not_yet_considered_object_names.remove(self.not_yet_considered_object_names[0])
+
         self.goal_object.clear()
 
         # Get new goal (method checks if objs available else returns empty)
         if self.object_names != []:
             self.goal_object, self.other_objs_than_goals = self.get_goal_object()
             #self.sorted_objects_to_model.update(self.goal_object['name'])
-
-            # Add one new unmodeled object to self.object_names, the closest one to the goal, if available from the self.not_yet_considered_object_names
-            if self.not_yet_considered_object_names:
-                sorted_non_modeled_elems = self.return_sorted_objs_to_model(self.goal_object, self.not_yet_considered_object_names) # returns dict of sorted objects
-                closest_obj_to_goal = list(sorted_non_modeled_elems.items())[1]        # Extract first dict item
-                self.object_names.append( closest_obj_to_goal[0] )                          # Only pass the name
-                self.sorted_objects_to_model[closest_obj_to_goal[0]] = closest_obj_to_goal[1]
-                self.not_yet_considered_object_names.remove(closest_obj_to_goal[0])
+            
             print(f"Computing new object goal. New goal obj is {self.goal_object['name']} with location {self.goal_object['pos']}.")
 
         elif (self.object_names + self.not_yet_considered_object_names) == []: # len(self.object_names) == 0 and len(self.objects_in_target_bin) == self.num_objs_to_load:
