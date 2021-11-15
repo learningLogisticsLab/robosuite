@@ -219,6 +219,9 @@ class Picking(SingleArmEnv, Serializable):
             :Note: Specifying "default" will automatically use the default noise settings.
                 Specifying None will automatically create the required dict with "magnitude" set to 0.0.
 
+        # TODO: update args
+
+        simple_objects: only loads circular fruits.
     Raises:
         AssertionError: [Invalid object type specified]
         AssertionError: [Invalid number of robots specified]
@@ -264,7 +267,9 @@ class Picking(SingleArmEnv, Serializable):
         num_objs_to_load        = 1,        # from db       
 
         object_reset_strategy = "jumbled",   # [organized, jumbled, wall, random]. random will randomly choose between first three options. 
-        object_randomization  = True,       # Randomly select new objects from database after reset or not
+        object_randomization  = True,        # Randomly select new objects from database after reset or not
+
+        simple_objects          = False,     # load circular objects flag
 
         # Reset
         hard_reset            = False,       # If True, re-loads model|sim|render object w reset call. Else, only call sim.reset and reset all robosuite-internal variables        
@@ -289,6 +294,9 @@ class Picking(SingleArmEnv, Serializable):
         render_collision_mesh   = False,
         render_visual_mesh      = True,
         render_gpu_device_id    = 0,            # was -1 
+
+        # Simulation run speed
+        run_speed               = 1.0,
 
         # Noise
         initialization_noise    ="default",
@@ -362,6 +370,8 @@ class Picking(SingleArmEnv, Serializable):
         else:     
             self.num_blocks  = num_blocks
             self.num_objects = num_blocks                       # tot num of objects to represent in graph (we use this more descriptive name here, but keep num_blocks for RelationalRL)
+
+        self.simple_objects = simple_objects                    # load circular objects flag
     
         # Given the available objects, randomly pick num_objs_to_load and return names, visual names, and name_to_id
         (self.object_names, self.visual_object_names, 
@@ -425,6 +435,8 @@ class Picking(SingleArmEnv, Serializable):
             render_collision_mesh   = render_collision_mesh,
             render_visual_mesh      = render_visual_mesh,
             render_gpu_device_id    = render_gpu_device_id,            
+
+            run_speed               = run_speed, 
 
             initialization_noise    = initialization_noise,                     
         )
@@ -712,6 +724,7 @@ class Picking(SingleArmEnv, Serializable):
             # can sample anywhere in bin
             bin_x_half = self.model.mujoco_arena.table_full_size[0] / 2 - 0.05 # half of bin - edges (2*0.025 half of each side of each wall so that we don't hit the wall)
             bin_y_half = self.model.mujoco_arena.table_full_size[1] / 2 - 0.05
+            
             # pickObjectSampler: (non-visual) objects are sampled within the bounds of the picking bin #1 (with some tolerance) and outside the object radiuses
             self.placement_initializer.append_sampler(
                 sampler = UniformRandomSampler(
@@ -793,7 +806,7 @@ class Picking(SingleArmEnv, Serializable):
                 ensure_valid_placement          = True,
                 reference_pos                   = self.bin1_pos + self.bin1_surface,
                 z_offset                        = 0.10,                             # Set a vertical offset of XXcm above the bin
-                z_offset_prob                   = 0.50,  # probability with which to set the z_offset
+                z_offset_prob                   = 0.50,                             # probability with which to set the z_offset
             )
         )
 
@@ -1363,13 +1376,13 @@ class Picking(SingleArmEnv, Serializable):
                 if not check_grasp:
                     return False
 
-            print("Successfully picked {}". format(self.goal_object['name']))
+            print("\nSuccessfully picked {}". format(self.goal_object['name']))
             # 02 Object Handling
             # Add the current goal object to the list of target bin objects
             assert self.goal_object != {}, 'checking Picking._is_successful(). Your goal_object is empty.'
 
             self.objects_in_target_bin.append(self.goal_object['name'])
-            print("The current objects in the target bin are:")
+            print("\nTarget bin objects:")
             for object in self.objects_in_target_bin:
                 print(f"{object} ")    
                                    
@@ -1382,8 +1395,8 @@ class Picking(SingleArmEnv, Serializable):
 
             self.goal_object.clear()
 
-            # Get new goal (method checks if objs available else returns empty)
-            if self.object_names != []:
+            # Get new goal (method checks if objs available (from modeled and unmodeled objects) else returns empty)
+            if self.object_names + self.not_yet_considered_object_names != []:
                 self.goal_object, self.other_objs_than_goals = self.get_goal_object()
                 #self.sorted_objects_to_model.update(self.goal_object['name'])
 
@@ -1536,8 +1549,11 @@ class Picking(SingleArmEnv, Serializable):
         not_yet_modelled_visual_object_names= []
 
         all_objects = list(range(num_objs_in_db))
+        if self.simple_objects:
+            all_objects = [13, 14, 15, 17, 18]        
+
+        # Load objects (can simplify to only load simple circular objects)        
         objs_to_consider = random.sample( all_objects, num_objs_to_load) # i.e.objs_to_consider = [69, 66, 64, 55, 65]
-        # objs_to_consider = [15]
 
         # 01 Sample number of objects to load
         for idx, val in enumerate(objs_to_consider):
@@ -1725,14 +1741,18 @@ class Picking(SingleArmEnv, Serializable):
         # the new dimensionality is reflected in these observations as well.
 
         # Initialize obj observations with dim 20 3 pos, 4 quat, 3 velp, 3 velr, 3 obj rel pos, 4 obj rel quat
-        object_i_pos = np.zeros(3*self.num_blocks)
-        object_i_quat = np.zeros(4*self.num_blocks)
-        object_velp = np.zeros(3*self.num_blocks)
-        object_velr = np.zeros(3*self.num_blocks)
-        object_rel_pos = np.zeros(3*self.num_blocks)
-        object_rel_rot = np.zeros(4*self.num_blocks)
+        object_i_pos    = np.zeros(3*self.num_blocks)
+        object_i_quat   = np.zeros(4*self.num_blocks)
+
+        object_velp     = np.zeros(3*self.num_blocks)
+        object_velr     = np.zeros(3*self.num_blocks)
+        
+        object_rel_pos  = np.zeros(3*self.num_blocks)
+        object_rel_rot  = np.zeros(4*self.num_blocks)
+
         achieved_goal = np.zeros(3)
 
+        # Range through the whole set of blocks. As they picked, we still iterate through them, but their entries will have zeros.
         for i in range(self.num_blocks) :
 
             name_list = list(self.sorted_objects_to_model)
@@ -1756,7 +1776,7 @@ class Picking(SingleArmEnv, Serializable):
                      object_rel_pos[3*i:3*(i+1)] = object_i_pos[:3] - grip_pos
                      object_rel_rot[4*i:4*(i+1)] = T.quat_distance(object_i_quat[:4] ,grip_quat) # quat_dist returns the difference
 
-                    # 02) Achieved Goal: the achieved state will be the object(s) pose(s) of the goal (1st) object
+                    # 02) Achieved Goal: the achieved state will be the goal object's position (ie. the object you are trying to grasp)
                     #--------------------------------------------------------------------------
                     # TODO: double check if this works effectively for our context + HER. Otherwise can add objects and grip pose.
                     #--------------------------------------------------------------------------
@@ -1916,7 +1936,7 @@ class Picking(SingleArmEnv, Serializable):
             self.sim.forward()
 
             # Action Clipping
-            # Not necessary to clip actions within robosuite as we wrap with the NormalizedBoxEnv. 
+            # Not necessary to clip actions within robosuite as we wrap with the NormalizedBoxEnv. Also inside OSC controller
             # -->Set (clipped) action in mujoco
             # action = np.clip(action, 
             #                  self.action_spec[0],
@@ -1948,7 +1968,18 @@ class Picking(SingleArmEnv, Serializable):
                  'is_inside_workspace': self._is_inside_workspace(env_obs['robot0_proprio-state']) }
 
         if info['is_success']:
+
+            # If deployed a scripted policy-based learning and want to open fingers after place, turn on open_gripper_flag
             self.open_gripper_flag = True          
+            
+            ## Experimental code to open fingers after place (no scripted polidy)
+            for _ in range(25):
+                action=np.array([0,0,0,0,0,0,-1]) # -1 action should open fingers
+                self._pre_action(action, policy_step=True)
+                self._update_observables()
+                #env_obs = self._get_obs()     # want to update goals but this will throw an error after all objects successfully placed with an empty self.goal_object and before a reset.
+                self.sim.step()
+                #self.render()                 # needs us to add a flag. 
 
         # 06b Process Reward * Info
             # TODO: design a manner to describe observations in our graph node setting. currently just 'state', but later will use images in nodes, and can extend beyond.

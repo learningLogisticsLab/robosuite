@@ -200,6 +200,8 @@ class GymWrapper(Wrapper, Env, Serializable):
                 - (bool) whether the current episode is completed or not
                 - (dict) misc information
         """
+
+        # Step into the environment
         ob_dict, reward, done, info = self.env.step(action)
 
         if self.rlkit_relational:

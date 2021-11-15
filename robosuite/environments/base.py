@@ -161,7 +161,9 @@ class MujocoEnv(metaclass=EnvMeta):
         render_camera           = "frontview",
         render_collision_mesh   = False,
         render_visual_mesh      = True,
-        render_gpu_device_id    = -1,        
+        render_gpu_device_id    = -1,      
+
+        run_speed               = 1  
     ):
         # First, verify that both the on- and off-screen renderers are not being used simultaneously
         if has_renderer is True and has_offscreen_renderer is True:
@@ -175,6 +177,7 @@ class MujocoEnv(metaclass=EnvMeta):
         self.render_visual_mesh     = render_visual_mesh
         self.render_gpu_device_id   = render_gpu_device_id
         self.viewer                 = None
+        self.run_speed              = run_speed
 
         # Simulation-specific attributes
         self._observables   = {}                        # Maps observable names to observable objects
@@ -341,6 +344,7 @@ class MujocoEnv(metaclass=EnvMeta):
         # create visualization screen or renderer
         if self.has_renderer and self.viewer is None:
             self.viewer = MujocoPyRenderer(self.sim)
+            self.viewer.viewer._run_speed = self.run_speed
             self.viewer.viewer.vopt.geomgroup[0] = (1 if self.render_collision_mesh else 0)
             self.viewer.viewer.vopt.geomgroup[1] = (1 if self.render_visual_mesh else 0)
 
@@ -520,7 +524,7 @@ class MujocoEnv(metaclass=EnvMeta):
         """
         Renders to an on-screen window.
         """
-        self.viewer.render()
+        self.viewer.render()        
 
     def observation_spec(self):
         """
@@ -712,7 +716,7 @@ class MujocoEnv(metaclass=EnvMeta):
         """
         # if there is an active viewer window, destroy it
         if self.viewer is not None:
-            self.viewer.close()  # TODO: change this to viewer.finish()?
+            self.viewer.close()  
             self.viewer = None
 
     def close(self):
