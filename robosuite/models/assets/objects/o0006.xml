@@ -1,18 +1,18 @@
 <mujoco model="mustard_bottle">
   <asset>
-    <mesh name="mustard_bottle_mesh" file="./meshes/mustard_bottle.msh" scale="1.0 1.0 1.0"/>
+    <mesh name="mustard_bottle_mesh" file="./meshes/mustard_bottle.msh" scale="0.48123235247737883 1.0 0.32132492816292"/>
     <texture name="tex-mustard_bottle" file="../textures/mustard_bottle.png" type="2d"/>
     <material name="mustard_bottle" reflectance="0.7" texrepeat="15 15" texture="tex-mustard_bottle" texuniform="true"/>
   </asset>
   <worldbody>
     <body>
       <body name="object">
-        <geom name="mustard_bottle" pos="0.015346468799771945 0.023207944532355217 -0.0924975" mesh="mustard_bottle_mesh" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" mass="0.603" friction="0.95 0.3 0.1"  material="mustard_bottle" group="0" condim="4"/>
+        <geom name="mustard_bottle" pos="0.0073852172827349495 0.023207944532355217 -0.029721752542749693" mesh="mustard_bottle_mesh" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" mass="0.603" friction="0.95 0.3 0.1"  material="mustard_bottle" group="0" condim="4"/>
       </body>
-      <site rgba="1 0 0 1" size="0.005" pos="0 0 -0.0875" name="bottom_site"/>
-      <site rgba="0 1 0 1" size="0.005" pos="0 0 0.0875" name="top_site"/>
-      <site rgba="0 0 1 1" size="0.005" pos="0.0425 0.025 0" name="horizontal_radius_site"/>
-      <site rgba="0 0 0 1" size="0.005" pos="0 0 0.175" name="vertical_radius_site"/>
+      <site rgba="1 0 0 1" size="0.005" pos="0 0 -0.0281159312142555" name="bottom_site"/>
+      <site rgba="0 1 0 1" size="0.005" pos="0 0 0.0281159312142555" name="top_site"/>
+      <site rgba="0 0 1 1" size="0.005" pos="0.020452374980288603 0.025 0" name="horizontal_radius_site"/>
+      <site rgba="0 0 0 1" size="0.005" pos="0 0 0.056231862428511" name="vertical_radius_site"/>
     </body>
   </worldbody>
 </mujoco>

@@ -1,15 +1,15 @@
 <mujoco model="bowlv">
   <asset>
-    <mesh name="bowl_mesh" file="./meshes/untextured_bowl.stl" scale="1.0 1.0 1.0"/>
+    <mesh name="bowl_mesh" file="./meshes/untextured_bowl.stl" scale="0.3740619989217851 0.3740619989217851 1.0"/>
   </asset>
   <worldbody>
     <body>
       <body name="object">
-        <geom name="bowl" pos="0.014750780088544337 0.043652562560080786 -0.026974500000000002" mesh="bowl_mesh" type="mesh" rgba="0.8 0.8 0.8 0.3" conaffinity="0" contype="0" mass="0.147" friction="0.95 0.3 0.1" group="1" condim="4"/>
+        <geom name="bowl" pos="0.0055177062855765605 0.016328764809282095 -0.026974500000000002" mesh="bowl_mesh" type="mesh" rgba="0.8 0.8 0.8 0.3" conaffinity="0" contype="0" mass="0.147" friction="0.95 0.3 0.1" group="1" condim="4"/>
       </body>
       <site rgba="1 0 0 1" size="0.005" pos="0 0 -0.0265" name="bottom_site"/>
       <site rgba="0 1 0 1" size="0.005" pos="0 0 0.0265" name="top_site"/>
-      <site rgba="0 0 1 1" size="0.005" pos="0.0795 0.0795 0" name="horizontal_radius_site"/>
+      <site rgba="0 0 1 1" size="0.005" pos="0.029737928914281914 0.029737928914281914 0" name="horizontal_radius_site"/>
       <site rgba="0 0 0 1" size="0.005" pos="0 0 0.053" name="vertical_radius_site"/>
     </body>
   </worldbody>

@@ -1,18 +1,18 @@
 <mujoco model="e_cups">
   <asset>
-    <mesh name="e_cups_mesh" file="./meshes/e_cups.msh" scale="0.8263843779878279 0.8263843779878279 0.8263843779878279"/>
+    <mesh name="e_cups_mesh" file="./meshes/e_cups.msh" scale="0.7677420015594457 0.7677420015594457 0.8166284385791585"/>
     <texture name="tex-e_cups" file="../textures/e_cups.png" type="2d"/>
     <material name="e_cups" reflectance="0.7" texrepeat="15 15" texture="tex-e_cups" texuniform="true"/>
   </asset>
   <worldbody>
     <body>
       <body name="object">
-        <geom name="e_cups" pos="0.02734510092291584 -0.021470851662278616 -0.02942754770014655" mesh="e_cups_mesh" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" mass="0.021" friction="0.95 0.3 0.1"  material="e_cups" group="0" condim="4"/>
+        <geom name="e_cups" pos="0.025404621716740246 -0.019947224402427577 -0.02908013869780383" mesh="e_cups_mesh" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" mass="0.021" friction="0.95 0.3 0.1"  material="e_cups" group="0" condim="4"/>
       </body>
-      <site rgba="1 0 0 1" size="0.005" pos="0 0 -0.02809706885158615" name="bottom_site"/>
-      <site rgba="0 1 0 1" size="0.005" pos="0 0 0.02809706885158615" name="top_site"/>
-      <site rgba="0 0 1 1" size="0.005" pos="0.030989414174543546 0.030989414174543546 0" name="horizontal_radius_site"/>
-      <site rgba="0 0 0 1" size="0.005" pos="0 0 0.0561941377031723" name="vertical_radius_site"/>
+      <site rgba="1 0 0 1" size="0.005" pos="0 0 -0.02776536691169139" name="bottom_site"/>
+      <site rgba="0 1 0 1" size="0.005" pos="0 0 0.02776536691169139" name="top_site"/>
+      <site rgba="0 0 1 1" size="0.005" pos="0.028790325058479213 0.028790325058479213 0" name="horizontal_radius_site"/>
+      <site rgba="0 0 0 1" size="0.005" pos="0 0 0.05553073382338278" name="vertical_radius_site"/>
     </body>
   </worldbody>
 </mujoco>

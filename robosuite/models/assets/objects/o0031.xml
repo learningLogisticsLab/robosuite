@@ -1,17 +1,17 @@
 <mujoco model="spatula">
   <asset>
-    <mesh name="spatula_mesh" file="./meshes/spatula.msh" scale="1.0 1.0 1.0"/>
+    <mesh name="spatula_mesh" file="./meshes/spatula.msh" scale="0.11704989138838358 0.6461072232603015 1.0"/>
     <texture name="tex-spatula" file="../textures/spatula.png" type="2d"/>
     <material name="spatula" reflectance="0.7" texrepeat="15 15" texture="tex-spatula" texuniform="true"/>
   </asset>
   <worldbody>
     <body>
       <body name="object">
-        <geom name="spatula" pos="0.029719503252586293 0.08459763234946586 -0.015929641902500975" mesh="spatula_mesh" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" mass="0.0515" friction="0.95 0.3 0.1"  material="spatula" group="0" condim="4"/>
+        <geom name="spatula" pos="0.003478664627831938 0.054659141331709245 -0.015929641902500975" mesh="spatula_mesh" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" mass="0.0515" friction="0.95 0.3 0.1"  material="spatula" group="0" condim="4"/>
       </body>
       <site rgba="1 0 0 1" size="0.005" pos="0 0 -0.0175" name="bottom_site"/>
       <site rgba="0 1 0 1" size="0.005" pos="0 0 0.0175" name="top_site"/>
-      <site rgba="0 0 1 1" size="0.005" pos="0.175 0.0415 0" name="horizontal_radius_site"/>
+      <site rgba="0 0 1 1" size="0.005" pos="0.020483730992967124 0.026813449765302512 0" name="horizontal_radius_site"/>
       <site rgba="0 0 0 1" size="0.005" pos="0 0 0.035" name="vertical_radius_site"/>
     </body>
   </worldbody>

@@ -1,17 +1,17 @@
 <mujoco model="nine_peg_hole_test">
   <asset>
-    <mesh name="nine_peg_hole_test_mesh" file="./meshes/nine_peg_hole_test.msh" scale="1.0 1.0 1.0"/>
+    <mesh name="nine_peg_hole_test_mesh" file="./meshes/nine_peg_hole_test.msh" scale="0.3428871672867227 0.3428871672867227 1.0"/>
     <texture name="tex-nine_peg_hole_test" file="../textures/nine_peg_hole_test.png" type="2d"/>
     <material name="nine_peg_hole_test" reflectance="0.7" texrepeat="15 15" texture="tex-nine_peg_hole_test" texuniform="true"/>
   </asset>
   <worldbody>
     <body>
       <body name="object">
-        <geom name="nine_peg_hole_test" pos="-0.004988811220653544 -0.013758346141484468 -0.019984376918677018" mesh="nine_peg_hole_test_mesh" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" mass="0.6959336694151722" friction="0.95 0.3 0.1"  material="nine_peg_hole_test" group="0" condim="4"/>
+        <geom name="nine_peg_hole_test" pos="-0.001710599347578111 -0.004717560335003821 -0.019984376918677018" mesh="nine_peg_hole_test_mesh" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" mass="0.12337766788277765" friction="0.95 0.3 0.1"  material="nine_peg_hole_test" group="0" condim="4"/>
       </body>
       <site rgba="1 0 0 1" size="0.005" pos="0 0 -0.025" name="bottom_site"/>
       <site rgba="0 1 0 1" size="0.005" pos="0 0 0.025" name="top_site"/>
-      <site rgba="0 0 1 1" size="0.005" pos="0.075 0.075 0" name="horizontal_radius_site"/>
+      <site rgba="0 0 1 1" size="0.005" pos="0.0257165375465042 0.0257165375465042 0" name="horizontal_radius_site"/>
       <site rgba="0 0 0 1" size="0.005" pos="0 0 0.05" name="vertical_radius_site"/>
     </body>
   </worldbody>

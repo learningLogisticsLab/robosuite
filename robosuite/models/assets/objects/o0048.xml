@@ -1,18 +1,18 @@
 <mujoco model="baseball">
   <asset>
-    <mesh name="baseball_mesh" file="./meshes/baseball.msh" scale="0.5358263444866541 0.5358263444866541 0.5358263444866541"/>
+    <mesh name="baseball_mesh" file="./meshes/baseball.msh" scale="0.6217534879186806 0.6217534879186806 0.6217534879186806"/>
     <texture name="tex-baseball" file="../textures/baseball.png" type="2d"/>
     <material name="baseball" reflectance="0.7" texrepeat="15 15" texture="tex-baseball" texuniform="true"/>
   </asset>
   <worldbody>
     <body>
       <body name="object">
-        <geom name="baseball" pos="0.005457646676355278 0.025583341330334367 -0.019356970341304243" mesh="baseball_mesh" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" mass="0.138" friction="0.95 0.3 0.1"  material="baseball" group="0" condim="4"/>
+        <geom name="baseball" pos="0.006332855582348483 0.02968598290923659 -0.02246112746989828" mesh="baseball_mesh" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" mass="0.138" friction="0.95 0.3 0.1"  material="baseball" group="0" condim="4"/>
       </body>
-      <site rgba="1 0 0 1" size="0.005" pos="0 0 -0.021433053779466166" name="bottom_site"/>
-      <site rgba="0 1 0 1" size="0.005" pos="0 0 0.021433053779466166" name="top_site"/>
-      <site rgba="0 0 1 1" size="0.005" pos="0.021433053779466166 0.021433053779466166 0" name="horizontal_radius_site"/>
-      <site rgba="0 0 0 1" size="0.005" pos="0 0 0.04286610755893233" name="vertical_radius_site"/>
+      <site rgba="1 0 0 1" size="0.005" pos="0 0 -0.024870139516747224" name="bottom_site"/>
+      <site rgba="0 1 0 1" size="0.005" pos="0 0 0.024870139516747224" name="top_site"/>
+      <site rgba="0 0 1 1" size="0.005" pos="0.024870139516747224 0.024870139516747224 0" name="horizontal_radius_site"/>
+      <site rgba="0 0 0 1" size="0.005" pos="0 0 0.04974027903349445" name="vertical_radius_site"/>
     </body>
   </worldbody>
 </mujoco>

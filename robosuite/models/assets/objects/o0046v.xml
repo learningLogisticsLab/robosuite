@@ -1,16 +1,16 @@
 <mujoco model="mini_soccer_ballv">
   <asset>
-    <mesh name="mini_soccer_ball_mesh" file="./meshes/untextured_mini_soccer_ball.stl" scale="0.3518445252945786 0.3518445252945786 0.3518445252945786"/>
+    <mesh name="mini_soccer_ball_mesh" file="./meshes/untextured_mini_soccer_ball.stl" scale="0.41068125423266755 0.41068125423266755 0.41068125423266755"/>
   </asset>
   <worldbody>
     <body>
       <body name="object">
-        <geom name="mini_soccer_ball" pos="0.0024141084719894335 -0.004355207695970425 -0.021219438057097407" mesh="mini_soccer_ball_mesh" type="mesh" rgba="0.8 0.8 0.8 0.3" conaffinity="0" contype="0" mass="0.123" friction="0.95 0.3 0.1" group="1" condim="4"/>
+        <geom name="mini_soccer_ball" pos="0.002817804524030221 -0.0050835014628333635 -0.024767830132087713" mesh="mini_soccer_ball_mesh" type="mesh" rgba="0.8 0.8 0.8 0.3" conaffinity="0" contype="0" mass="0.123" friction="0.95 0.3 0.1" group="1" condim="4"/>
       </body>
-      <site rgba="1 0 0 1" size="0.005" pos="0 0 -0.024629116770620504" name="bottom_site"/>
-      <site rgba="0 1 0 1" size="0.005" pos="0 0 0.024629116770620504" name="top_site"/>
-      <site rgba="0 0 1 1" size="0.005" pos="0.024629116770620504 0.024629116770620504 0" name="horizontal_radius_site"/>
-      <site rgba="0 0 0 1" size="0.005" pos="0 0 0.04925823354124101" name="vertical_radius_site"/>
+      <site rgba="1 0 0 1" size="0.005" pos="0 0 -0.028747687796286732" name="bottom_site"/>
+      <site rgba="0 1 0 1" size="0.005" pos="0 0 0.028747687796286732" name="top_site"/>
+      <site rgba="0 0 1 1" size="0.005" pos="0.028747687796286732 0.028747687796286732 0" name="horizontal_radius_site"/>
+      <site rgba="0 0 0 1" size="0.005" pos="0 0 0.057495375592573464" name="vertical_radius_site"/>
     </body>
   </worldbody>
 </mujoco>

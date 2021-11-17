@@ -1,15 +1,15 @@
 <mujoco model="large_markerv">
   <asset>
-    <mesh name="large_marker_mesh" file="./meshes/untextured_large_marker.stl" scale="1.0 1.0 1.0"/>
+    <mesh name="large_marker_mesh" file="./meshes/untextured_large_marker.stl" scale="1.0 0.48404534397380844 1.0"/>
   </asset>
   <worldbody>
     <body>
       <body name="object">
-        <geom name="large_marker" pos="0.03577394817206969 0.005012480842232053 -0.009024002435731765" mesh="large_marker_mesh" type="mesh" rgba="0.8 0.8 0.8 0.3" conaffinity="0" contype="0" mass="0.0158" friction="0.95 0.3 0.1" group="1" condim="4"/>
+        <geom name="large_marker" pos="0.03577394817206969 0.002426268013440339 -0.009024002435731765" mesh="large_marker_mesh" type="mesh" rgba="0.8 0.8 0.8 0.3" conaffinity="0" contype="0" mass="0.0158" friction="0.95 0.3 0.1" group="1" condim="4"/>
       </body>
       <site rgba="1 0 0 1" size="0.005" pos="0 0 -0.009" name="bottom_site"/>
       <site rgba="0 1 0 1" size="0.005" pos="0 0 0.009" name="top_site"/>
-      <site rgba="0 0 1 1" size="0.005" pos="0.009 0.0605 0" name="horizontal_radius_site"/>
+      <site rgba="0 0 1 1" size="0.005" pos="0.009 0.02928474331041541 0" name="horizontal_radius_site"/>
       <site rgba="0 0 0 1" size="0.005" pos="0 0 0.018" name="vertical_radius_site"/>
     </body>
   </worldbody>

@@ -1,18 +1,18 @@
 <mujoco model="potted_meat_can">
   <asset>
-    <mesh name="potted_meat_can_mesh" file="./meshes/potted_meat_can.msh" scale="1.0 1.0 1.0"/>
+    <mesh name="potted_meat_can_mesh" file="./meshes/potted_meat_can.msh" scale="0.5146045665015841 1.0 0.7144299392056974"/>
     <texture name="tex-potted_meat_can" file="../textures/potted_meat_can.png" type="2d"/>
     <material name="potted_meat_can" reflectance="0.7" texrepeat="15 15" texture="tex-potted_meat_can" texuniform="true"/>
   </asset>
   <worldbody>
     <body>
       <body name="object">
-        <geom name="potted_meat_can" pos="0.03277451596771181 0.026538283209855247 -0.03858349999999999" mesh="potted_meat_can_mesh" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" mass="0.37" friction="0.95 0.3 0.1"  material="potted_meat_can" group="0" condim="4"/>
+        <geom name="potted_meat_can" pos="0.016865915581863584 0.026538283209855247 -0.02756520755934302" mesh="potted_meat_can_mesh" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" mass="0.37" friction="0.95 0.3 0.1"  material="potted_meat_can" group="0" condim="4"/>
       </body>
-      <site rgba="1 0 0 1" size="0.005" pos="0 0 -0.041" name="bottom_site"/>
-      <site rgba="0 1 0 1" size="0.005" pos="0 0 0.041" name="top_site"/>
-      <site rgba="0 0 1 1" size="0.005" pos="0.0485 0.025 0" name="horizontal_radius_site"/>
-      <site rgba="0 0 0 1" size="0.005" pos="0 0 0.082" name="vertical_radius_site"/>
+      <site rgba="1 0 0 1" size="0.005" pos="0 0 -0.029291627507433596" name="bottom_site"/>
+      <site rgba="0 1 0 1" size="0.005" pos="0 0 0.029291627507433596" name="top_site"/>
+      <site rgba="0 0 1 1" size="0.005" pos="0.024958321475326832 0.025 0" name="horizontal_radius_site"/>
+      <site rgba="0 0 0 1" size="0.005" pos="0 0 0.05858325501486719" name="vertical_radius_site"/>
     </body>
   </worldbody>
 </mujoco>

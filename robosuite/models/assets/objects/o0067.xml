@@ -1,18 +1,18 @@
 <mujoco model="toy_airplane">
   <asset>
-    <mesh name="toy_airplane_mesh" file="./meshes/toy_airplane.msh" scale="0.3442365618693587 0.3442365618693587 0.3442365618693587"/>
+    <mesh name="toy_airplane_mesh" file="./meshes/toy_airplane.msh" scale="0.15456775506536868 0.1480499497700842 0.31434145940480096"/>
     <texture name="tex-toy_airplane" file="../textures/toy_airplane.png" type="2d"/>
     <material name="toy_airplane" reflectance="0.7" texrepeat="15 15" texture="tex-toy_airplane" texuniform="true"/>
   </asset>
   <worldbody>
     <body>
       <body name="object">
-        <geom name="toy_airplane" pos="-0.012568829358271836 -0.005208007474093446 -0.026940854349472975" mesh="toy_airplane_mesh" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" mass="0.57" friction="0.95 0.3 0.1"  material="toy_airplane" group="0" condim="4"/>
+        <geom name="toy_airplane" pos="-0.005643606615049404 -0.002239870282095071 -0.02460118538204389" mesh="toy_airplane_mesh" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" mass="0.57" friction="0.95 0.3 0.1"  material="toy_airplane" group="0" condim="4"/>
       </body>
-      <site rgba="1 0 0 1" size="0.005" pos="0 0 -0.02943222603983017" name="bottom_site"/>
-      <site rgba="0 1 0 1" size="0.005" pos="0 0 0.02943222603983017" name="top_site"/>
-      <site rgba="0 0 1 1" size="0.005" pos="0.045783462728624706 0.04819311866171022 0" name="horizontal_radius_site"/>
-      <site rgba="0 0 0 1" size="0.005" pos="0 0 0.05886445207966034" name="vertical_radius_site"/>
+      <site rgba="1 0 0 1" size="0.005" pos="0 0 -0.026876194779110484" name="bottom_site"/>
+      <site rgba="0 1 0 1" size="0.005" pos="0 0 0.026876194779110484" name="top_site"/>
+      <site rgba="0 0 1 1" size="0.005" pos="0.020557511423694035 0.020726992967811792 0" name="horizontal_radius_site"/>
+      <site rgba="0 0 0 1" size="0.005" pos="0 0 0.05375238955822097" name="vertical_radius_site"/>
     </body>
   </worldbody>
 </mujoco>

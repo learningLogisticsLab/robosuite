@@ -1,18 +1,18 @@
 <mujoco model="orange">
   <asset>
-    <mesh name="orange_mesh" file="./meshes/orange.msh" scale="0.5926680448097218 0.5926680448097218 0.5926680448097218"/>
+    <mesh name="orange_mesh" file="./meshes/orange.msh" scale="0.7407879428686192 0.7407879428686192 0.7407879428686192"/>
     <texture name="tex-orange" file="../textures/orange.png" type="2d"/>
     <material name="orange" reflectance="0.7" texrepeat="15 15" texture="tex-orange" texuniform="true"/>
   </asset>
   <worldbody>
     <body>
       <body name="object">
-        <geom name="orange" pos="0.004259667247896019 0.010854739912036249 -0.020997043491518826" mesh="orange_mesh" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" mass="0.047" friction="0.95 0.3 0.1"  material="orange" group="0" condim="4"/>
+        <geom name="orange" pos="0.005324245444828752 0.013567562010860297 -0.02624463523994944" mesh="orange_mesh" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" mass="0.047" friction="0.95 0.3 0.1"  material="orange" group="0" condim="4"/>
       </body>
-      <site rgba="1 0 0 1" size="0.005" pos="0 0 -0.021632383635554843" name="bottom_site"/>
-      <site rgba="0 1 0 1" size="0.005" pos="0 0 0.021632383635554843" name="top_site"/>
-      <site rgba="0 0 1 1" size="0.005" pos="0.021632383635554843 0.021632383635554843 0" name="horizontal_radius_site"/>
-      <site rgba="0 0 0 1" size="0.005" pos="0 0 0.043264767271109686" name="vertical_radius_site"/>
+      <site rgba="1 0 0 1" size="0.005" pos="0 0 -0.027038759914704596" name="bottom_site"/>
+      <site rgba="0 1 0 1" size="0.005" pos="0 0 0.027038759914704596" name="top_site"/>
+      <site rgba="0 0 1 1" size="0.005" pos="0.027038759914704596 0.027038759914704596 0" name="horizontal_radius_site"/>
+      <site rgba="0 0 0 1" size="0.005" pos="0 0 0.05407751982940919" name="vertical_radius_site"/>
     </body>
   </worldbody>
 </mujoco>

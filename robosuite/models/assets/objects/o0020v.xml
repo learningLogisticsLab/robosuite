@@ -1,16 +1,16 @@
 <mujoco model="bleach_cleanserv">
   <asset>
-    <mesh name="bleach_cleanser_mesh" file="./meshes/untextured_bleach_cleanser.stl" scale="0.7595196686410085 0.7595196686410085 0.7595196686410085"/>
+    <mesh name="bleach_cleanser_mesh" file="./meshes/untextured_bleach_cleanser.stl" scale="0.8272226740227486 0.43272462358120684 0.16556691402223095"/>
   </asset>
   <worldbody>
     <body>
       <body name="object">
-        <geom name="bleach_cleanser" pos="0.01684709973677993 -0.008849813252574834 -0.09481691639380624" mesh="bleach_cleanser_mesh" type="mesh" rgba="0.8 0.8 0.8 0.3" conaffinity="0" contype="0" mass="0.3444401737194669" friction="0.95 0.3 0.1" group="1" condim="4"/>
+        <geom name="bleach_cleanser" pos="0.018348837389192237 -0.00504204468507908 -0.02066904241270727" mesh="bleach_cleanser_mesh" type="mesh" rgba="0.8 0.8 0.8 0.3" conaffinity="0" contype="0" mass="0.2534358652810265" friction="0.95 0.3 0.1" group="1" condim="4"/>
       </body>
-      <site rgba="1 0 0 1" size="0.005" pos="0 0 -0.09493995858012606" name="bottom_site"/>
-      <site rgba="0 1 0 1" size="0.005" pos="0 0 0.09493995858012606" name="top_site"/>
-      <site rgba="0 0 1 1" size="0.005" pos="0.024684389230832778 0.03721646376340942 0" name="horizontal_radius_site"/>
-      <site rgba="0 0 0 1" size="0.005" pos="0 0 0.18987991716025213" name="vertical_radius_site"/>
+      <site rgba="1 0 0 1" size="0.005" pos="0 0 -0.02069586425277887" name="bottom_site"/>
+      <site rgba="0 1 0 1" size="0.005" pos="0 0 0.02069586425277887" name="top_site"/>
+      <site rgba="0 0 1 1" size="0.005" pos="0.02688473690573933 0.021203506555479135 0" name="horizontal_radius_site"/>
+      <site rgba="0 0 0 1" size="0.005" pos="0 0 0.04139172850555774" name="vertical_radius_site"/>
     </body>
   </worldbody>
 </mujoco>

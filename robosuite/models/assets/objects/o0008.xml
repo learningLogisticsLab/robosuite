@@ -1,17 +1,17 @@
 <mujoco model="pudding_box">
   <asset>
-    <mesh name="pudding_box_mesh" file="./meshes/pudding_box.msh" scale="1.0 1.0 1.0"/>
+    <mesh name="pudding_box_mesh" file="./meshes/pudding_box.msh" scale="0.5149520606370617 0.6642247459492675 1.0"/>
     <texture name="tex-pudding_box" file="../textures/pudding_box.png" type="2d"/>
     <material name="pudding_box" reflectance="0.7" texrepeat="15 15" texture="tex-pudding_box" texuniform="true"/>
   </asset>
   <worldbody>
     <body>
       <body name="object">
-        <geom name="pudding_box" pos="-0.000559241928293105 -0.019038126180796443 -0.018947500000000006" mesh="pudding_box_mesh" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" mass="0.187" friction="0.95 0.3 0.1"  material="pudding_box" group="0" condim="4"/>
+        <geom name="pudding_box" pos="-0.0002879827833691783 -0.012645594525789616 -0.018947500000000006" mesh="pudding_box_mesh" type="mesh" solimp="0.998 0.998 0.001" solref="0.001 1" mass="0.187" friction="0.95 0.3 0.1"  material="pudding_box" group="0" condim="4"/>
       </body>
       <site rgba="1 0 0 1" size="0.005" pos="0 0 -0.0175" name="bottom_site"/>
       <site rgba="0 1 0 1" size="0.005" pos="0 0 0.0175" name="top_site"/>
-      <site rgba="0 0 1 1" size="0.005" pos="0.055 0.0445 0" name="horizontal_radius_site"/>
+      <site rgba="0 0 1 1" size="0.005" pos="0.028322363335038393 0.029558001194742403 0" name="horizontal_radius_site"/>
       <site rgba="0 0 0 1" size="0.005" pos="0 0 0.035" name="vertical_radius_site"/>
     </body>
   </worldbody>

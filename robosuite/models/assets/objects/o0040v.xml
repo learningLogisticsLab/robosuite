@@ -1,15 +1,15 @@
 <mujoco model="flat_screwdriverv">
   <asset>
-    <mesh name="flat_screwdriver_mesh" file="./meshes/untextured_flat_screwdriver.stl" scale="1.0 1.0 1.0"/>
+    <mesh name="flat_screwdriver_mesh" file="./meshes/untextured_flat_screwdriver.stl" scale="0.18926760091630315 1.0 1.0"/>
   </asset>
   <worldbody>
     <body>
       <body name="object">
-        <geom name="flat_screwdriver" pos="0.014083765598958868 -0.013290671121382417 -0.014204226530278594" mesh="flat_screwdriver_mesh" type="mesh" rgba="0.8 0.8 0.8 0.3" conaffinity="0" contype="0" mass="0.0984" friction="0.95 0.3 0.1" group="1" condim="4"/>
+        <geom name="flat_screwdriver" pos="0.0026656005267825062 -0.013290671121382417 -0.014204226530278594" mesh="flat_screwdriver_mesh" type="mesh" rgba="0.8 0.8 0.8 0.3" conaffinity="0" contype="0" mass="0.0984" friction="0.95 0.3 0.1" group="1" condim="4"/>
       </body>
       <site rgba="1 0 0 1" size="0.005" pos="0 0 -0.0155" name="bottom_site"/>
       <site rgba="0 1 0 1" size="0.005" pos="0 0 0.0155" name="top_site"/>
-      <site rgba="0 0 1 1" size="0.005" pos="0.1075 0.0155 0" name="horizontal_radius_site"/>
+      <site rgba="0 0 1 1" size="0.005" pos="0.02034626709850259 0.0155 0" name="horizontal_radius_site"/>
       <site rgba="0 0 0 1" size="0.005" pos="0 0 0.031" name="vertical_radius_site"/>
     </body>
   </worldbody>
