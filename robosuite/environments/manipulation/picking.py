@@ -2004,7 +2004,7 @@ class Picking(SingleArmEnv, Serializable):
         # 07 Process Done: 
         # If ( OR (ii) we have succeeded, set to true OR (iii) end-effector moves outside the workspace
         done = ((self.timestep >= self.horizon)and not self.ignore_done                                 or  # 1. time_step is past horizon               
-               (info['is_success'] and (self.object_names+self.not_yet_considered_object_names) == [])  or  # 2. Succeeded AND no more objects. important for multiple object settings when we are done after all objects picked up.
+               info['is_success'] or #(info['is_success'] and (self.object_names+self.not_yet_considered_object_names) == [])  or  # 2. Succeeded AND no more objects. important for multiple object settings when we are done after all objects picked up.
                self.fallen_objs_flag                                                                    or  # 3. If there is a fallen object, reset and start again. 
                not info['is_inside_workspace'])                                                             # 4. If robot end effector exits workspace, reset. 
         
