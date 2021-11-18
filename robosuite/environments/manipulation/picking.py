@@ -310,6 +310,12 @@ class Picking(SingleArmEnv, Serializable):
 
         # Check Grasp
         check_grasp_flag        = False,        # Flag enables checking whether gripper fingers touching object. Useful to confirm success turns computation on/off and used in _is_success
+        
+        # currlearn
+        curr_learn_dist_col     = -0.5,
+        curr_learn_dist_vis     = -0.5,
+        average_returns         = 0.0
+        
     ):
         print('Generating Picking class.\n')
         # Task settings
@@ -401,7 +407,9 @@ class Picking(SingleArmEnv, Serializable):
         self.check_grasp_flag = check_grasp_flag                # Flag enables checking whether gripper fingers touching object. Useful to confirm success turns computation on/off and used in _is_success
 
         # (E) Curriculum Learning
-        self.curr_learn_dist = 0.05                             # curriculum learning threshold
+        self.curr_learn_dist_col = curr_learn_dist_col                            # curriculum learning threshold
+        self.curr_learn_dist_vis = curr_learn_dist_vis
+        self.average_returns     = average_returns
         
         # (F) Open Gripper Flag
         self.open_gripper_flag = False
@@ -796,7 +804,7 @@ class Picking(SingleArmEnv, Serializable):
         # placeObjectSamplers: each visual object receives a sampler that places it in the TARGET bin
         
         # curr_learn switch vis goals to bin2 when 75% succ achieved in whole bin1
-        if self.curr_learn_dist_col == 1.0 and self.success_rate > 0.75:
+        if self.curr_learn_dist_col == 1.0 and self.average_returns > 0.75:
             reference_pos = self.bin2_pos + self.bin2_surface
             z_offset_prob = 1.0
             bin_y_half_vis = self.curr_learn_dist_vis * bin_y_half
@@ -1200,8 +1208,9 @@ class Picking(SingleArmEnv, Serializable):
                 # C> Turn off flag
                 self.fallen_objs_flag = False
 
-            # Update sampler properties, update param for curr learn
-            self._get_placement_initializer()
+            # Update sampler properties, update param for curr learn when we reach 75% average returns
+            if self.average_returns > 0.75:
+                self._get_placement_initializer()
             
             # Sample from the "placement initializer" for all objects (regular and visual objects)
             self.object_placements = self.placement_initializer.sample()
