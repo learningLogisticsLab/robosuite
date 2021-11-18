@@ -1955,6 +1955,7 @@ class Picking(SingleArmEnv, Serializable):
                  'is_inside_workspace': self._is_inside_workspace(env_obs['robot0_proprio-state']) }
 
         if info['is_success']:
+            self.post_action()
             self.add_remove_objects()
 
         # 06b Process Reward * Info
@@ -1980,6 +1981,63 @@ class Picking(SingleArmEnv, Serializable):
         reward = self.compute_reward(env_obs['achieved_goal'], env_obs['desired_goal'], info)
     
         return env_obs, reward, done, info       
+
+    def post_action(self):
+        
+        self._update_observables()
+        env_obs = self._get_obs()
+        gripper_curr_pos = env_obs['robot0_proprio-state'][21:24]
+
+        gripper_state = env_obs['observation'][13:15]
+        desired_gripper_pos = self.bin2_pos+self.bin2_surface+[0.0,-0.10,0.20]
+        gripper_rel_pos = desired_gripper_pos-gripper_curr_pos
+
+        while np.linalg.norm(gripper_rel_pos)>0.1:
+            action=np.array([20*gripper_rel_pos[0],20*gripper_rel_pos[1],20*gripper_rel_pos[2],0,0,0,1])
+
+            for i in range(int(self.control_timestep / self.model_timestep)):
+                self.sim.forward()
+                self._pre_action(action, policy_step=True)
+                self.sim.step()
+                self._update_observables()
+
+            self.render()
+            env_obs = self._get_obs()                
+            gripper_curr_pos = env_obs['robot0_proprio-state'][21:24]
+            gripper_rel_pos = desired_gripper_pos-gripper_curr_pos
+
+        while np.linalg.norm(gripper_state[0])<0.0395:
+            
+            action=np.array([0,0,0,0,0,0,-1])
+
+            for i in range(int(self.control_timestep / self.model_timestep)):
+                self.sim.forward()
+                self._pre_action(action, policy_step=True)
+                self.sim.step()
+                self._update_observables()
+
+            self.render()
+            env_obs = self._get_obs()                
+            gripper_state = env_obs['observation'][13:15]
+
+
+        gripper_initial_pos = np.array([-0.03265195021118044, -0.11499707056321098, 1.0156763108673754])
+        gripper_curr_pos = env_obs['robot0_proprio-state'][21:24]
+        gripper_rel_pos = gripper_curr_pos-gripper_initial_pos
+
+        while np.linalg.norm(gripper_rel_pos)>0.05:
+            action=np.array([20*gripper_rel_pos[0],20*gripper_rel_pos[1],20*gripper_rel_pos[2],0,0,0,1])
+
+            for i in range(int(self.control_timestep / self.model_timestep)):
+                self.sim.forward()
+                self._pre_action(action, policy_step=True)
+                self.sim.step()
+                self._update_observables()
+
+            self.render()
+            env_obs = self._get_obs()                
+            gripper_curr_pos = env_obs['robot0_proprio-state'][21:24]
+            gripper_rel_pos = gripper_initial_pos-gripper_curr_pos
 
     # -----Serialization------
     def __getstate__(self):
