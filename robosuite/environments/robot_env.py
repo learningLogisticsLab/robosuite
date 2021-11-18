@@ -140,6 +140,7 @@ class RobotEnv(MujocoEnv):
         camera_depths=False,
         camera_segmentations=None,
         robot_configs=None,
+        run_speed = 1.,
     ):
         # First, verify that correct number of robots are being inputted
         self.env_configuration = env_configuration
@@ -174,6 +175,7 @@ class RobotEnv(MujocoEnv):
         self.camera_widths = self._input2list(camera_widths, self.num_cameras)
         self.camera_depths = self._input2list(camera_depths, self.num_cameras)
         self.camera_segmentations = self._input2list(camera_segmentations, self.num_cameras)
+        
         # We need to parse camera segmentations more carefully since it may be a nested list
         seg_is_nested = False
         for i, camera_s in enumerate(self.camera_segmentations):
@@ -188,6 +190,7 @@ class RobotEnv(MujocoEnv):
         # sanity checks for camera rendering
         if self.use_camera_obs and not self.has_offscreen_renderer:
             raise ValueError("Error: Camera observations require an offscreen renderer!")
+        
         if self.use_camera_obs and self.camera_names is None:
             raise ValueError("Must specify at least one camera name when using camera obs")
 
@@ -215,7 +218,10 @@ class RobotEnv(MujocoEnv):
             render_collision_mesh   = render_collision_mesh,
             render_visual_mesh      = render_visual_mesh,
             render_gpu_device_id    = render_gpu_device_id,
+            run_speed               = run_speed,
+            
             control_freq            = control_freq,
+            
             horizon                 = horizon,
             ignore_done             = ignore_done,
             hard_reset              = hard_reset,

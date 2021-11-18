@@ -387,7 +387,7 @@ class UniformRandomSampler(ObjectPositionSampler):
                             np.linalg.norm((object_x - x,
                                             object_y - y,
                                             object_z - z))  # Compute the norm between current object and each of the other objects
-                            >= 0.15
+                            <= 0.15
                             # If the norm is less than the sum of the horizontal radius of both objects it means collision
                     ):
                         location_valid = False
