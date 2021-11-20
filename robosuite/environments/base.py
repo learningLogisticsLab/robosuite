@@ -180,17 +180,21 @@ class MujocoEnv(metaclass=EnvMeta):
         self.run_speed              = run_speed
 
         # Simulation-specific attributes
-        self._observables   = {}                        # Maps observable names to observable objects
-        self._obs_cache     = {}                        # Maps observable names to pre-/partially-computed observable values
-        self.control_freq   = control_freq
-        self.horizon        = horizon
-        self.ignore_done    = ignore_done
-        self.hard_reset     = hard_reset
+        self._observables           = {}                # Maps observable names to observable objects
+        self._obs_cache             = {}                # Maps observable names to pre-/partially-computed observable values
+        
+        self.control_freq           = control_freq
+        self.control_timestep       = None
+
+        self.horizon                = horizon
+        self.ignore_done            = ignore_done
+        self.hard_reset             = hard_reset
+
         self._model_postprocessor   = None              # Function to post-process model after load_model() call
         self.model                  = None
+        
         self.cur_time               = None
         self.model_timestep         = None
-        self.control_timestep       = None
         self.deterministic_reset    = False             # Whether to add randomized resetting of objects / robot joints
 
         # Load the model. Yields self.model for task.
@@ -315,10 +319,8 @@ class MujocoEnv(metaclass=EnvMeta):
         else:
             self.sim.reset()
         
-        # Reset necessary robosuite-centric variables
-        #if self.do_reset_internal: # done to avoid a circular loop when needing to change objects after a reset
+        # Reset necessary robosuite-centric variables        
         self._reset_internal()
-        #self.do_reset_internal = True
         self.sim.forward()
         
         # Setup observables, reloading if hard reset
