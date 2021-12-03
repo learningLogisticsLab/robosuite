@@ -1677,13 +1677,13 @@ class Picking(SingleArmEnv, Serializable):
         # Concatenate and place in env_obs (1)
         env_obs = np.concatenate([  # 17 dims
             grip_pos.ravel(),       # 3
-            grip_quat.ravel(),      # 4
+            #grip_quat.ravel(),      # 4
 
-            grip_velp.ravel(),      # 3
-            grip_velr.ravel(),      # 3
+            #grip_velp.ravel(),      # 3
+            #grip_velr.ravel(),      # 3
 
             gripper_state.ravel(),  # 2
-            gripper_vel.ravel(),    # 2
+            #gripper_vel.ravel(),    # 2
         ])
 
         #-------------------------------------------------------------------------- 
@@ -1763,15 +1763,15 @@ class Picking(SingleArmEnv, Serializable):
             #     object_rel_rot.ravel()  # 4
             # ])
             env_obs = np.concatenate([  # 17 + (20 * num_objects)
-                # env_obs,
-                # object_i_pos[3*i:3*(i+1)].ravel(),  # 3
+                env_obs,
+                object_i_pos[3*i:3*(i+1)].ravel(),  # 3
                 # object_i_quat[4*i:4*(i+1)].ravel(),  # 4
 
                 # object_velp[3*i:3*(i+1)].ravel(),  # 3
                 # object_velr[3*i:3*(i+1)].ravel(),  # 3
 
-                object_rel_pos[3*i:3*(i+1)].ravel(),  # 3
-                object_rel_rot[4*i:4*(i+1)].ravel()  # 4
+                # object_rel_pos[3*i:3*(i+1)].ravel(),  # 3
+                # object_rel_rot[4*i:4*(i+1)].ravel()  # 4
             ])
 
             ## TODO: Additional observations
