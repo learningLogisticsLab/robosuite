@@ -1200,50 +1200,50 @@ class Picking(SingleArmEnv, Serializable):
             # Copy objects in target bin back to object names and then clear the former. 
             # After that, both (i) and (ii) require us to collect the object's positions and orientation. And for collision objects, set the HER strategy.
             else:
-                # Special handling of self.timesteps. If all objs picked we need to reset, but do not want timesteps to be reset to zero here.
-                if not self.terminal: # have not been done
+                # Special handling of self.timesteps: If all objs picked up before end of rollout, reset, but keep timestep value 
+                if not self.terminal and ( self.num_objects==len(self.objects_in_target_bin) ): 
                     temp = self.timestep
-                    super()._reset_internal()
+                    super()._reset_internal() # controller|action_dim|camera|viewer|references|observables|time|done
                     self.timestep = temp
+                
                 else:
                     super()._reset_internal()
 
                 # Two cases when objects found in target bin:
-                if self.objects_in_target_bin != []:
+                #if self.objects_in_target_bin != []:
 
-                    # (I) All Objects Picked Up but have not terminated: 
-                    # Bring back objects from target bin to: (i) object_names and (ii) not_yet_consiered_object_names)
-                    # if self.object_names == []:# and not self.terminal:
-                    #     print('\nReset after success but no termination: moving objects from target bin to object_names')
-                    #     self.object_names += self.objects_in_target_bin[:self.num_objects]                                              # Use slicing so that you create new objects (no need to copy
-                    #     self.not_yet_considered_object_names += self.objects_in_target_bin[self.num_objects:]
-                    #     self.objects_in_target_bin.clear()
+                # (I) All Objects Picked Up but have not terminated: 
+                # Bring back objects from target bin to: (i) object_names and (ii) not_yet_consiered_object_names)
+                # if self.object_names == []:# and not self.terminal:
+                #     print('\nReset after success but no termination: moving objects from target bin to object_names')
+                #     self.object_names += self.objects_in_target_bin[:self.num_objects]                                              # Use slicing so that you create new objects (no need to copy
+                #     self.not_yet_considered_object_names += self.objects_in_target_bin[self.num_objects:]
+                #     self.objects_in_target_bin.clear()
 
-                    # # (II) Episode Terminated or fallen object (regardless of where objects are) or other (inside workspace). 
-                    # # Reset structures to their orig numbers: modelled and unmodelled 
-                    # elif self.object_names != []:# and not self.terminal: #self.terminal or self.fallen_objs_flag:      # have not considered if not info['inside_workspace'], so keep else here.
-                    #     print('\nIn reset after termination: reseting object strucs')
-                        
-                    # Refill modelled collision objects directly from the modelled goals
-                    self.object_names = [name[:5] + 'Object' for name in self.visual_object_names]
-
-                    # Refilled unmodelled collision objects directly from the unmodelled goals
-                    self.not_yet_considered_object_names = [name[:5]+'Object' for name in self.not_yet_considered_visual_object_names]
-
-                    # Clear objects in target bin
-                    self.objects_in_target_bin.clear()
-
-                    # Clear fallen objects and flag
-                    self.fallen_objs.clear()                        
-                    self.fallen_objs_flag = False
-
-                    # Assert bin is clear
-                    assert len(self.objects_in_target_bin) == 0, print('target bin is not empty after a reset upon termination')
-
-                    # Reset terminal flag
-                    self.terminal = False
+                # # (II) Episode Terminated or fallen object (regardless of where objects are) or other (inside workspace). 
+                # # Reset structures to their orig numbers: modelled and unmodelled 
+                # elif self.object_names != []:# and not self.terminal: #self.terminal or self.fallen_objs_flag:      # have not considered if not info['inside_workspace'], so keep else here.
+                #     print('\nIn reset after termination: reseting object strucs')
                     
-                    self.printObjectInfo()
+                # Refill modelled collision objects directly from the modelled goals
+                self.object_names = [name[:5] + 'Object' for name in self.visual_object_names]
+                assert len(self.object_names) == self.num_objects, print('The number of modelled objects is less than num_blocks')
+                
+                # Refilled unmodelled collision objects directly from the unmodelled goals
+                self.not_yet_considered_object_names = [name[:5]+'Object' for name in self.not_yet_considered_visual_object_names]
+
+                # Clear objects in target bin
+                self.objects_in_target_bin.clear()
+                assert len(self.objects_in_target_bin) == 0, print('target bin is not empty after a reset upon termination')
+
+                # Clear fallen objects and flag
+                self.fallen_objs.clear()                        
+                self.fallen_objs_flag = False                
+
+                # Reset terminal flag
+                self.terminal = False
+                
+                self.printObjectInfo()
 
             # Update object placements. 
             # Sample from the "placement initializer" for all objects (regular and visual objects)
@@ -1264,8 +1264,8 @@ class Picking(SingleArmEnv, Serializable):
 
                     ## Addition ---
                     # self.object_placements is a place holder for all objects. However:
-                    # Under HER paradigm, we have a self.goal variable for the desired goal +
-                    # Under our current architecture we set self.goal_object as the target goal object until that object is placed. 
+                    # Under HER paradigm, we have a self.goal variable for the desired object +
+                    # Under our current architecture we set self.goal_object as the desired object until that object is placed. 
                     # Use this name + 'Visual' to fill desired_goal which will be used in _get_obs.
                     if obj.name.lower() == self.goal_object['name'][:5] + 'visualobject':
                             self.goal_object['pos'] = obj_pos
@@ -1560,7 +1560,12 @@ class Picking(SingleArmEnv, Serializable):
         workspace_min = np.array([self.bin1_pos[0]-bin_x_half, self.bin1_pos[1]-bin_y_half, self.bin1_pos[2]+self.bin1_surface[2]])
         workspace_max = np.array([self.bin1_pos[0]+bin_x_half, self.bin1_pos[1]+bin_y_half, self.bin1_pos[2]+self.bin1_surface[2]+0.3])
 
-        return np.all(np.greater(robot0_gripper_position, workspace_min)) and np.all(np.less(robot0_gripper_position, workspace_max))
+        inside_workspace = np.all(np.greater(robot0_gripper_position, workspace_min)) and np.all(np.less(robot0_gripper_position, workspace_max))
+        
+        if not inside_workspace:
+            print("\nRobot EEF has moved outside established workspace boundaries!!\n")
+        
+        return inside_workspace
 
     def visualize(self, vis_settings):
         """
@@ -1770,7 +1775,7 @@ class Picking(SingleArmEnv, Serializable):
         achieved_goal = []
 
         # Get robosuite observations as an Ordered dict. keep a local obs reference for convencience (vs. self_observables)
-        obs = self._get_observations(force_update) # if called by reset() [see base class] this will be set to True.
+        obs = self._get_observations(force_update) # if called by reset() [see base class] this will be set to True.        
 
         # Get prefix for robot to extract observation keys
         pf = self.robots[0].robot_model.naming_prefix
@@ -2034,8 +2039,9 @@ class Picking(SingleArmEnv, Serializable):
                 print(F"action {action}") 
 
             # 05 Update observables and get new observations
-            self._update_observables()
-            env_obs = self._get_obs()
+            #self._update_observables() no need to call this here. Can do it by setting force_update=True below.
+            env_obs = self._get_obs(force_update=True)
+            assert np.any(env_obs['robot0_proprio-state'][21:24]), print(env_obs)
             
             policy_step = False
 
@@ -2043,22 +2049,11 @@ class Picking(SingleArmEnv, Serializable):
         self.cur_time += self.control_timestep        
 
         # 06 Process info
-        info = { 'is_success': self._is_success(env_obs['achieved_goal'], env_obs['desired_goal']),
-                 'is_inside_workspace': self._is_inside_workspace(env_obs['robot0_proprio-state']) }
+        info = { 'is_success':          self._is_success( env_obs['achieved_goal'], env_obs['desired_goal'] ),
+                 'is_inside_workspace': self._is_inside_workspace( env_obs['robot0_proprio-state'] ) 
+                 }
 
-        if info['is_success']:
-
-            # # If deployed a scripted policy-based learning and want to open fingers after place, turn on open_gripper_flag
-            # self.open_gripper_flag = True          
-            
-            # ## Experimental code to open fingers after place (no scripted polidy)
-            # for _ in range(25):
-            #     action=np.array([0,0,0,0,0,0,-1]) # -1 action should open fingers
-            #     self._pre_action(action, policy_step=True)
-            #     self._update_observables()
-            #     #env_obs = self._get_obs()     # want to update goals but this will throw an error after all objects successfully placed with an empty self.goal_object and before a reset.
-            #     self.sim.step()
-            #     #self.render()                 # needs us to add a flag. 
+        if info['is_success']: 
             self.add_remove_objects()
 
         # 06b Process Reward * Info
@@ -2073,13 +2068,23 @@ class Picking(SingleArmEnv, Serializable):
             # else:
             #     raise ("Obs_type not recognized")
 
-        # 07 Process Done: 
-        self.terminal = (self.timestep >= self.horizon)             # used in reset. TODO: when all objs picked up before termination, reset called, and timesteps reset... this distorts this condition. 
-        done = (self.terminal and not self.ignore_done                                                  or  # 1. time_step is past horizon               
-               (info['is_success'] and (self.object_names+self.not_yet_considered_object_names) == [])  or  # 2. Succeeded AND no more objects. important for multiple object settings when we are done after all objects picked up.
-               self.fallen_objs_flag                                                                    or  # 3. If there is a fallen object, reset and start again. 
-               not info['is_inside_workspace'])                                                             # 4. If robot end effector exits workspace, reset.                                                           
+        # 07 Process Done (keep self.terminal to use in _reset_internal)
+        self.terminal   = (self.timestep >= self.horizon)               # Needed in _reset_internal(). When all objs are picked up before mzx_path_len is reached, reset is called. But it is important to keep the current number of timesteps (not reset them), such that we can compute an accurate termination condition in succeeding paths. 
+        d_success       = info['is_success'] and (self.object_names+self.not_yet_considered_object_names) == []
+        d_workspace     = not info['is_inside_workspace']
         
+        done = (self.terminal and not self.ignore_done      or          # 1. time_step is past horizon               
+                d_success                                   or          # 2. Succeeded AND no more objects. important for multiple object settings when we are done after all objects picked up.
+                self.fallen_objs_flag                       or          # 3. If there is a fallen object, reset and start again. 
+                d_workspace)                                            # 4. If robot end effector exits workspace, reset.                                                           
+                       
+        if done:
+            print("done called")
+            if self.terminal: print('terminal')
+            if d_success: print('success')
+            if d_workspace: print('workspace')
+            if self.fallen_objs_flag: print('flag')
+
         # 08 Process Reward
         reward = self.compute_reward(env_obs['achieved_goal'], env_obs['desired_goal'], info)
     
