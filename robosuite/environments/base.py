@@ -307,9 +307,8 @@ class MujocoEnv(metaclass=EnvMeta):
         """
         set_site_visualization = True
 
-        # TODO(yukez): investigate black screen of death
         # Use hard reset if requested
-        if self.hard_reset and not self.deterministic_reset:
+        if self.hard_reset and not self.deterministic_reset: #TODO: investigate increasing memory consumption when calling this every rollout
             self._destroy_viewer()
             self._load_model()              #  Create a manipulation task objec (arena/robot/object/placement of objects/goal objects)
             self._postprocess_model()
