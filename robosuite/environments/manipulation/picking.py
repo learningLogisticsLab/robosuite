@@ -1204,9 +1204,11 @@ class Picking(SingleArmEnv, Serializable):
             # Copy objects in target bin back to object names and then clear the former. 
             # After that, both recompute the objects positions and orientation. And for collision objects, set the HER strategy.
             else:
+                #--------------------------------------------------------------------------------------------------------------
                 # Special handling of self.timesteps: If all objs picked up before end of rollout, reset, but keep timestep value 
-                    # TODO: the condition self.num_objects==len(self.objects_in_target_bin)  does not work since objects are moved at the end of this method not before. so we are not successfully checking for success. 
-                    #       this has the effect that the env timestep is not synced up with the algo timestep. it is not critical from what I can see. First rollouts always ok, second rollouts might be terminated on algo side when env side thinks it has not yet reached horizon.
+                # TODO: the condition self.num_objects==len(self.objects_in_target_bin)  does not work since objects are moved at the end of this method not before. so we are not successfully checking for success. 
+                #       this has the effect that the env timestep is not synced up with the algo timestep. it is not critical from what I can see. First rollouts always ok, second rollouts might be terminated on algo side when env side thinks it has not yet reached horizon.
+                #--------------------------------------------------------------------------------------------------------------    
                 # if not self.terminal and ( self.num_objects==len(self.objects_in_target_bin) ): 
                 #     temp = self.timestep
                 #     super()._reset_internal() # controller|action_dim|camera|viewer|references|observables|time|done
@@ -1216,9 +1218,11 @@ class Picking(SingleArmEnv, Serializable):
                 super()._reset_internal()
 
                 # Resetting Objects:
-                # TODO: originally I was considering differences between the below two commented cases. However, not necessary, can reset objects in both similarly without effect. Keeping for future analysis.
+                #--------------------------------------------------------------------------------------------------------------
+                # TODO: originally I was considering differences between the below two commented cases. However, not necessary, can reset objects in both similarly without effect. Keeping comments below for future analysis.
                 # Two cases when objects found in target bin:
-                #if self.objects_in_target_bin != []:
+                #--------------------------------------------------------------------------------------------------------------
+                # if self.objects_in_target_bin != []:
 
                 # (I) All Objects Picked Up but have not terminated: 
                 # Bring back objects from target bin to: (i) object_names and (ii) not_yet_consiered_object_names)
