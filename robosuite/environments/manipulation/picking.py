@@ -311,6 +311,8 @@ class Picking(SingleArmEnv, Serializable):
 
         # Check Grasp
         check_grasp_flag        = False,        # Flag enables checking whether gripper fingers touching object. Useful to confirm success turns computation on/off and used in _is_success
+
+        debug                   = True          # used to print print statements
     ):
         print('Generating Picking class.\n')
         # Task settings
@@ -409,7 +411,9 @@ class Picking(SingleArmEnv, Serializable):
         self.open_gripper_flag = False
 
         # Variant dictionary
-        self.variant = variant
+        self.variant = variant                                  # leveraged in train_sequentialTransfer.py
+
+        self.debug = debug                                      # Used to print print statements
 
         # Initialize Parent Classes: SingleArmEnv->ManipEnv->RobotEnv->MujocoEnv
         super().__init__(
@@ -1198,17 +1202,21 @@ class Picking(SingleArmEnv, Serializable):
             # II. Not Object Randomizations. 
             #     Continuing Reset. 
             # Copy objects in target bin back to object names and then clear the former. 
-            # After that, both (i) and (ii) require us to collect the object's positions and orientation. And for collision objects, set the HER strategy.
+            # After that, both recompute the objects positions and orientation. And for collision objects, set the HER strategy.
             else:
                 # Special handling of self.timesteps: If all objs picked up before end of rollout, reset, but keep timestep value 
-                if not self.terminal and ( self.num_objects==len(self.objects_in_target_bin) ): 
-                    temp = self.timestep
-                    super()._reset_internal() # controller|action_dim|camera|viewer|references|observables|time|done
-                    self.timestep = temp
+                    # TODO: the condition self.num_objects==len(self.objects_in_target_bin)  does not work since objects are moved at the end of this method not before. so we are not successfully checking for success. 
+                    #       this has the effect that the env timestep is not synced up with the algo timestep. it is not critical from what I can see. First rollouts always ok, second rollouts might be terminated on algo side when env side thinks it has not yet reached horizon.
+                # if not self.terminal and ( self.num_objects==len(self.objects_in_target_bin) ): 
+                #     temp = self.timestep
+                #     super()._reset_internal() # controller|action_dim|camera|viewer|references|observables|time|done
+                #     self.timestep = temp
                 
-                else:
-                    super()._reset_internal()
+                # else:
+                super()._reset_internal()
 
+                # Resetting Objects:
+                # TODO: originally I was considering differences between the below two commented cases. However, not necessary, can reset objects in both similarly without effect. Keeping for future analysis.
                 # Two cases when objects found in target bin:
                 #if self.objects_in_target_bin != []:
 
@@ -1243,7 +1251,8 @@ class Picking(SingleArmEnv, Serializable):
                 # Reset terminal flag
                 self.terminal = False
                 
-                self.printObjectInfo()
+                if self.debug: 
+                    self.printObjectInfo()
 
             # Update object placements. 
             # Sample from the "placement initializer" for all objects (regular and visual objects)
@@ -1251,7 +1260,8 @@ class Picking(SingleArmEnv, Serializable):
             
             # Set goal object to pick up and sort closest objects to model
             self.goal_object, self.other_objs_than_goals = self.get_goal_object() 
-            print( '\nThe goal object is: {} \n'.format( self.goal_object['name'] ) )              
+            if self.debug: 
+                print( '\nThe goal object is: {} \n'.format( self.goal_object['name'] ) )              
             
             # Position the objects
             for obj_pos, obj_quat, obj in self.object_placements.values():
@@ -1371,7 +1381,8 @@ class Picking(SingleArmEnv, Serializable):
             
             # bring goal obj to front
             self.sorted_objects_to_model = self.return_sorted_objs_to_model(self.goal_object, self.other_objs_than_goals)
-            print("fallen is {}, pos is {}, goal is {}, other obj is {}".format(fallen_objs, self._observables[fallen_objs[0]+'_pos'].obs, self.goal_object,
+            if self.debug: 
+                print("fallen is {}, pos is {}, goal is {}, other obj is {}".format(fallen_objs, self._observables[fallen_objs[0]+'_pos'].obs, self.goal_object,
                                                                      self.other_objs_than_goals))
             # Turn on flag if we detect 1 fallen obj
             self.fallen_objs_flag = True
@@ -1449,16 +1460,17 @@ class Picking(SingleArmEnv, Serializable):
 
         global _reset_internal_after_picking_all_objs
 
-        print("\nSuccessfully picked {}". format(self.goal_object['name']))
+        if self.debug: print("\nSuccessfully picked {}". format(self.goal_object['name']))
 
         # 01 Object Handling
         # Add the current goal object to the list of target bin objects
         assert self.goal_object != {}, 'checking Picking.add_remove_objects(). Your goal_object is empty.'
 
         self.objects_in_target_bin.append(self.goal_object['name'])
-        print("\nThe current objects in the target bin are:")
-        for object in self.objects_in_target_bin:
-            print(f"{object} ")    
+        if self.debug: 
+            print("\nThe current objects in the target bin are:")
+            for object in self.objects_in_target_bin:
+                print(f"{object} ")    
                                 
         # Remove goal from the list of modeled names for the next round            
         self.object_names.remove(self.goal_object['name'])
@@ -1487,14 +1499,16 @@ class Picking(SingleArmEnv, Serializable):
                 self.sorted_objects_to_model[closest_obj_to_goal[0]] = closest_obj_to_goal[1]
                 self.not_yet_considered_object_names.remove(closest_obj_to_goal[0])
             
-            print(f"\nComputing new object goal. \nNew goal obj is {self.goal_object['name']} with location: (", end='')
-            for val in self.goal_object['pos']:
-                 print(f'{val:2.2f},', end='')
-            print(')\n')
+            if self.debug: 
+                print(f"\nComputing new object goal. \nNew goal obj is {self.goal_object['name']} with location: (", end='')
+                for val in self.goal_object['pos']:
+                    print(f'{val:2.2f},', end='')
+                print(')\n')
 
         elif (self.object_names + self.not_yet_considered_object_names) == []: # len(self.object_names) == 0 and len(self.objects_in_target_bin) == self.num_objs_to_load:
-            _reset_internal_after_picking_all_objs = True                                
-            print("\nFinished picking and placing all objects, can call reset internal again")            
+            _reset_internal_after_picking_all_objs = True          
+            if self.debug:                      
+                print("\nFinished picking and placing all objects, can call reset internal again")            
 
     def check_success(self):
         """
@@ -1531,7 +1545,8 @@ class Picking(SingleArmEnv, Serializable):
 
             # Get a new object_goal if objs still available
             self.goal_object,_ = self.get_goal_object() 
-            print(f"Successful placement. New object goal is {self.goal_object['name']}") 
+            if self.debug: 
+                print(f"Successful placement. New object goal is {self.goal_object['name']}") 
 
             # Add the current goal object to the list ob objects in target bins
             self.objects_in_target_bin.append(self.goal_object['name'])            
@@ -1563,13 +1578,14 @@ class Picking(SingleArmEnv, Serializable):
         inside_workspace = np.all(np.greater(robot0_gripper_position, workspace_min)) and np.all(np.less(robot0_gripper_position, workspace_max))
         
         if not inside_workspace:
-            print("\nRobot EEF has moved outside established workspace boundaries!!\n")
+            if self.debug: 
+                print("\nRobot EEF has moved outside established workspace boundaries!!\n")
         
         return inside_workspace
 
     def visualize(self, vis_settings):
         """
-        In addition to super call, visualize gripper site proportional to the distance to the closest object.
+        In addition to super call, visualize "gripper site" proportional to the distance to the closest object.
 
         Args:
             vis_settings (dict): Visualization keywords mapped to T/F, determining whether that specific
@@ -2079,11 +2095,12 @@ class Picking(SingleArmEnv, Serializable):
                 d_workspace)                                            # 4. If robot end effector exits workspace, reset.                                                           
                        
         if done:
-            print("done called")
-            if self.terminal: print('terminal')
-            if d_success: print('success')
-            if d_workspace: print('workspace')
-            if self.fallen_objs_flag: print('flag')
+            if self.debug: 
+                print(f"done called. timesteps: {self.timestep}")
+                if self.terminal:           print('terminal')
+                if d_success:               print('success')
+                if d_workspace:             print('workspace')
+                if self.fallen_objs_flag:   print('flag')
 
         # 08 Process Reward
         reward = self.compute_reward(env_obs['achieved_goal'], env_obs['desired_goal'], info)
