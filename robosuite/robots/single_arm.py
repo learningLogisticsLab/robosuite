@@ -246,6 +246,8 @@ class SingleArm(Manipulator):
 
         # Update the controller goal if this is a new policy step
         if policy_step:
+
+            # Scale arm action (xyz rpy) to compute delta, check for limits, and add.
             self.controller.set_goal(arm_action)
 
         # Now run the controller for a step

@@ -12,6 +12,9 @@ REGISTERED_ENVS = {}
 picking_dict = {}
 
 # See rlkit/util/arguments.py to match options for class registration names
+MAX_OBJ         = 10  # max num of objects
+MAX_NRB         = 3   # max num of relational blocks (meesage passin)
+MAX_NQH         = 1   # max num of number of query heads
 REWARDS         = ["dense", "sparse", "incremental"]
 OBS_TYPE        = ["dictstate", "dictimage", "np"]
 RESET_STRATEGY  = ['jumbled', 'wall', 'stacked', 'random']
@@ -25,23 +28,30 @@ def register_env(target_class):
     # - Gives you the ability to create different class names, for the same type of class. 
     # - Useful in curriculum learning to distinguish class properties from name. 
     # - We store the different names in the REGISTERED_ENVS dictionary, with its value as the target_class.
+    #
     # - Class name variables are hand formatted here. But must make sure that they agree with variables in rlkit/util/arguments.py as well as those in 3 other locations:
-    #   1. env_name in DRL algo (i.e. rlkit-relational/rlkit/util/arguments.py/get_expl_env_kwargs:env_name)
-    #   2. Replay learned policy (i.e. rlkit-relational/scripts/sim_goal_conditioned_policy.py in the suite.make() line.)
-    #   3. In curriculum learning (i.e. rlkit-relational/examplers/relationalrl/train_sequentialtransfer.py:exp_prefix)
+    #       1. env_name in DRL algo (i.e. rlkit-relational/rlkit/util/arguments.py/get_expl_env_kwargs:env_name)
+    #       2. Replay learned policy (i.e. rlkit-relational/scripts/sim_goal_conditioned_policy.py in the suite.make() line.)
+    #       3. In curriculum learning (i.e. rlkit-relational/examplers/relationalrl/train_sequentialtransfer.py:exp_prefix)
     #-------------------------------------------------------------
     if target_class.__name__ == 'Picking':
-        for objs in range(1, 25):                       # loaded objs
-            for num_blocks in range(1, objs+1):         # modeled objects
-                for num_relational_blocks in list(range(1,4)):  # currently only testin with 3 relational blocks (message passing)
-                    for num_query_heads in list(range(1,4)):       # number of query heads (multi-head attention) currently fixed at 1
-                        for reward in REWARDS:  
-                            for obs_type in OBS_TYPE: 
-                                for object_reset_strategy in RESET_STRATEGY:
+        for prev_objs in range(1, MAX_OBJ+1):                                       # loaded objs
+            for objs in range(1, MAX_OBJ+1):                                        # loaded objs
+                for prev_num_blocks in range(1, MAX_OBJ+1):                         # modeled objects
+                    for num_blocks in range(1, MAX_OBJ+1):                          # modeled objects
+                        for num_relational_blocks in list(range(1,MAX_NRB+1)):      # currently only testin with 3 relational blocks (message passing)
+                            for num_query_heads in list(range(1,MAX_NQH+1)):        # number of query heads (multi-head attention) currently fixed at 1
+                                for reward in REWARDS:  
+                                    for obs_type in OBS_TYPE: 
+                                        for object_reset_strategy in RESET_STRATEGY:
 
-                                    # Generate the class name 
-                                    className = F"picking_{objs}objs_{num_blocks}model_{num_relational_blocks}nrb_{num_query_heads}nqh_{reward}Rew_{obs_type}Obs_{object_reset_strategy}Strat"
-                                    REGISTERED_ENVS[className] = target_class
+                                            # Generate the class name 
+                                            className = F"picking_{objs}objs_{num_blocks}model_{num_relational_blocks}nrb_{num_query_heads}nqh_{reward}Rew_{obs_type}Obs_{object_reset_strategy}Strat"
+                                            REGISTERED_ENVS[className] = target_class
+
+                                            # Sequential Transfer variations
+                                            className = F"seqTransf_{prev_objs}prevObjs_{prev_num_blocks}prevModel_{className}"
+                                            REGISTERED_ENVS[className] = target_class
     else:
         REGISTERED_ENVS[target_class.__name__] = target_class
 
@@ -302,10 +312,8 @@ class MujocoEnv(metaclass=EnvMeta):
         else:
             self.sim.reset()
         
-        # Reset necessary robosuite-centric variables
-        #if self.do_reset_internal: # done to avoid a circular loop when needing to change objects after a reset
-        self._reset_internal()
-        #self.do_reset_internal = True
+        # Reset necessary robosuite-centric variables        
+        self._reset_internal()        
         self.sim.forward()
         
         # Setup observables, reloading if hard reset
@@ -579,7 +587,7 @@ class MujocoEnv(metaclass=EnvMeta):
 
     def check_contact(self, geoms_1, geoms_2=None):
         """
-        Finds contact between two geom groups.
+        Finds contact between two geom groups, i.e. gripper and objects.
 
         Args:
             geoms_1 (str or list of str or MujocoModel): an individual geom name or list of geom names or a model. If

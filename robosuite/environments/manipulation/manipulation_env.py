@@ -159,27 +159,31 @@ class ManipulationEnv(RobotEnv):
         # Run superclass init
         super().__init__(
             robots=robots,
+            robot_configs=robot_configs,
             env_configuration=env_configuration,
-            controller_configs=controller_configs,
             mount_types=mount_types,
+
+            control_freq=control_freq,
+            controller_configs=controller_configs,            
             initialization_noise=initialization_noise,
+            
             use_camera_obs=use_camera_obs,
             has_renderer=has_renderer,
             has_offscreen_renderer=has_offscreen_renderer,
             render_camera=render_camera,
             render_collision_mesh=render_collision_mesh,
             render_visual_mesh=render_visual_mesh,
-            render_gpu_device_id=render_gpu_device_id,
-            control_freq=control_freq,
-            horizon=horizon,
-            ignore_done=ignore_done,
-            hard_reset=hard_reset,
+            render_gpu_device_id=render_gpu_device_id,            
+
             camera_names=camera_names,
             camera_heights=camera_heights,
             camera_widths=camera_widths,
             camera_depths=camera_depths,
             camera_segmentations=camera_segmentations,
-            robot_configs=robot_configs,
+
+            horizon=horizon,
+            ignore_done=ignore_done,
+            hard_reset=hard_reset,                        
         )
 
     @property
