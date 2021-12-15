@@ -16,6 +16,10 @@ from robosuite.utils.placement_samplers import SequentialCompositeSampler, Unifo
 # Import desired|all objects (and visual objects). Use * to import large number of objects. 
 from robosuite.models.objects import * 
 
+import matplotlib.cm as cm
+import pygame
+import cv2
+
 # After importing we can extract objects by getting the modules via dir()
 mods = dir()
 
@@ -276,15 +280,16 @@ class Picking(SingleArmEnv, Serializable):
         goal_pos_error_thresh   = 0.05,     # Used to determine if the current position of the object is within a threshold of goal position
 
         # Camera: RGB
-        camera_names            = "agentview",
-        camera_heights          = 256,
-        camera_widths           = 256,
+        camera_names            = "robot0_eye_in_hand",
+        camera_heights          = 84,
+        camera_widths           = 84,
         camera_depths           = False,
 
         has_renderer            = False,
         has_offscreen_renderer  = True,
         # "camera" names = ('frontview', 'birdview', 'agentview', 'robot0_robotview', 'robot0_eye_in_hand').
         render_camera           = "agentview", #TODO: may need to adjust here for better angle for our work
+        camera_segmentations     = "instance",
         render_collision_mesh   = False,
         render_visual_mesh      = True,
         render_gpu_device_id    = 0,            # was -1 
@@ -391,6 +396,11 @@ class Picking(SingleArmEnv, Serializable):
         # Variant dictionary
         self.variant = variant
 
+        self.camera_heights          = camera_heights
+        self.camera_widths           = camera_widths
+
+        self.screen = pygame.display.set_mode((self.camera_widths, self.camera_heights))
+
         # Initialize Parent Classes: SingleArmEnv->ManipEnv->RobotEnv->MujocoEnv
         super().__init__(
             robots                  = robots,
@@ -407,6 +417,7 @@ class Picking(SingleArmEnv, Serializable):
             hard_reset              = hard_reset,
 
             camera_names            = camera_names,
+            camera_segmentations    = camera_segmentations,
             camera_heights          = camera_heights,
             camera_widths           = camera_widths,
             camera_depths           = camera_depths,
@@ -1657,6 +1668,12 @@ class Picking(SingleArmEnv, Serializable):
         # Get robosuite observations as an Ordered dict. keep a local obs reference for convencience (vs. self_observables)
         obs = self._get_observations(force_update) # if called by reset() [see base class] this will be set to True.
 
+
+        if self.use_camera_obs:
+            # image_obs = obs[self.camera_names[0]+'_image']
+            seg_image_obs = obs[self.camera_names[0]+'_segmentation_instance']
+            proc_seg_image = self.process_seg_image(seg_image_obs, output_size=(self.camera_widths[0], self.camera_heights[0]))
+
         # Get prefix for robot to extract observation keys
         pf = self.robots[0].robot_model.naming_prefix
         dt = self.sim.nsubsteps * self.sim.model.opt.timestep  # dt is equivalent to the amount of time across number of substeps. But xvelp is already the velocity in 1 substep. It seems to make more sense to simply scale xvel by the number of substeps in 1 env step.        
@@ -1804,6 +1821,8 @@ class Picking(SingleArmEnv, Serializable):
             'observation':   env_obs.copy(),
             'achieved_goal': achieved_goal.copy(),  # [ag_ob0_xyz, ag_ob1_xyz, ... rob_xyz]
             'desired_goal':  desired_goal.copy(),   # [goal_obj_xyz, goal_obj_quat]
+            # self.camera_names[0]+'_image': image_obs,
+            'image_'+self.camera_names[0]: proc_seg_image.copy(),
 
             # TODO: Should we also include modalities [image-state, object-state] from observables? 
             # GymWrapper checks for it, but we may not need GymWrapper.
@@ -1816,6 +1835,26 @@ class Picking(SingleArmEnv, Serializable):
         #TODO: add image representation
         #if obs[]
         return return_dict
+
+    def process_seg_image(self, seg_im, output_size):
+        """
+        Helper function to visualize segmentations as grayscale frames.
+        NOTE: assumes that geom IDs go up to 255 at most - if not,
+        multiple geoms might be assigned to the same color.
+        """
+        
+        # flip and ensure all values lie within [0, 255]
+        seg_im = np.mod(np.flip(seg_im.transpose((1, 0, 2)), 1).squeeze(-1)[::-1], 256)
+
+        # deterministic shuffling of values to map each geom ID to a random int in [0, 255]
+        rstate = np.random.RandomState(seed=10)
+        inds = np.arange(256)
+        rstate.shuffle(inds)
+
+        # use @inds to map each geom ID to a color
+        gray_image = (cm.gray(inds[seg_im], 3))[..., :1].squeeze(-1)
+
+        return cv2.resize(gray_image, output_size)
 
     def step(self, action):
         '''
@@ -1921,6 +1960,20 @@ class Picking(SingleArmEnv, Serializable):
             env_obs = self._get_obs()
             
             policy_step = False
+
+
+        if self.use_camera_obs:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    sys.exit()
+            # read camera observation
+            im = env_obs['image_'+self.camera_names[0]]
+            im = np.uint8(im * 255.0)
+            pygame.pixelcopy.array_to_surface(self.screen, cv2.merge([im,im,im]))
+            pygame.display.update()
+            # print(rgb_im.shape)
+            # plt.imshow(rgb_im, cmap='gray')
+            # plt.show()
 
         # Note: this is done all at once to avoid floating point inaccuracies
         self.cur_time += self.control_timestep        

@@ -68,8 +68,9 @@ class GymWrapper(Wrapper, Env, Serializable):
             
             # Add image obs if requested
             if self.env.use_camera_obs:
-                keys += [f"{cam_name}_image" for cam_name in self.env.camera_names]
-            
+                # keys += [f"{cam_name}_image" for cam_name in self.env.camera_names]
+                keys += [f"image_{cam_name}" for cam_name in self.env.camera_names]
+
             # Iterate over all robots to add to state
             for idx in range(len(self.env.robot_names)): # for idx in range(len(self.env.robos)):
                 keys += ["robot{}_proprio-state".format(idx)]
@@ -119,9 +120,10 @@ class GymWrapper(Wrapper, Env, Serializable):
                 # Set the observation space as a spaces.Dict. Can check rlkit_relational/FCB/FCB/envs/robotics/robot_env.py__init__
                 # Spatial Information:
                 self.observation_space = spaces.Dict(dict(
-                    desired_goal  = spaces.Box(-np.inf, np.inf, shape=obs['achieved_goal'].shape, dtype='float32'),
+                    desired_goal  = spaces.Box(-np.inf, np.inf, shape=obs['desired_goal'].shape, dtype='float32'),
                     achieved_goal = spaces.Box(-np.inf, np.inf, shape=obs['achieved_goal'].shape, dtype='float32'),
                     observation   = spaces.Box(-np.inf, np.inf, shape=obs['observation'].shape, dtype='float32'),
+                    image_robot0_eye_in_hand = spaces.Box(0, 255, shape=obs['image_robot0_eye_in_hand'].shape, dtype=np.uint8),
                 ))       
 
                 # Action Dimensions... 
