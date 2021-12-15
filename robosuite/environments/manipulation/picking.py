@@ -55,7 +55,8 @@ from robosuite.wrappers import GymWrapper
 from rlkit.envs.wrappers import NormalizedBoxEnv 
 
 # Globals
-object_reset_strategy_cases = ['jumbled', 'wall', 'random']# ['organized', 'jumbled', 'wall', 'random']
+object_reset_strategy_cases = ['jumbled', 'wall']# ['organized', 'jumbled', 'wall', 'random']
+_reset_internal_after_picking_all_objs = True
 
 
 class Picking(SingleArmEnv, Serializable):
@@ -695,7 +696,7 @@ class Picking(SingleArmEnv, Serializable):
         """
         # init eef [-0.02423557, -0.09839531,  1.02317629]
         if self.object_reset_strategy == 'random':
-            self.object_reset_strategy = random.choice(object_reset_strategy_cases[0:3]) # Do not include random in selection
+            self.object_reset_strategy = random.choice(object_reset_strategy_cases[0:2]) # Do not include random in selection
 
         if self.object_reset_strategy == 'jumbled':
             self.placement_initializer = SequentialCompositeSampler(name="ObjectSampler")  # Samples position for each object sequentially. Allows chaining multiple placement initializers together - so that object locations can be sampled on top of other objects or relative to other object placements.
@@ -708,16 +709,16 @@ class Picking(SingleArmEnv, Serializable):
                 sampler = UniformRandomSampler(
                     name                            = "pickObjectSampler",
                     mujoco_objects                  = self.objects+self.not_yet_considered_objects,
-                    # x_range                         = [-binx_half, bin_x_half],    # This (+ve,-ve) range goes from center to the walls on each side of the bin
-                    # y_range                         = [-bin_y_half, bin_y_half],
-                    x_range                         = [-self.curr_learn_dist, self.curr_learn_dist],                # 5 cm from ref
-                    y_range                         = [-self.curr_learn_dist, self.curr_learn_dist],
+                    x_range                         = [-bin_x_half, bin_x_half],    # This (+ve,-ve) range goes from center to the walls on each side of the bin
+                    y_range                         = [-bin_y_half, bin_y_half],
+                    # x_range                         = [-self.curr_learn_dist, self.curr_learn_dist],                # 5 cm from ref
+                    # y_range                         = [-self.curr_learn_dist, self.curr_learn_dist],
                     rotation                        = None,                         # Add uniform random rotation
                     rotation_axis                   = 'z',                          # Currently only accepts one axis. TODO: extend to multiple axes.
                     ensure_object_boundary_in_range = True,
                     ensure_valid_placement          = True,
-                    # reference_pos                   = self.bin1_pos + self.bin1_surface,
-                    reference_pos                   = [-0.02423557, -0.09839531,  self.bin1_pos[2]+self.bin1_surface[2]],
+                    reference_pos                   = self.bin1_pos + self.bin1_surface,
+                    # reference_pos                   = [-0.02423557, -0.09839531,  self.bin1_pos[2]+self.bin1_surface[2]],
                     z_offset                        = 0.,
                 )
             )
@@ -784,7 +785,7 @@ class Picking(SingleArmEnv, Serializable):
                 ensure_valid_placement          = True,
                 reference_pos                   = self.bin1_pos + self.bin1_surface,
                 z_offset                        = 0.10,                             # Set a vertical offset of XXcm above the bin
-                z_offset_prob                   = 1.0,  # probability with which to set the z_offset
+                z_offset_prob                   = 0.50,  # probability with which to set the z_offset
             )
         )
 
@@ -1028,7 +1029,7 @@ class Picking(SingleArmEnv, Serializable):
             3. move gripper fingers and update gripper sim according to obj.y_radius
         """
         # Set HER 50% of the time
-        HER = np.random.uniform() < 0.50
+        HER = np.random.uniform() < 0.0#0.50
         # introduce offset between grip site and gripper mount to prevent collision
         offset = 0.03
         # maximum gripping space
@@ -1039,8 +1040,6 @@ class Picking(SingleArmEnv, Serializable):
             # Rename goal object pos as eef pos, goal object quat
             HER_pos = self._eef_xpos
             HER_quat = obj_quat
-            # print("Original object pos is {}".format(HER_pos))
-            # print("Original obj_quat is {}".format(HER_quat))
             min_longitude = min(obj.x_radius * 2, obj.y_radius * 2, obj.vertical_radius)
             # Gripping strategy if horizontal radius is the shorter side
             if min_longitude == (obj.x_radius * 2) or min_longitude == (obj.y_radius * 2):
@@ -1078,8 +1077,6 @@ class Picking(SingleArmEnv, Serializable):
             self.goal_object['pos'] = HER_pos
             self.goal_object['quat'] = HER_quat
             self.sim.data.set_joint_qpos(obj.joints[0], np.concatenate([np.array(HER_pos), np.array(HER_quat)]))
-            # print("Update HER pos for {} to {}".format(self.goal_object['name'], HER_pos))
-            # print("Update HER pose for {} to {}".format(self.goal_object['name'], HER_quat))
         else:
             self.sim.data.set_joint_qpos(obj.joints[0], np.concatenate([np.array(obj_pos), np.array(obj_quat)]))
 
@@ -1338,18 +1335,17 @@ class Picking(SingleArmEnv, Serializable):
         # Subtract obj_pos from goal and compute that error's norm:
         target_dist_error = np.linalg.norm(achieved_goal - desired_goal)
 
-        # while not check_grasp:
+        # Include checking whether any pad of the fingers is touching the goal object
+        check_grasp = False
         if self.goal_object['name'] == [] or self.goal_object == {}:
             check_grasp = False
         else:
             check_grasp = self._check_grasp(
-                gripper=self.robots[0].gripper,
-                object_geoms=[g for g in self.object_placements[self.goal_object['name']][2].contact_geoms])
-            # print("obj geoms {}".format([g for g in self.object_placements[self.goal_object['name']][2].contact_geoms]))
-            # print("debug check grasp {}".format(check_grasp))
+                    gripper=self.robots[0].gripper,
+                    object_geoms=[g for g in self.object_placements[self.goal_object['name']][2].contact_geoms])
 
         # If successfully placed
-        if target_dist_error <= self.goal_pos_error_thresh and check_grasp:
+        if target_dist_error <= self.goal_pos_error_thresh:
 
             print("Successfully picked {}". format(self.goal_object['name']))
             # 02 Object Handling
@@ -1430,6 +1426,29 @@ class Picking(SingleArmEnv, Serializable):
             
 
         return True
+
+    def _is_inside_workspace(self, robot0_proprio_obs):
+        """
+        Check if the robot end-effector is inside a box-like workspace.
+
+        For x- and y-axes, the limits of the workspace match those of the bin.
+        For z-axes, the lower limit coincides with the bin's bottom surface and the upper limit is located 50cm above that.
+
+        Returns:
+            bool: True if robot end-effector is inside the workspace.
+
+        """
+
+        robot0_gripper_position = robot0_proprio_obs[21:24] # extract end-effector position for robot propoprioception observation vector
+
+        # bin size
+        bin_x_half = self.model.mujoco_arena.table_full_size[0] / 2 - 0.05  # half of bin - edges (2*0.025 half of each side of each wall so that we don't hit the wall)
+        bin_y_half = self.model.mujoco_arena.table_full_size[1] / 2 - 0.05
+
+        workspace_min = np.array([self.bin1_pos[0]-bin_x_half, self.bin1_pos[1]-bin_y_half, self.bin1_pos[2]+self.bin1_surface[2]])
+        workspace_max = np.array([self.bin1_pos[0]+bin_x_half, self.bin1_pos[1]+bin_y_half, self.bin1_pos[2]+self.bin1_surface[2]+0.3])
+
+        return np.all(np.greater(robot0_gripper_position, workspace_min)) and np.all(np.less(robot0_gripper_position, workspace_max))
 
     def visualize(self, vis_settings):
         """
@@ -1905,7 +1924,8 @@ class Picking(SingleArmEnv, Serializable):
         self.cur_time += self.control_timestep        
 
         # 06 Process info
-        info = { 'is_success': self._is_success(env_obs['achieved_goal'], env_obs['desired_goal']) }
+        info = { 'is_success': self._is_success(env_obs['achieved_goal'], env_obs['desired_goal']),
+                 'is_inside_workspace': self._is_inside_workspace(env_obs['robot0_proprio-state']) }
 
         # 06b Process Reward * Info
             # TODO: design a manner to describe observations in our graph node setting. currently just 'state', but later will use images in nodes, and can extend beyond.
@@ -1920,9 +1940,9 @@ class Picking(SingleArmEnv, Serializable):
             #     raise ("Obs_type not recognized")
 
         # 07 Process Done: 
-        # If (i) time_step is past horizon OR (ii) we have succeeded, set to true.
+        # If (i) time_step is past horizon OR (ii) we have succeeded, set to true OR (iii) end-effector moves outside the workspace
         done = (self.timestep >= self.horizon) and not self.ignore_done or info['is_success'] and self.object_names == [] \
-               or self.fallen_objs_flag
+               or self.fallen_objs_flag or not info['is_inside_workspace']
         
         # 08 Process Reward
         reward = self.compute_reward(env_obs['achieved_goal'], env_obs['desired_goal'], info)

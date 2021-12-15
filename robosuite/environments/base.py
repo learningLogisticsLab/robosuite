@@ -587,7 +587,7 @@ class MujocoEnv(metaclass=EnvMeta):
 
     def check_contact(self, geoms_1, geoms_2=None):
         """
-        Finds contact between two geom groups.
+        Finds contact between two geom groups, i.e. gripper and objects.
 
         Args:
             geoms_1 (str or list of str or MujocoModel): an individual geom name or list of geom names or a model. If

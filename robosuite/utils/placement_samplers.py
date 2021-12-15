@@ -293,7 +293,7 @@ class UniformRandomSampler(ObjectPositionSampler):
 
                 # Place the object in the air with z_offset with probability z_offset_prob
                 if np.random.uniform() < self.z_offset_prob:
-                    object_z = self.z_offset + base_offset[2] + obj.vertical_radius / 2
+                    object_z = np.random.uniform(0, self.z_offset) + base_offset[2] + obj.vertical_radius / 2
                 else:
                     object_z = base_offset[2] + obj.vertical_radius / 2
 
@@ -333,8 +333,6 @@ class UniformRandomSampler(ObjectPositionSampler):
         if not success:
             print("cannot place all objs")
             # raise RandomizationError("Cannot place all objects ):")
-        # print("{} placed objs are {}".format(len(placed_objects.keys()), placed_objects.keys()))
-        # print("{} placed vis objs are {}")
         return placed_objects
 
     def recheck_validity_pos(self, location_valid, success, placed_objects, object_x, object_y, object_z, obj):

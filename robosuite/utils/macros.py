@@ -8,7 +8,7 @@ To make sure global reference is maintained, should import these settings as:
 """
 
 # Global Mujoco Simulation Parameters
-SIMULATION_TIMESTEP = 0.002     # Internal simulation timestep (in seconds)
+SIMULATION_TIMESTEP = 0.004 #0.002     # Internal simulation timestep (in seconds)
 
 # Instance Randomization
 # Used if we want to randomize geom groups uniformly per instance -- e.g.: entire robot arm, vs. per-joint geom
