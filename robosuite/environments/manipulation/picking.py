@@ -281,8 +281,8 @@ class Picking(SingleArmEnv, Serializable):
 
         # Camera: RGB
         camera_names            = "robot0_eye_in_hand",
-        camera_heights          = 84,
-        camera_widths           = 84,
+        camera_image_height     = 84,
+        camera_image_width      = 84,
         camera_depths           = False,
 
         has_renderer            = False,
@@ -396,10 +396,10 @@ class Picking(SingleArmEnv, Serializable):
         # Variant dictionary
         self.variant = variant
 
-        self.camera_heights          = camera_heights
-        self.camera_widths           = camera_widths
+        self.camera_image_height          = camera_image_height
+        self.camera_image_width           = camera_image_width
 
-        self.screen = pygame.display.set_mode((self.camera_widths, self.camera_heights))
+        self.screen = pygame.display.set_mode((self.camera_image_width, self.camera_image_height))
 
         # Initialize Parent Classes: SingleArmEnv->ManipEnv->RobotEnv->MujocoEnv
         super().__init__(
@@ -418,8 +418,8 @@ class Picking(SingleArmEnv, Serializable):
 
             camera_names            = camera_names,
             camera_segmentations    = camera_segmentations,
-            camera_heights          = camera_heights,
-            camera_widths           = camera_widths,
+            camera_heights          = camera_image_height,
+            camera_widths           = camera_image_width,
             camera_depths           = camera_depths,
 
             has_renderer            = has_renderer,
@@ -1673,7 +1673,7 @@ class Picking(SingleArmEnv, Serializable):
         if self.use_camera_obs:
             # image_obs = obs[self.camera_names[0]+'_image']
             seg_image_obs = obs[self.camera_names[0]+'_segmentation_instance']
-            proc_seg_image = self.process_seg_image(seg_image_obs, output_size=(self.camera_widths[0], self.camera_heights[0]))
+            proc_seg_image = self.process_seg_image(seg_image_obs, output_size=(self.camera_image_height, self.camera_image_width))
 
         # Get prefix for robot to extract observation keys
         pf = self.robots[0].robot_model.naming_prefix
