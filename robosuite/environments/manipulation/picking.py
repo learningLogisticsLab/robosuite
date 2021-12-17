@@ -17,7 +17,6 @@ from robosuite.utils.placement_samplers import SequentialCompositeSampler, Unifo
 from robosuite.models.objects import * 
 
 import matplotlib.cm as cm
-import pygame
 import cv2
 
 # After importing we can extract objects by getting the modules via dir()
@@ -292,6 +291,7 @@ class Picking(SingleArmEnv, Serializable):
         camera_segmentations     = "instance",
         render_collision_mesh   = False,
         render_visual_mesh      = True,
+        use_pygame_render       = False,
         render_gpu_device_id    = 0,            # was -1 
 
         # Noise
@@ -398,8 +398,12 @@ class Picking(SingleArmEnv, Serializable):
 
         self.camera_image_height          = camera_image_height
         self.camera_image_width           = camera_image_width
+        
+        self.use_pygame_render           = use_pygame_render
 
-        self.screen = pygame.display.set_mode((self.camera_image_width, self.camera_image_height))
+        if use_pygame_render:
+            import pygame
+            self.screen = pygame.display.set_mode((self.camera_image_width, self.camera_image_height))
 
         # Initialize Parent Classes: SingleArmEnv->ManipEnv->RobotEnv->MujocoEnv
         super().__init__(
@@ -1962,7 +1966,8 @@ class Picking(SingleArmEnv, Serializable):
             policy_step = False
 
 
-        if self.use_camera_obs:
+        if self.use_pygame_render:
+            import pygame
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     sys.exit()
@@ -1971,9 +1976,6 @@ class Picking(SingleArmEnv, Serializable):
             im = np.uint8(im * 255.0)
             pygame.pixelcopy.array_to_surface(self.screen, cv2.merge([im,im,im]))
             pygame.display.update()
-            # print(rgb_im.shape)
-            # plt.imshow(rgb_im, cmap='gray')
-            # plt.show()
 
         # Note: this is done all at once to avoid floating point inaccuracies
         self.cur_time += self.control_timestep        
