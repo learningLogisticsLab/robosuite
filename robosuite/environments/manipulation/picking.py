@@ -292,6 +292,7 @@ class Picking(SingleArmEnv, Serializable):
         render_collision_mesh   = False,
         render_visual_mesh      = True,
         use_pygame_render       = False,
+        visualize_camera_obs    = False,
         render_gpu_device_id    = 0,            # was -1 
 
         # Noise
@@ -400,10 +401,14 @@ class Picking(SingleArmEnv, Serializable):
         self.camera_image_width           = camera_image_width
         
         self.use_pygame_render           = use_pygame_render
+        self.visualize_camera_obs        = visualize_camera_obs
 
         if use_pygame_render:
             import pygame
-            self.screen = pygame.display.set_mode((self.camera_image_width, self.camera_image_height))
+            if self.visualize_camera_obs:
+                self.screen = pygame.display.set_mode((self.camera_image_width, self.camera_image_height))
+            else:
+                self.screen = pygame.display.set_mode((300, 300))
 
         # Initialize Parent Classes: SingleArmEnv->ManipEnv->RobotEnv->MujocoEnv
         super().__init__(
@@ -1971,10 +1976,18 @@ class Picking(SingleArmEnv, Serializable):
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     sys.exit()
-            # read camera observation
-            im = env_obs['image_'+self.camera_names[0]]
-            im = np.uint8(im * 255.0)
-            pygame.pixelcopy.array_to_surface(self.screen, cv2.merge([im,im,im]))
+
+            if self.visualize_camera_obs:
+                # read camera observation
+                im = env_obs['image_'+self.camera_names[0]]
+                im = np.uint8(im * 255.0)
+                im = cv2.merge([im,im,im])
+            else:
+                # read agentview camera
+                im = self.sim.render(camera_name="agentview", height=300, width=300)[::-1]
+                im = np.flip(im.transpose((1, 0, 2)), 0)[::-1]
+
+            pygame.pixelcopy.array_to_surface(self.screen, im)
             pygame.display.update()
 
         # Note: this is done all at once to avoid floating point inaccuracies
