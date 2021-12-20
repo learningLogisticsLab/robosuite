@@ -123,7 +123,7 @@ class GymWrapper(Wrapper, Env, Serializable):
                     desired_goal  = spaces.Box(-np.inf, np.inf, shape=obs['desired_goal'].shape, dtype='float32'),
                     achieved_goal = spaces.Box(-np.inf, np.inf, shape=obs['achieved_goal'].shape, dtype='float32'),
                     observation   = spaces.Box(-np.inf, np.inf, shape=obs['observation'].shape, dtype='float32'),
-                    image_robot0_eye_in_hand = spaces.Box(0, 255, shape=obs['image_robot0_eye_in_hand'].shape, dtype=np.uint8),
+                    image_robot0_eye_in_hand = spaces.Box(0, 1, shape=obs['image_robot0_eye_in_hand'].shape, dtype='float32'),
                 ))       
 
                 # Action Dimensions... 
