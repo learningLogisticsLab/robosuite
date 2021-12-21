@@ -1853,7 +1853,9 @@ class Picking(SingleArmEnv, Serializable):
         """
         
         # flip and ensure all values lie within [0, 255]
-        seg_im = np.mod(np.flip(seg_im.transpose((1, 0, 2)), 1).squeeze(-1)[::-1], 256)
+        # seg_im = np.mod(np.flip(seg_im.transpose((1, 0, 2)), 1).squeeze(-1)[::-1], 256)
+        seg_im = np.mod(seg_im.squeeze(-1), 256)
+
 
         # deterministic shuffling of values to map each geom ID to a random int in [0, 255]
         rstate = np.random.RandomState(seed=10)
@@ -1861,7 +1863,7 @@ class Picking(SingleArmEnv, Serializable):
         rstate.shuffle(inds)
 
         # use @inds to map each geom ID to a color
-        gray_image = (cm.gray(inds[seg_im], 3))[..., :1].squeeze(-1)
+        gray_image = (cm.gray(inds[seg_im], 3))[..., :1].squeeze(-1).astype('float64')
 
         return cv2.resize(gray_image, output_size)
 
