@@ -1805,17 +1805,17 @@ class Picking(SingleArmEnv, Serializable):
             #     object_rel_pos.ravel(), # 3
             #     object_rel_rot.ravel()  # 4
             # ])
-            env_obs = np.concatenate([  # 17 + (20 * num_objects)
-                env_obs,
-                object_i_pos[3*i:3*(i+1)].ravel(),  # 3
-                object_i_quat[4*i:4*(i+1)].ravel(),  # 4
+            # env_obs = np.concatenate([  # 17 + (20 * num_objects)
+            #     env_obs,
+            #     object_i_pos[3*i:3*(i+1)].ravel(),  # 3
+            #     object_i_quat[4*i:4*(i+1)].ravel(),  # 4
 
-                object_velp[3*i:3*(i+1)].ravel(),  # 3
-                object_velr[3*i:3*(i+1)].ravel(),  # 3
+            #     object_velp[3*i:3*(i+1)].ravel(),  # 3
+            #     object_velr[3*i:3*(i+1)].ravel(),  # 3
 
-                object_rel_pos[3*i:3*(i+1)].ravel(),  # 3
-                object_rel_rot[4*i:4*(i+1)].ravel()  # 4
-            ])
+            #     object_rel_pos[3*i:3*(i+1)].ravel(),  # 3
+            #     object_rel_rot[4*i:4*(i+1)].ravel()  # 4
+            # ])
 
             ## TODO: Additional observations
             # (1) End-effector type: use robosuites list to provide an appropriate number to these
