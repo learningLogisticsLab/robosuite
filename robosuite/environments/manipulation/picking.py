@@ -2010,7 +2010,7 @@ class Picking(SingleArmEnv, Serializable):
             if self.visualize_camera_obs:
                 # read camera observation
                 if not self.use_depth_obs:
-                    im = env_obs['image_'+self.camera_names[0]][:,:,0]
+                    im = env_obs['image_'+self.camera_names[0]]
                     im = np.uint8(im * 255.0)
 
                 else:
@@ -2025,19 +2025,27 @@ class Picking(SingleArmEnv, Serializable):
                 im = self.sim.render(camera_name="agentview", height=300, width=300)[::-1]
                 im = np.flip(im.transpose((1, 0, 2)), 0)[::-1]
 
-                inset1 = env_obs['image_'+self.camera_names[0]][:,:,0]
-                inset1 = np.uint8(inset1 * 255.0)
-                inset1 = cv2.merge([inset1,inset1,inset1])
-                inset1 = cv2.resize(inset1, (80,80))
+                if not self.use_depth_obs:
+                    inset1 = env_obs['image_'+self.camera_names[0]]
+                    inset1 = np.uint8(inset1 * 255.0)
+                    inset1 = cv2.merge([inset1,inset1,inset1])
+                    inset1 = cv2.resize(inset1, (80,80))
 
-                im[:np.shape(inset1)[0],-np.shape(inset1)[1]:,:] = inset1
+                    im[:np.shape(inset1)[0],-np.shape(inset1)[1]:,:] = inset1
 
-                inset2 = env_obs['image_'+self.camera_names[0]][:,:,1]
-                inset2 = np.uint8(inset2 * 255.0)
-                inset2 = cv2.merge([inset2,inset2,inset2])
-                inset2 = cv2.resize(inset2, (80,80))
 
-                im[-np.shape(inset2)[0]:,-np.shape(inset2)[1]:,:] = inset2
+                else:
+                    inset1 = env_obs['image_'+self.camera_names[0]][:,:,0]
+                    inset1 = np.uint8(inset1 * 255.0)
+                    inset1 = cv2.merge([inset1,inset1,inset1])
+                    inset1 = cv2.resize(inset1, (80,80))
+                    im[:np.shape(inset1)[0],-np.shape(inset1)[1]:,:] = inset1
+
+                    inset2 = env_obs['image_'+self.camera_names[0]][:,:,1]
+                    inset2 = np.uint8(inset2 * 255.0)
+                    inset2 = cv2.merge([inset2,inset2,inset2])
+                    inset2 = cv2.resize(inset2, (80,80))
+                    im[-np.shape(inset2)[0]:,-np.shape(inset2)[1]:,:] = inset2
 
             pygame.pixelcopy.array_to_surface(self.screen, im)
             pygame.display.update()
