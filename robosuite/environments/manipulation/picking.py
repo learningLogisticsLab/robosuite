@@ -290,7 +290,7 @@ class Picking(SingleArmEnv, Serializable):
         render_camera           = "agentview", #TODO: may need to adjust here for better angle for our work
         camera_segmentations     = "instance",
         render_collision_mesh   = False,
-        render_visual_mesh      = True,
+        render_visual_mesh      = False,
         use_pygame_render       = False,
         visualize_camera_obs    = False,
         render_gpu_device_id    = 0,            # was -1 
