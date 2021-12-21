@@ -10,6 +10,8 @@ from collections import OrderedDict
 # Utilities
 import robosuite as suite
 import robosuite.utils.transform_utils as T
+import robosuite.utils.camera_utils as camera_utils
+
 from robosuite.utils.placement_samplers import SequentialCompositeSampler, UniformRandomSampler, robotUniformRandomSampler, UniformWallSampler
 
 # 01 Objects
@@ -399,6 +401,7 @@ class Picking(SingleArmEnv, Serializable):
 
         self.camera_image_height          = camera_image_height
         self.camera_image_width           = camera_image_width
+        self.use_depth_obs                = camera_depths 
         
         self.use_pygame_render           = use_pygame_render
         self.visualize_camera_obs        = visualize_camera_obs
@@ -406,7 +409,10 @@ class Picking(SingleArmEnv, Serializable):
         if use_pygame_render:
             import pygame
             if self.visualize_camera_obs:
-                self.screen = pygame.display.set_mode((self.camera_image_width, self.camera_image_height))
+                if not self.use_depth_obs:
+                    self.screen = pygame.display.set_mode((self.camera_image_width, self.camera_image_height))
+                else:
+                    self.screen = pygame.display.set_mode((self.camera_image_width, 2*self.camera_image_height))
             else:
                 self.screen = pygame.display.set_mode((300, 300))
 
@@ -1680,9 +1686,19 @@ class Picking(SingleArmEnv, Serializable):
 
 
         if self.use_camera_obs:
-            # image_obs = obs[self.camera_names[0]+'_image']
-            seg_image_obs = obs[self.camera_names[0]+'_segmentation_instance']
-            proc_seg_image = self.process_seg_image(seg_image_obs, output_size=(self.camera_image_height, self.camera_image_width))
+            if not self.use_depth_obs:
+                # image_obs = obs[self.camera_names[0]+'_image']
+                seg_image_obs = obs[self.camera_names[0]+'_segmentation_instance']
+                proc_image_obs = self.process_seg_image(seg_image_obs, output_size=(self.camera_image_height, self.camera_image_width))
+            else:
+                seg_image_obs = obs[self.camera_names[0]+'_segmentation_instance']
+                proc_seg_image = self.process_seg_image(seg_image_obs, output_size=(self.camera_image_height, self.camera_image_width))
+
+                depth_image_obs = obs[self.camera_names[0]+'_depth']
+                proc_depth_image = self.process_depth_image(depth_image_obs, output_size=(self.camera_image_height, self.camera_image_width))
+
+                proc_image_obs = cv2.merge([proc_seg_image, proc_depth_image])
+
 
         # Get prefix for robot to extract observation keys
         pf = self.robots[0].robot_model.naming_prefix
@@ -1831,7 +1847,8 @@ class Picking(SingleArmEnv, Serializable):
             'achieved_goal': achieved_goal.copy(),  # [ag_ob0_xyz, ag_ob1_xyz, ... rob_xyz]
             'desired_goal':  desired_goal.copy(),   # [goal_obj_xyz, goal_obj_quat]
             # self.camera_names[0]+'_image': image_obs,
-            'image_'+self.camera_names[0]: proc_seg_image.copy(),
+            'image_'+self.camera_names[0]: proc_image_obs.copy(),
+            # 'depth_image_'+self.camera_names[0]: depth_image_proc.copy(),
 
             # TODO: Should we also include modalities [image-state, object-state] from observables? 
             # GymWrapper checks for it, but we may not need GymWrapper.
@@ -1866,6 +1883,17 @@ class Picking(SingleArmEnv, Serializable):
         gray_image = (cm.gray(inds[seg_im], 3))[..., :1].squeeze(-1).astype('float64')
 
         return cv2.resize(gray_image, output_size)
+
+    def process_depth_image(self, depth_im, output_size):
+        """
+        Process depth map. Unscale and flip.
+        """
+
+        depth_im = camera_utils.get_real_depth_map(self.sim, depth_im)
+        # depth_im = np.flip(depth_im.transpose((1, 0, 2)), 1).squeeze(-1).astype('float64')
+        depth_im = depth_im.squeeze(-1).astype('float64')
+
+        return cv2.resize(depth_im, output_size)
 
     def step(self, action):
         '''
@@ -1981,8 +2009,16 @@ class Picking(SingleArmEnv, Serializable):
 
             if self.visualize_camera_obs:
                 # read camera observation
-                im = env_obs['image_'+self.camera_names[0]]
-                im = np.uint8(im * 255.0)
+                if not self.use_depth_obs:
+                    im = env_obs['image_'+self.camera_names[0]][:,:,0]
+                    im = np.uint8(im * 255.0)
+
+                else:
+                    im1 = env_obs['image_'+self.camera_names[0]][:,:,0]
+                    im2 = env_obs['image_'+self.camera_names[0]][:,:,1]
+                    im = np.hstack((im1,im2))
+                    im = np.uint8(im * 255.0)
+
                 im = cv2.merge([im,im,im])
             else:
                 # read agentview camera
