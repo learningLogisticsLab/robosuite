@@ -1840,6 +1840,7 @@ class Picking(SingleArmEnv, Serializable):
             self.goal_object['pos'],    # 3             # Try pos only first.
             # self.goal_object['quat']    # 4
         ])
+        self.object_pos = achieved_goal
 
         # Returns obs, ag, and also dg
         return_dict = {
