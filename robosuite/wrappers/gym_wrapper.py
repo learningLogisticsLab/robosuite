@@ -121,7 +121,7 @@ class GymWrapper(Wrapper, Env, Serializable):
                 # Spatial Information:
                 self.observation_space = spaces.Dict(dict(
                     desired_goal  = spaces.Box(-np.inf, np.inf, shape=obs['desired_goal'].shape, dtype='float32'),
-                    achieved_goal = spaces.Box(-np.inf, np.inf, shape=obs['achieved_goal'].shape, dtype='float32'),
+                    # achieved_goal = spaces.Box(-np.inf, np.inf, shape=obs['achieved_goal'].shape, dtype='float32'),
                     observation   = spaces.Box(-np.inf, np.inf, shape=obs['observation'].shape, dtype='float32'),
                     image_robot0_eye_in_hand = spaces.Box(0, 1, shape=obs['image_robot0_eye_in_hand'].shape, dtype='float32'),
                 ))       
