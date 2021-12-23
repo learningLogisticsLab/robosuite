@@ -1994,13 +1994,12 @@ class Picking(SingleArmEnv, Serializable):
             except mujoco_py.builder.MujocoException as e:
                 print(e)
                 print(F"action {action}") 
-
-            # 05 Update observables and get new observations
-            self._update_observables()
-            env_obs = self._get_obs()
             
             policy_step = False
 
+        # 05 Update observables and get new observations
+        self._update_observables()
+        env_obs = self._get_obs()
 
         if self.use_pygame_render:
             import pygame
