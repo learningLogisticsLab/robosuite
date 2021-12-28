@@ -738,8 +738,8 @@ class Picking(SingleArmEnv, Serializable):
                 sampler = UniformRandomSampler(
                     name                            = "pickObjectSampler",
                     mujoco_objects                  = self.objects+self.not_yet_considered_objects,
-                    x_range                         = [-bin_x_half, bin_x_half],    # This (+ve,-ve) range goes from center to the walls on each side of the bin
-                    y_range                         = [-bin_y_half, bin_y_half],
+                    x_range                         = [0, bin_x_half],#[-bin_x_half, bin_x_half],    # This (+ve,-ve) range goes from center to the walls on each side of the bin
+                    y_range                         = [0, bin_y_half],#[-bin_y_half, bin_y_half],
                     # x_range                         = [-self.curr_learn_dist, self.curr_learn_dist],                # 5 cm from ref
                     # y_range                         = [-self.curr_learn_dist, self.curr_learn_dist],
                     rotation                        = None,                         # Add uniform random rotation
