@@ -140,6 +140,7 @@ class RobotEnv(MujocoEnv):
         camera_depths=False,
         camera_segmentations=None,
         robot_configs=None,
+        top_down_grasp=False,
     ):
         # First, verify that correct number of robots are being inputted
         self.env_configuration = env_configuration
@@ -157,6 +158,8 @@ class RobotEnv(MujocoEnv):
 
         # Controller
         controller_configs = self._input2list(controller_configs, self.num_robots)
+
+        self.top_down_grasp = top_down_grasp
 
         # Initialization Noise
         initialization_noise = self._input2list(initialization_noise, self.num_robots)
@@ -263,6 +266,11 @@ class RobotEnv(MujocoEnv):
         for robot in self.robots:
             lo, hi = robot.action_limits # gripper (1) + robot (i.e. OSC xyz rpy) 
             low, high = np.concatenate([low, lo]), np.concatenate([high, hi])
+            if self.top_down_grasp:
+                low[3] = 0
+                low[4] = 0
+                high[3] = 0
+                high[4] = 0
         return low, high
 
     @property

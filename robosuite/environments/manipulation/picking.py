@@ -306,6 +306,7 @@ class Picking(SingleArmEnv, Serializable):
 
         # Reset
         first_reset             = True,
+        top_down_grasp          = False,
     ):
         print('Generating Picking class.\n')
         # Task settings
@@ -405,6 +406,7 @@ class Picking(SingleArmEnv, Serializable):
         
         self.use_pygame_render           = use_pygame_render
         self.visualize_camera_obs        = visualize_camera_obs
+        self.top_down_grasp              = top_down_grasp,
 
         if use_pygame_render:
             import pygame
@@ -444,7 +446,8 @@ class Picking(SingleArmEnv, Serializable):
             render_visual_mesh      = render_visual_mesh,
             render_gpu_device_id    = render_gpu_device_id,            
 
-            initialization_noise    = initialization_noise,                     
+            initialization_noise    = initialization_noise,
+            top_down_grasp          = top_down_grasp,                     
         )
 
         # Serializable Class
