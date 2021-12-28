@@ -31,8 +31,8 @@ def register_env(target_class):
     #   3. In curriculum learning (i.e. rlkit-relational/examplers/relationalrl/train_sequentialtransfer.py:exp_prefix)
     #-------------------------------------------------------------
     if target_class.__name__ == 'Picking':
-        for objs in range(1, 25):                       # loaded objs
-            for num_blocks in range(1, objs+1):         # modeled objects
+        for objs in range(1, 10):                       # loaded objs
+            for num_blocks in range(1,30): #range(1, objs+1):         # modeled objects
                 for num_relational_blocks in list(range(1,4)):  # currently only testin with 3 relational blocks (message passing)
                     for num_query_heads in list(range(1,4)):       # number of query heads (multi-head attention) currently fixed at 1
                         for reward in REWARDS:  
