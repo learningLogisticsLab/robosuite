@@ -361,12 +361,12 @@ class Picking(SingleArmEnv, Serializable):
         else:
             self.num_objs_to_load = self.num_objs_in_db                   
 
-        if num_blocks > self.num_objs_to_load:
-            self.num_blocks  = self.num_objs_to_load            # We cannot model more objects in the graph that what we have loaded
-            self.num_objects = self.num_blocks
-        else:     
-            self.num_blocks  = num_blocks
-            self.num_objects = num_blocks                       # tot num of objects to represent in graph (we use this more descriptive name here, but keep num_blocks for RelationalRL)
+        # if num_blocks > self.num_objs_to_load:
+        #     self.num_blocks  = self.num_objs_to_load            # We cannot model more objects in the graph that what we have loaded
+        #     self.num_objects = self.num_blocks
+        # else:     
+        self.num_blocks  = num_blocks
+        self.num_objects = self.num_objs_to_load                       # tot num of objects to represent in graph (we use this more descriptive name here, but keep num_blocks for RelationalRL)
     
         # Given the available objects, randomly pick num_objs_to_load and return names, visual names, and name_to_id
         (self.object_names, self.visual_object_names, 
@@ -1751,15 +1751,15 @@ class Picking(SingleArmEnv, Serializable):
         # the new dimensionality is reflected in these observations as well.
 
         # Initialize obj observations with dim 20 3 pos, 4 quat, 3 velp, 3 velr, 3 obj rel pos, 4 obj rel quat
-        object_i_pos = np.zeros(3*self.num_blocks)
-        object_i_quat = np.zeros(4*self.num_blocks)
-        object_velp = np.zeros(3*self.num_blocks)
-        object_velr = np.zeros(3*self.num_blocks)
-        object_rel_pos = np.zeros(3*self.num_blocks)
-        object_rel_rot = np.zeros(4*self.num_blocks)
+        object_i_pos = np.zeros(3*self.num_objects)
+        object_i_quat = np.zeros(4*self.num_objects)
+        object_velp = np.zeros(3*self.num_objects)
+        object_velr = np.zeros(3*self.num_objects)
+        object_rel_pos = np.zeros(3*self.num_objects)
+        object_rel_rot = np.zeros(4*self.num_objects)
         achieved_goal = np.zeros(3)
 
-        for i in range(self.num_blocks) :
+        for i in range(self.num_objects) :
 
             name_list = list(self.sorted_objects_to_model)
             # if not empty fill from obs, else leave entries as zeros
