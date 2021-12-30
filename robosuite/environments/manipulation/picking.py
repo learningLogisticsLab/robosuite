@@ -281,7 +281,7 @@ class Picking(SingleArmEnv, Serializable):
         goal_pos_error_thresh   = 0.05,     # Used to determine if the current position of the object is within a threshold of goal position
 
         # Camera: RGB
-        camera_names            = "robot0_eye_in_hand",
+        camera_names            = "agentview",
         camera_image_height     = 84,
         camera_image_width      = 84,
         camera_depths           = False,
