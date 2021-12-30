@@ -2047,7 +2047,7 @@ class Picking(SingleArmEnv, Serializable):
                 if not self.use_depth_obs:
                     inset1 = env_obs['image_'+self.camera_names[0]]
                     inset1 = np.uint8(inset1 * 255.0)
-                    if len(inset1.shape[2]) == 2:
+                    if len(inset1.shape) == 2:
                         inset1 = cv2.merge([inset1,inset1,inset1])
                     inset1 = cv2.resize(inset1, (80,80))
 
