@@ -285,6 +285,8 @@ class Picking(SingleArmEnv, Serializable):
         camera_image_height     = 84,
         camera_image_width      = 84,
         camera_depths           = False,
+        image_obs_height        = 84,
+        image_obs_width         = 84,
 
         has_renderer            = False,
         has_offscreen_renderer  = True,
@@ -403,6 +405,9 @@ class Picking(SingleArmEnv, Serializable):
         self.camera_image_height          = camera_image_height
         self.camera_image_width           = camera_image_width
         self.use_depth_obs                = camera_depths 
+
+        self.image_obs_height             = image_obs_height
+        self.image_obs_width              = image_obs_width
         
         self.use_pygame_render           = use_pygame_render
         self.visualize_camera_obs        = visualize_camera_obs
@@ -1690,15 +1695,16 @@ class Picking(SingleArmEnv, Serializable):
 
         if self.use_camera_obs:
             if not self.use_depth_obs:
-                # image_obs = obs[self.camera_names[0]+'_image']
-                seg_image_obs = obs[self.camera_names[0]+'_segmentation_instance']
-                proc_image_obs = self.process_seg_image(seg_image_obs, output_size=(self.camera_image_height, self.camera_image_width))
+                raw_image_obs = obs[self.camera_names[0]+'_image']
+                proc_image_obs = self.process_raw_image(raw_image_obs, output_size=(self.image_obs_height, self.image_obs_width))
+                # seg_image_obs = obs[self.camera_names[0]+'_segmentation_instance']
+                # proc_image_obs = self.process_seg_image(seg_image_obs, output_size=(self.image_obs_height, self.image_obs_width))
             else:
                 seg_image_obs = obs[self.camera_names[0]+'_segmentation_instance']
-                proc_seg_image = self.process_seg_image(seg_image_obs, output_size=(self.camera_image_height, self.camera_image_width))
+                proc_seg_image = self.process_seg_image(seg_image_obs, output_size=(self.image_obs_height, self.image_obs_width))
 
                 depth_image_obs = obs[self.camera_names[0]+'_depth']
-                proc_depth_image = self.process_depth_image(depth_image_obs, output_size=(self.camera_image_height, self.camera_image_width))
+                proc_depth_image = self.process_depth_image(depth_image_obs, output_size=(self.image_obs_height, self.image_obs_width))
 
                 proc_image_obs = cv2.merge([proc_seg_image, proc_depth_image])
 
@@ -1887,6 +1893,17 @@ class Picking(SingleArmEnv, Serializable):
 
         return cv2.resize(gray_image, output_size)
 
+
+    def process_raw_image(self, raw_im, output_size):
+
+        image_float = np.ascontiguousarray(np.transpose(raw_im,(1,0,2)), dtype=np.float32) / 255
+
+        # robot and bin on top left
+        image_height, image_width, _ = image_float.shape
+        cropped_image = image_float[int(image_width*0.05):int(image_width*0.52),int(image_height*0.08):int(image_height*0.55),:]
+
+        return cv2.resize(cropped_image, output_size)
+
     def process_depth_image(self, depth_im, output_size):
         """
         Process depth map. Unscale and flip.
@@ -2030,7 +2047,8 @@ class Picking(SingleArmEnv, Serializable):
                 if not self.use_depth_obs:
                     inset1 = env_obs['image_'+self.camera_names[0]]
                     inset1 = np.uint8(inset1 * 255.0)
-                    inset1 = cv2.merge([inset1,inset1,inset1])
+                    if len(inset1.shape[2]) == 2:
+                        inset1 = cv2.merge([inset1,inset1,inset1])
                     inset1 = cv2.resize(inset1, (80,80))
 
                     im[:np.shape(inset1)[0],-np.shape(inset1)[1]:,:] = inset1
