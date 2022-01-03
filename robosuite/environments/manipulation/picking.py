@@ -743,8 +743,8 @@ class Picking(SingleArmEnv, Serializable):
                 sampler = UniformRandomSampler(
                     name                            = "pickObjectSampler",
                     mujoco_objects                  = self.objects+self.not_yet_considered_objects,
-                    x_range                         = [0, bin_x_half],#[-bin_x_half, bin_x_half],    # This (+ve,-ve) range goes from center to the walls on each side of the bin
-                    y_range                         = [0, 0.75*bin_y_half],#[-bin_y_half, bin_y_half],
+                    x_range                         = [-bin_x_half/2, bin_x_half/2],#[-bin_x_half, bin_x_half],    # This (+ve,-ve) range goes from center to the walls on each side of the bin
+                    y_range                         = [-bin_y_half/2, bin_y_half/2],#[-bin_y_half, bin_y_half],
                     # x_range                         = [-self.curr_learn_dist, self.curr_learn_dist],                # 5 cm from ref
                     # y_range                         = [-self.curr_learn_dist, self.curr_learn_dist],
                     rotation                        = None,                         # Add uniform random rotation
@@ -811,8 +811,8 @@ class Picking(SingleArmEnv, Serializable):
             sampler=UniformRandomSampler(
                 name                            = "placeObjectSampler",             # name for object sampler for each object
                 mujoco_objects                  = self.visual_objects+self.not_yet_considered_visual_objects,
-                x_range                         = [0, bin_x_half], #[-bin_x_half, bin_x_half],        # This (+ve,-ve) range goes from center to the walls on each side of the bin
-                y_range                         = [0, 0.75*bin_y_half], #[-bin_y_half, bin_y_half],
+                x_range                         = [-bin_x_half/2, bin_x_half/2], #[-bin_x_half, bin_x_half],        # This (+ve,-ve) range goes from center to the walls on each side of the bin
+                y_range                         = [-bin_y_half/2, bin_y_half/2], #[-bin_y_half, bin_y_half],
                 rotation                        = None,                             # Add uniform random rotation
                 rotation_axis                   = 'z',                              # Currently only accepts one axis. TODO: extend to multiple axes.
                 ensure_object_boundary_in_range = True,
