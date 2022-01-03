@@ -1693,6 +1693,7 @@ class Picking(SingleArmEnv, Serializable):
                 # image_obs = obs[self.camera_names[0]+'_image']
                 seg_image_obs = obs[self.camera_names[0]+'_segmentation_instance']
                 proc_image_obs = self.process_seg_image(seg_image_obs, output_size=(self.camera_image_height, self.camera_image_width))
+                proc_image_obs = cv2.merge([proc_image_obs,proc_image_obs])
             else:
                 seg_image_obs = obs[self.camera_names[0]+'_segmentation_instance']
                 proc_seg_image = self.process_seg_image(seg_image_obs, output_size=(self.camera_image_height, self.camera_image_width))
@@ -1970,6 +1971,8 @@ class Picking(SingleArmEnv, Serializable):
         # or an actual policy_step update
         policy_step = True
 
+        self._update_observables()
+        first_image = self._get_obs()['image_'+self.camera_names[0]][:,:,0]
 
         # Loop through the simulation at the model timestep rate until we're ready to take the next policy step
         # (as defined by the control frequency specified at the environment level)
@@ -2000,8 +2003,13 @@ class Picking(SingleArmEnv, Serializable):
             policy_step = False
 
         # 05 Update observables and get new observations
+        # self._update_observables()
+        # env_obs = self._get_obs()
+
         self._update_observables()
         env_obs = self._get_obs()
+        second_image = env_obs['image_'+self.camera_names[0]][:,:,0]
+        env_obs['image_'+self.camera_names[0]] = cv2.merge([first_image, second_image])
 
         if self.use_pygame_render:
             import pygame
@@ -2028,7 +2036,7 @@ class Picking(SingleArmEnv, Serializable):
                 im = np.flip(im.transpose((1, 0, 2)), 0)[::-1]
 
                 if not self.use_depth_obs:
-                    inset1 = env_obs['image_'+self.camera_names[0]]
+                    inset1 = second_image #env_obs['image_'+self.camera_names[0]]
                     inset1 = np.uint8(inset1 * 255.0)
                     inset1 = cv2.merge([inset1,inset1,inset1])
                     inset1 = cv2.resize(inset1, (80,80))
