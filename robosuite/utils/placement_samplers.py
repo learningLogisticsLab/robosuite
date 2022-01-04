@@ -538,7 +538,7 @@ class UniformWallSampler(ObjectPositionSampler):
         else:
             rot_angle = self.rotation
 
-        # Return angle based on axis requested
+        # Return quat angle based on axis requested (s <x y z>)
         if self.rotation_axis == 'x':
             return np.array([np.cos(rot_angle / 2), np.sin(rot_angle / 2), 0, 0])
         elif self.rotation_axis == 'y':

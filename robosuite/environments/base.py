@@ -307,8 +307,12 @@ class MujocoEnv(metaclass=EnvMeta):
         """
         set_site_visualization = True
 
-        # Use hard reset if requested
-        if self.hard_reset and not self.deterministic_reset: #TODO: investigate increasing memory consumption when calling this every rollout
+        # Use hard reset if requested (set by object_randomization) when all objects are picked up
+        #TODO: investigate increasing memory consumption when calling this every rollout
+        if (self.hard_reset                                     and 
+           len(self.objects_in_target_bin) == self.num_blocks   and 
+           not self.deterministic_reset): 
+           
             self._destroy_viewer()
             self._load_model()              #  Create a manipulation task objec (arena/robot/object/placement of objects/goal objects)
             self._postprocess_model()
@@ -319,20 +323,21 @@ class MujocoEnv(metaclass=EnvMeta):
             self.sim.reset()
         
         # Reset necessary robosuite-centric variables        
-        self._reset_internal()
+        self._reset_internal() # observables | references | robots | cameras
         self.sim.forward()
         
         # Setup observables, reloading if hard reset
         self._obs_cache = {}
         
-        if self.hard_reset:
+        if self.hard_reset and len(self.objects_in_target_bin) == self.num_blocks :
+
             # If we're using hard reset, must re-update sensor object references
             self._observables = self._setup_observables() ## TODO: original this code was _observables = self._setup_observables(). New changes only kept in local variable. I modified it to use the self._observables as the modifier uses that list to make its calculations.
             for obs_name, obs in self._observables.items():
                 self.modify_observable(observable_name=obs_name, attribute="sensor", modifier=obs._sensor)
         
         # Make sure that all sites are toggled OFF by default
-        self.visualize(vis_settings={vis: set_site_visualization for vis in self._visualizations})
+        self.visualize(vis_settings={vis: set_site_visualization for vis in self._visualizations})        
         
         return self._get_obs(force_update=True) # Update observables and return their values
 
