@@ -1700,13 +1700,16 @@ class Picking(SingleArmEnv, Serializable):
                 # seg_image_obs = obs[self.camera_names[0]+'_segmentation_instance']
                 # proc_image_obs = self.process_seg_image(seg_image_obs, output_size=(self.image_obs_height, self.image_obs_width))
             else:
-                seg_image_obs = obs[self.camera_names[0]+'_segmentation_instance']
-                proc_seg_image = self.process_seg_image(seg_image_obs, output_size=(self.image_obs_height, self.image_obs_width))
+                raw_image_obs = obs[self.camera_names[0]+'_image']
+                proc_raw_image = self.process_raw_image(raw_image_obs, output_size=(self.image_obs_height, self.image_obs_width))
+
+                # seg_image_obs = obs[self.camera_names[0]+'_segmentation_instance']
+                # proc_seg_image = self.process_seg_image(seg_image_obs, output_size=(self.image_obs_height, self.image_obs_width))
 
                 depth_image_obs = obs[self.camera_names[0]+'_depth']
                 proc_depth_image = self.process_depth_image(depth_image_obs, output_size=(self.image_obs_height, self.image_obs_width))
 
-                proc_image_obs = cv2.merge([proc_seg_image, proc_depth_image])
+                proc_image_obs = np.concatenate((proc_raw_image, proc_depth_image[...,np.newaxis]),axis=2)
 
 
         # Get prefix for robot to extract observation keys
@@ -1904,16 +1907,20 @@ class Picking(SingleArmEnv, Serializable):
 
         return cv2.resize(cropped_image, output_size)
 
-    def process_depth_image(self, depth_im, output_size):
+    def process_depth_image(self, raw_im, output_size):
         """
         Process depth map. Unscale and flip.
         """
+       
+        image_float = np.ascontiguousarray(np.transpose(raw_im,(1,0,2)), dtype=np.float32)
 
-        depth_im = camera_utils.get_real_depth_map(self.sim, depth_im)
-        # depth_im = np.flip(depth_im.transpose((1, 0, 2)), 1).squeeze(-1).astype('float64')
-        depth_im = depth_im.squeeze(-1).astype('float64')
+        image_height, image_width, _ = image_float.shape
+        cropped_image = image_float[int(image_width*0.05):int(image_width*0.52),int(image_height*0.08):int(image_height*0.55),:]
 
-        return cv2.resize(depth_im, output_size)
+        # cropped_image = camera_utils.get_real_depth_map(self.sim, cropped_image) # convert depth map to actual distance. by default scaled between 0 and 1 (poor)
+        cropped_image = (cropped_image-np.min(cropped_image))/(np.max(cropped_image)-np.min(cropped_image)) # scale cropped depth map between 0 and 1
+
+        return cv2.resize(cropped_image, output_size)
 
     def step(self, action):
         '''
@@ -2055,13 +2062,13 @@ class Picking(SingleArmEnv, Serializable):
 
 
                 else:
-                    inset1 = env_obs['image_'+self.camera_names[0]][:,:,0]
+                    inset1 = env_obs['image_'+self.camera_names[0]][:,:,0:3]
                     inset1 = np.uint8(inset1 * 255.0)
-                    inset1 = cv2.merge([inset1,inset1,inset1])
+                    # inset1 = cv2.merge([inset1,inset1,inset1])
                     inset1 = cv2.resize(inset1, (80,80))
                     im[:np.shape(inset1)[0],-np.shape(inset1)[1]:,:] = inset1
 
-                    inset2 = env_obs['image_'+self.camera_names[0]][:,:,1]
+                    inset2 = env_obs['image_'+self.camera_names[0]][:,:,3]
                     inset2 = np.uint8(inset2 * 255.0)
                     inset2 = cv2.merge([inset2,inset2,inset2])
                     inset2 = cv2.resize(inset2, (80,80))
