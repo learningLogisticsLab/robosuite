@@ -1160,8 +1160,8 @@ class Picking(SingleArmEnv, Serializable):
         If starting a fresh setup, use object_placments to place objects. If not all objects have yet been picked
         up, use observables to re-set the positions of the objects where they are. 
 
-        Note that currently the code assumes goals are found in bin1, and for picked objects, it will hard code the positions of those objects in bin2. 
-        Will require improving depending on what goal location strategies are used. 
+        Note that currently the code assumes goals are found in bin1. Once goals are reached, objects are transported to bin2 using the shifted original placements of bin1 
+        TODO: could use scripted motions to carry object from goal in bin1 to 2. 
         '''
 
         # This global indicates if all objects picked up. Set in add_remove_objects()s
@@ -1259,26 +1259,18 @@ class Picking(SingleArmEnv, Serializable):
     def _reset_internal(self):
         """
         Resets the simulation's internal configuration upon termination conditions like:
-        - success (definition can vary: pick one object or pick all objects)
-        - horizon/max_path_len reached
-        - An object falls
-        - EEF moves outside the workspace limits
+        - success:   definition can be set in environment: pick one object or pick all objects)
+        - terminal:  number of timesteps exceeds horizon
+        - fallen:    a modeled object falls
+        - workspace: EEF moves outside constrained workspace limits if set
         
-        How the reset operates depends on the object_randomization, object_placement_strategy, and success_strategy.
-        - object_placement_strategy will place objects differently according to the following options"
-        [organized, jumbled, wall, random] (recall that we have a multi-object environment).
-        - object_randomization states whether or not new objects should be loaded. 
-        - success_strategy:
-                - do a soft reset of variables after one object is picked up, but do not change object placement. 
-                - Change placement when all (modelled and unmodelled) objects picked up. 
-                - Select new objects if object_randomization is turned on.
-        
-        Since we are using a GNN model for DRL, we use num_objs to denote which objs to consider for graph modeling as nodes. 
-        This results in two sets of lists (self.objects | self.visual objects and self.not_yet_considered_objects | self.not_yet_considered_visual_objects)
+        How does reset work?
+        We have opted for a unified reset operation. 
+        Full reset of the environment occurs when: (i) all objects picked up, or ill conditions (terminal, fallen, eef) 
+         - Such resets, update all internals, all object positions and lists.
 
-        If there are `self.not_yet_considered_objects':
-        - Add an unmodelled object to the modelled objects
-        - select new goal
+        In multiobjet scenarios, when object picked, env remains the same, internals reset, but object names/positions/lists remain. 
+         - Only, when all objects are picked is object selection randomized. 
          
         Note: 
         - at the beginning of the program reset() may be called upto 3 times before actually starting rollouts: by Picking.__init__,  GymWrapper.__init__, and by RLAlgorithm._start_new_rollout()       
