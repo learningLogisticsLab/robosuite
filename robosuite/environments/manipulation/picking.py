@@ -1374,7 +1374,7 @@ class Picking(SingleArmEnv, Serializable):
                     object_geoms=[g for g in self.object_placements[self.goal_object['name']][2].contact_geoms])
 
         # If successfully picked
-        if check_grasp and achieved_goal[2]>0.90: #target_dist_error <= self.goal_pos_error_thresh:
+        if check_grasp: #and achieved_goal[2]>0.90: #target_dist_error <= self.goal_pos_error_thresh:
 
             print("Successfully picked {}". format(self.goal_object['name']))
             # 02 Object Handling
