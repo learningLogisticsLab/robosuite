@@ -1373,8 +1373,8 @@ class Picking(SingleArmEnv, Serializable):
                     gripper=self.robots[0].gripper,
                     object_geoms=[g for g in self.object_placements[self.goal_object['name']][2].contact_geoms])
 
-        # If successfully placed
-        if target_dist_error <= self.goal_pos_error_thresh:
+        # If successfully picked
+        if check_grasp and achieved_goal[2]>0.90: #target_dist_error <= self.goal_pos_error_thresh:
 
             print("Successfully picked {}". format(self.goal_object['name']))
             # 02 Object Handling
@@ -1839,11 +1839,12 @@ class Picking(SingleArmEnv, Serializable):
         #--------------------------------------------------------------------------
         # 03 Desired Goal
         #--------------------------------------------------------------------------
-        desired_goal = []
-        desired_goal = np.concatenate([ # 3             # 7
-            self.goal_object['pos'],    # 3             # Try pos only first.
-            # self.goal_object['quat']    # 4
-        ])
+        # desired_goal = []
+        # desired_goal = np.concatenate([ # 3             # 7
+        #     self.goal_object['pos'],    # 3             # Try pos only first.
+        #     # self.goal_object['quat']    # 4
+        # ])
+        desired_goal = np.array([0,0,0])
 
         # Returns obs, ag, and also dg
         return_dict = {
