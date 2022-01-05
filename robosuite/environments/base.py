@@ -329,7 +329,7 @@ class MujocoEnv(metaclass=EnvMeta):
         # Setup observables, reloading if hard reset
         self._obs_cache = {}
         
-        if self.hard_reset and len(self.objects_in_target_bin) == self.num_blocks :
+        if self.hard_reset: # and len(self.objects_in_target_bin) == self.num_blocks :
 
             # If we're using hard reset, must re-update sensor object references
             self._observables = self._setup_observables() ## TODO: original this code was _observables = self._setup_observables(). New changes only kept in local variable. I modified it to use the self._observables as the modifier uses that list to make its calculations.

@@ -806,7 +806,8 @@ class Picking(SingleArmEnv, Serializable):
                     z_offset                        = 0.,
                 )
             )
-        # placeObjectSamplers: each visual object receives a sampler that places it in the TARGET bin
+        
+        # placeObjectSamplersBin1: each visual object receives a sampler that places it in the ORIG bin. Simpler problem.
         self.placement_initializer.append_sampler(
             sampler=UniformRandomSampler(
                 name                            = "placeObjectSampler",             # name for object sampler for each object
@@ -821,7 +822,7 @@ class Picking(SingleArmEnv, Serializable):
                 z_offset                        = 0.10,                             # Set a vertical offset of XXcm above the bin
                 z_offset_prob                   = 0.50,                             # probability with which to set the z_offset
             )
-        )
+        )           
 
         # robot_eefSampler:
         # TODO: this eefSampler probably best placed in robosuite/environments/robot_env.py.reset() where init_qpos + noise is computed.
@@ -933,7 +934,7 @@ class Picking(SingleArmEnv, Serializable):
 
     def _setup_observables(self):
         """
-        Sets up observables to be used for this environment. Creates object-based observables if enabled (i.e. for 1 object: _pos, _quat, _velp, _velr, eef_pos, eef_quat)
+        Sets up observables to be used for objects in this environment. Oject-based observables consitute of: _pos, _quat, _velp, _velr, eef_pos, eef_quat)
 
         Returns:
             OrderedDict: Dictionary mapping observable names to its corresponding Observable object
@@ -1153,14 +1154,21 @@ class Picking(SingleArmEnv, Serializable):
     
     def update_object_goal_her_poses(self):
         '''
-        Update object placements. object_placements contains [pos|quat|object instance]            
+        Update object placements. object_placements contains [pos|quat|object instance] 
+        Used during reset. 
+        
+        If starting a fresh setup, use object_placments to place objects. If not all objects have yet been picked
+        up, use observables to re-set the positions of the objects where they are. 
+
+        Note that currently the code assumes goals are found in bin1, and for picked objects, it will hard code the positions of those objects in bin2. 
+        Will require improving depending on what goal location strategies are used. 
         '''
 
         # This global indicates if all objects picked up. Set in add_remove_objects()s
         global _reset_internal_after_picking_all_objs        
 
-        # (A) Sample new poses from the "placement initializer" for collision and visual objects and place them in the world
-        if  _reset_internal_after_picking_all_objs or self.terminal or self.fallen_objs_flag: # if we can't pick and terminate, reset locations. Also, do not include workspace here, as it does not affect the workspace            
+        # (A) Sample new poses from the "placement initializer" for collision and visual objects and place them in the world for all terminal conditions or finishing all objects. 
+        if  _reset_internal_after_picking_all_objs or self.terminal or self.fallen_objs_flag or self.workspace: # if we can't pick and terminate, reset locations.
             self.object_placements = self.placement_initializer.sample()  
 
             # Extract target object (from object_placements) and sort closest objects to model
@@ -1194,7 +1202,17 @@ class Picking(SingleArmEnv, Serializable):
             self.sim.model.body_pos[self.sim.model.body_name2id("bin2")] = self.bin2_pos               
     
         # Picked up one object, more remaining
-        else: 
+        else:  
+
+            # (A) Set picked object in bin2. Use original pickSampler but add a y-displacement equivalent to the width of the bin
+            bin_length = self.model.mujoco_arena.table_full_size[1]
+            obj_pos  = np.array(self.object_placements[ self.objects_in_target_bin[-1]][0])  + [0, bin_length, 0]
+            obj_quat = np.array(self.object_placements[ self.objects_in_target_bin[-1]][1])                        # s vx vy vz          
+            obj      = self.object_placements[ self.objects_in_target_bin[-1]][2]
+
+            # Place in bin 2 (also visual object)
+            self.sim.data.set_joint_qpos( obj.joints[0], np.concatenate( [obj_pos,obj_quat] ))                    
+            self.sim.model.body_pos[self.obj_body_id[ self.objects_in_target_bin[-1][0:5] + 'VisualObject' ]]  = obj_pos + [0,0,0.1]
 
             # Get new goal
             if not self.goal_object: # Goal also called in add_remove_objects(). if called there skip here.
@@ -1202,8 +1220,8 @@ class Picking(SingleArmEnv, Serializable):
                 if self.debug: 
                     print( '\nThe goal object is: {} \n'.format( self.goal_object['name'] ) )  
 
-            # Set current object positions
-            obs = self._get_observations(force_update=True)
+            # Set current object positions and goal object moved to bin2        
+            obs = self._get_observations(force_update=False) # Do not false update or object data will be reset to zero
             for obj in self.sorted_objects_to_model:
 
                 obj_instance = self.object_placements[obj][2]
@@ -1220,7 +1238,7 @@ class Picking(SingleArmEnv, Serializable):
                                                   np.concatenate( [ np.array(obj_pos), 
                                                                     np.array(obj_quat)] ))
         
-                # Update object_placement
+                # Update object_placement: if objects moved from original placement, can update this location. 
                 # Note: quaternion representation is not consistent. get_obs returns an ([vx vy vz], w), but object_placement is (w, [vx,vy,vz])                
                 tmp = np.zeros(4)
                 tmp[1:4] = obj_quat[0:3] # set vec
@@ -1327,10 +1345,8 @@ class Picking(SingleArmEnv, Serializable):
                     self.fallen_objs.clear()                        
                     self.fallen_objs_flag = False  
 
-                    # (B) Reset parent internals before object placement
-                    # self.hard_reset = True    # set hard_reset flag for all objects picked up and enable updating of observables
-                    super()._reset_internal() # observables | references | action_dim | controllers | robots | cameras | model | render
-                    # self.hard_reset = False   # reset flag 
+                    # (B) Reset parent internals before object placement                    
+                    super()._reset_internal()   # observables | references | action_dim | controllers | robots | cameras | model | render                    
 
                     # (C) After resetting object lists, update object placements. object_placements contains [pos|quat|object instance]            
                     self.update_object_goal_her_poses()     
@@ -1525,19 +1541,12 @@ class Picking(SingleArmEnv, Serializable):
             for object in self.objects_in_target_bin:
                 print(f"{object} ")    
                                 
-        # Fix object to bin2: now hack. # TODO use placement_sampler later.         
-        obj_pos  = self.bin2_pos + [0.,0.,0.1] #self._observables[ self.goal_object['name'] + '_pos'].obs
-        obj_quat = self._observables[ self.goal_object['name'] + '_quat'].obs # s vx vy vz
-        obj = self.object_placements[ self.goal_object['name'] ][2]
-        self.sim.data.set_joint_qpos(obj.joints[0], np.concatenate([np.array(obj_pos), np.array(obj_quat)]))
-
         # Remove goal from the list of modeled names for the next round            
         self.object_names.remove(self.goal_object['name'])
         try:
             self.sorted_objects_to_model.pop(self.goal_object['name']) # pop by key. if no key raises KeyError exception. 
         except KeyError:
             print(F"Could not find object {self.goal_object['name']} in the sorted_objects_to_model OrderedDictionary in Picking._is_success()")
-
 
         # Add one new unmodeled object to self.object_names, the closest one to the goal, if available from the self.not_yet_considered_object_names
         if self.not_yet_considered_object_names:
