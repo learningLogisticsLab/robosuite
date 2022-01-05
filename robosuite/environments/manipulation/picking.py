@@ -1207,7 +1207,7 @@ class Picking(SingleArmEnv, Serializable):
             # (A) Set picked object in bin2 and update object placements. Use original pickSampler but add a y-displacement equivalent to the width of the bin
             bin_length = self.model.mujoco_arena.table_full_size[1]
             
-            if self.objects_in_target_bin ~= []:
+            if self.objects_in_target_bin != []:
                 obj_pos  = np.array(self.object_placements[ self.objects_in_target_bin[-1]][0])  + [0, bin_length, 0]           
                 obj_quat = np.array(self.object_placements[ self.objects_in_target_bin[-1]][1])                        # s vx vy vz          
                 obj      = self.object_placements[ self.objects_in_target_bin[-1]][2]
