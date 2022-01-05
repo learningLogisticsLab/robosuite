@@ -1207,23 +1207,24 @@ class Picking(SingleArmEnv, Serializable):
             # (A) Set picked object in bin2 and update object placements. Use original pickSampler but add a y-displacement equivalent to the width of the bin
             bin_length = self.model.mujoco_arena.table_full_size[1]
             
-            obj_pos  = np.array(self.object_placements[ self.objects_in_target_bin[-1]][0])  + [0, bin_length, 0]           
-            obj_quat = np.array(self.object_placements[ self.objects_in_target_bin[-1]][1])                        # s vx vy vz          
-            obj      = self.object_placements[ self.objects_in_target_bin[-1]][2]
+            if self.objects_in_target_bin ~= []:
+                obj_pos  = np.array(self.object_placements[ self.objects_in_target_bin[-1]][0])  + [0, bin_length, 0]           
+                obj_quat = np.array(self.object_placements[ self.objects_in_target_bin[-1]][1])                        # s vx vy vz          
+                obj      = self.object_placements[ self.objects_in_target_bin[-1]][2]
 
-            # TOOD: Update observables?? Cannot set them directly. 
-            # self._observables[ self.objects_in_target_bin[-1] + '_pos'  ].obs = obj_pos
-            # self._observables[ self.objects_in_target_bin[-1] + '_quat' ].obs = obj_quat
+                # TOOD: Update observables?? Cannot set them directly. 
+                # self._observables[ self.objects_in_target_bin[-1] + '_pos'  ].obs = obj_pos
+                # self._observables[ self.objects_in_target_bin[-1] + '_quat' ].obs = obj_quat
 
-            # Update tuple entry in object_placements. TODO: this value might be reset elsewhere. 
-            tmp = np.zeros(4)
-            tmp[1:4] = obj_quat[0:3] # set vec
-            tmp[0]   = obj_quat[3]   # set mag            
-            self.object_placements[ self.objects_in_target_bin[-1] ] = (tuple(obj_pos), tuple(tmp), obj)
+                # Update tuple entry in object_placements. TODO: this value might be reset elsewhere. 
+                tmp = np.zeros(4)
+                tmp[1:4] = obj_quat[0:3] # set vec
+                tmp[0]   = obj_quat[3]   # set mag            
+                self.object_placements[ self.objects_in_target_bin[-1] ] = (tuple(obj_pos), tuple(tmp), obj)
 
-            # Move objects to bin 2 (also visual object)
-            self.sim.data.set_joint_qpos( obj.joints[0], np.concatenate( [obj_pos,obj_quat] ))                    
-            self.sim.model.body_pos[self.obj_body_id[ self.objects_in_target_bin[-1][0:5] + 'VisualObject' ]]  = obj_pos + [0,0,0.1]
+                # Move objects to bin 2 (also visual object)
+                self.sim.data.set_joint_qpos( obj.joints[0], np.concatenate( [obj_pos,obj_quat] ))                    
+                self.sim.model.body_pos[self.obj_body_id[ self.objects_in_target_bin[-1][0:5] + 'VisualObject' ]]  = obj_pos + [0,0,0.1]
 
             # Get new goal
             if not self.goal_object: # Goal also called in add_remove_objects(). if called there skip here.
