@@ -1290,27 +1290,11 @@ class Picking(SingleArmEnv, Serializable):
                 # Update object placements. object_placements contains [pos|quat|object instance]            
                 self.update_object_goal_her_poses()                    
 
-            # # Not first reset + Object Randomization: clear target bin & fallen_objs + turn off fallen flag
-            # elif not self.first_reset and self.object_randomization:
-            #     self.hard_reset = True
-            #     super()._reset_internal()   # observables | action_dim | controllers | robots | cameras | model | render
-                
-            #     self.objects_in_target_bin.clear()
-            #     self.fallen_objs.clear()    
-            #     self.fallen_objs_flag = False             
-
-            #     # Update object placements. object_placements contains [pos|quat|object instance]            
-            #     self.update_object_goal_her_poses()   
-
             else:
                 # Continue Reset.                     
-
-                # if not self.object_randomization: # When object_rand/hard_reset all objects get re-created.
                     
-                # Not all object picked up: update placements before reset
-                if not _reset_internal_after_picking_all_objs:
-                    
-                    #TODO move eef to bin2 here... currently done inside update_object_goal_her_poses()
+                # Not all object picked up and no ill conditions: update placements before reset
+                if not _reset_internal_after_picking_all_objs and not self.terminal and not self.fallen_objs_flag and not self.workspace:                                        
 
                     # Update object placements. object_placements contains [pos|quat|object instance]            
                     self.update_object_goal_her_poses()                    
@@ -1326,8 +1310,8 @@ class Picking(SingleArmEnv, Serializable):
                 # All objects picked up: update placement after reset
                 else: 
 
-                    # Print info 
-                    print('\nAll objs picked up: reset objects/placement.')
+                    # # Print info 
+                    # print('\nAll objs picked up: reset objects/placement.')
 
                     # (A) Reset object lists
                     # Refill modelled collision objects directly from the modelled goals
