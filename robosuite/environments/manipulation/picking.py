@@ -1883,9 +1883,18 @@ class Picking(SingleArmEnv, Serializable):
         rstate.shuffle(inds)
 
         # use @inds to map each geom ID to a color
-        gray_image = (cm.gray(inds[seg_im], 3))[..., :1].squeeze(-1).astype('float64')
+        # gray_image = (cm.gray(inds[seg_im], 3))[..., :1].squeeze(-1).astype('float64')
+        
+        seg_im[seg_im==0]=0
+        seg_im[seg_im==1]=0
+        seg_im[seg_im==2]=1 #object to be grasped
+        seg_im[seg_im==3]=0
+        seg_im[seg_im==4]=0
+        seg_im[seg_im==5]=1 #gripper
 
-        return cv2.resize(gray_image, output_size)
+        seg_im = seg_im.astype('float64')
+
+        return cv2.resize(seg_im, output_size)
 
     def process_depth_image(self, depth_im, output_size):
         """
