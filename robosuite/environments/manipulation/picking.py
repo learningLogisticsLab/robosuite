@@ -1899,11 +1899,12 @@ class Picking(SingleArmEnv, Serializable):
 
     def process_raw_image(self, raw_im, output_size):
 
-        image_float = np.ascontiguousarray(np.transpose(raw_im,(1,0,2)), dtype=np.float32) / 255
+        image_float = np.ascontiguousarray(raw_im, dtype=np.float32) / 255
 
         # robot and bin on top left
         image_height, image_width, _ = image_float.shape
-        cropped_image = image_float[int(image_width*0.05):int(image_width*0.51),int(image_height*0.08):int(image_height*0.54),:]
+
+        cropped_image = image_float[int(image_height*0.08):int(image_height*0.54),int(image_width*0.05):int(image_width*0.51),:]
 
         return cv2.resize(cropped_image, output_size)
 
@@ -1912,10 +1913,11 @@ class Picking(SingleArmEnv, Serializable):
         Process depth map. Unscale and flip.
         """
        
-        image_float = np.ascontiguousarray(np.transpose(raw_im,(1,0,2)), dtype=np.float32)
+        image_float = np.ascontiguousarray(raw_im, dtype=np.float32)
 
         image_height, image_width, _ = image_float.shape
-        cropped_image = image_float[int(image_width*0.05):int(image_width*0.51),int(image_height*0.08):int(image_height*0.54),:]
+
+        cropped_image = image_float[int(image_height*0.08):int(image_height*0.54),int(image_width*0.05):int(image_width*0.51),:]
 
         # cropped_image = camera_utils.get_real_depth_map(self.sim, cropped_image) # convert depth map to actual distance. by default scaled between 0 and 1 (poor)
         cropped_image = (cropped_image-np.min(cropped_image))/(np.max(cropped_image)-np.min(cropped_image)) # scale cropped depth map between 0 and 1
