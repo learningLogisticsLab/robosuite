@@ -239,7 +239,7 @@ class SingleArm(Manipulator):
 
         gripper_action = None
         if self.has_gripper:
-            gripper_action = action[self.controller.control_dim:]  # all indexes past controller dimension indexes
+            gripper_action = action[self.controller.control_dim:]  # all indeces past controller dimension (i.e. 6)
             arm_action = action[:self.controller.control_dim]
         else:
             arm_action = action

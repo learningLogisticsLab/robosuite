@@ -161,7 +161,9 @@ class MujocoEnv(metaclass=EnvMeta):
         render_camera           = "frontview",
         render_collision_mesh   = False,
         render_visual_mesh      = True,
-        render_gpu_device_id    = -1,        
+        render_gpu_device_id    = -1,      
+
+        run_speed               = 1  
     ):
         # First, verify that both the on- and off-screen renderers are not being used simultaneously
         if has_renderer is True and has_offscreen_renderer is True:
@@ -175,19 +177,24 @@ class MujocoEnv(metaclass=EnvMeta):
         self.render_visual_mesh     = render_visual_mesh
         self.render_gpu_device_id   = render_gpu_device_id
         self.viewer                 = None
+        self.run_speed              = run_speed
 
         # Simulation-specific attributes
-        self._observables   = {}                        # Maps observable names to observable objects
-        self._obs_cache     = {}                        # Maps observable names to pre-/partially-computed observable values
-        self.control_freq   = control_freq
-        self.horizon        = horizon
-        self.ignore_done    = ignore_done
-        self.hard_reset     = hard_reset
+        self._observables           = {}                # Maps observable names to observable objects
+        self._obs_cache             = {}                # Maps observable names to pre-/partially-computed observable values
+        
+        self.control_freq           = control_freq
+        self.control_timestep       = None
+
+        self.horizon                = horizon
+        self.ignore_done            = ignore_done
+        self.hard_reset             = hard_reset
+
         self._model_postprocessor   = None              # Function to post-process model after load_model() call
         self.model                  = None
+        
         self.cur_time               = None
         self.model_timestep         = None
-        self.control_timestep       = None
         self.deterministic_reset    = False             # Whether to add randomized resetting of objects / robot joints
 
         # Load the model. Yields self.model for task.
@@ -300,9 +307,12 @@ class MujocoEnv(metaclass=EnvMeta):
         """
         set_site_visualization = True
 
-        # TODO(yukez): investigate black screen of death
-        # Use hard reset if requested
-        if self.hard_reset and not self.deterministic_reset:
+        # Use hard reset if requested (set by object_randomization) when all objects are picked up
+        #TODO: investigate increasing memory consumption when calling this every rollout
+        if (self.hard_reset                                     and 
+           len(self.objects_in_target_bin) == self.num_blocks   and 
+           not self.deterministic_reset): 
+           
             self._destroy_viewer()
             self._load_model()              #  Create a manipulation task objec (arena/robot/object/placement of objects/goal objects)
             self._postprocess_model()
@@ -313,20 +323,21 @@ class MujocoEnv(metaclass=EnvMeta):
             self.sim.reset()
         
         # Reset necessary robosuite-centric variables        
-        self._reset_internal()        
+        self._reset_internal() # observables | references | robots | cameras
         self.sim.forward()
         
         # Setup observables, reloading if hard reset
         self._obs_cache = {}
         
-        if self.hard_reset:
+        if self.hard_reset: # and len(self.objects_in_target_bin) == self.num_blocks :
+
             # If we're using hard reset, must re-update sensor object references
             self._observables = self._setup_observables() ## TODO: original this code was _observables = self._setup_observables(). New changes only kept in local variable. I modified it to use the self._observables as the modifier uses that list to make its calculations.
             for obs_name, obs in self._observables.items():
                 self.modify_observable(observable_name=obs_name, attribute="sensor", modifier=obs._sensor)
         
         # Make sure that all sites are toggled OFF by default
-        self.visualize(vis_settings={vis: set_site_visualization for vis in self._visualizations})
+        self.visualize(vis_settings={vis: set_site_visualization for vis in self._visualizations})        
         
         return self._get_obs(force_update=True) # Update observables and return their values
 
@@ -339,6 +350,7 @@ class MujocoEnv(metaclass=EnvMeta):
         # create visualization screen or renderer
         if self.has_renderer and self.viewer is None:
             self.viewer = MujocoPyRenderer(self.sim)
+            self.viewer.viewer._run_speed = self.run_speed
             self.viewer.viewer.vopt.geomgroup[0] = (1 if self.render_collision_mesh else 0)
             self.viewer.viewer.vopt.geomgroup[1] = (1 if self.render_visual_mesh else 0)
 
@@ -518,7 +530,7 @@ class MujocoEnv(metaclass=EnvMeta):
         """
         Renders to an on-screen window.
         """
-        self.viewer.render()
+        self.viewer.render()        
 
     def observation_spec(self):
         """
@@ -710,7 +722,7 @@ class MujocoEnv(metaclass=EnvMeta):
         """
         # if there is an active viewer window, destroy it
         if self.viewer is not None:
-            self.viewer.close()  # TODO: change this to viewer.finish()?
+            self.viewer.close()  
             self.viewer = None
 
     def close(self):

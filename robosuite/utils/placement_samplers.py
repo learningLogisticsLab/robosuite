@@ -384,7 +384,7 @@ class UniformRandomSampler(ObjectPositionSampler):
                             np.linalg.norm((object_x - x,
                                             object_y - y,
                                             object_z - z))  # Compute the norm between current object and each of the other objects
-                            >= 0.15
+                            <= 0.15
                             # If the norm is less than the sum of the horizontal radius of both objects it means collision
                     ):
                         location_valid = False
@@ -538,7 +538,7 @@ class UniformWallSampler(ObjectPositionSampler):
         else:
             rot_angle = self.rotation
 
-        # Return angle based on axis requested
+        # Return quat angle based on axis requested (s <x y z>)
         if self.rotation_axis == 'x':
             return np.array([np.cos(rot_angle / 2), np.sin(rot_angle / 2), 0, 0])
         elif self.rotation_axis == 'y':

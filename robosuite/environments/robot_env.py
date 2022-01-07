@@ -140,6 +140,7 @@ class RobotEnv(MujocoEnv):
         camera_depths=False,
         camera_segmentations=None,
         robot_configs=None,
+        run_speed = 1.,
     ):
         # First, verify that correct number of robots are being inputted
         self.env_configuration = env_configuration
@@ -217,6 +218,7 @@ class RobotEnv(MujocoEnv):
             render_collision_mesh   = render_collision_mesh,
             render_visual_mesh      = render_visual_mesh,
             render_gpu_device_id    = render_gpu_device_id,
+            run_speed               = run_speed,
             
             control_freq            = control_freq,
             

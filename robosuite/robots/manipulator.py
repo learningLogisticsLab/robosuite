@@ -15,7 +15,9 @@ class Manipulator(Robot):
 
     def grip_action(self, gripper, gripper_action):
         """
-        Executes @gripper_action for specified @gripper
+        Executes @gripper_action for specified @gripper.
+        The method will achieve a gradual opening or closing of the fingers over the low-level control loops encompassed in a policy step.
+        If the gripper action is negative
 
         Args:
             gripper (GripperModel): Gripper to execute action for
@@ -29,9 +31,9 @@ class Manipulator(Robot):
        
         # Rescale normalized gripper action to control range ~ \pm 0.04cm
         ctrl_range = self.sim.model.actuator_ctrlrange[actuator_idxs]   
-        bias = 0.5 * (ctrl_range[:, 1] + ctrl_range[:, 0])
+        bias   = 0.5 * (ctrl_range[:, 1] + ctrl_range[:, 0])
         weight = 0.5 * (ctrl_range[:, 1] - ctrl_range[:, 0])
-        applied_gripper_action = bias + weight * gripper_action_actual  # TODO: juan: not quite sure about bias + weight calcs...
+        applied_gripper_action = bias + weight * gripper_action_actual  
         
         self.sim.data.ctrl[actuator_idxs] = applied_gripper_action
 

@@ -140,6 +140,7 @@ class ManipulationEnv(RobotEnv):
         camera_widths=256,
         camera_depths=False,
         camera_segmentations=None,
+        run_speed=1.0
     ):
         # Robot info
         robots = list(robots) if type(robots) is list or type(robots) is tuple else [robots]
@@ -173,7 +174,8 @@ class ManipulationEnv(RobotEnv):
             render_camera=render_camera,
             render_collision_mesh=render_collision_mesh,
             render_visual_mesh=render_visual_mesh,
-            render_gpu_device_id=render_gpu_device_id,            
+            render_gpu_device_id=render_gpu_device_id,   
+            run_speed = run_speed,         
 
             camera_names=camera_names,
             camera_heights=camera_heights,
