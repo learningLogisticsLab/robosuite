@@ -1456,6 +1456,13 @@ class Picking(SingleArmEnv, Serializable):
 
         return True
 
+    def _can_see_object(self):
+        obs = self._get_observations(False)               
+        if np.count_nonzero(obs[self.camera_names[0]+'_segmentation_instance']==2): # check if scene contains object
+            return True
+        else:
+            return False
+
     def _is_inside_workspace(self, robot0_proprio_obs):
         """
         Check if the robot end-effector is inside a box-like workspace.
@@ -2074,7 +2081,8 @@ class Picking(SingleArmEnv, Serializable):
 
         # 06 Process info
         info = { 'is_success': self._is_success(env_obs['achieved_goal'], env_obs['desired_goal']),
-                 'is_inside_workspace': self._is_inside_workspace(env_obs['robot0_proprio-state']) }
+                 'is_inside_workspace': self._is_inside_workspace(env_obs['robot0_proprio-state']),
+                 'can_see_object': self._can_see_object()}
 
         # 06b Process Reward * Info
             # TODO: design a manner to describe observations in our graph node setting. currently just 'state', but later will use images in nodes, and can extend beyond.
@@ -2091,7 +2099,7 @@ class Picking(SingleArmEnv, Serializable):
         # 07 Process Done: 
         # If (i) time_step is past horizon OR (ii) we have succeeded, set to true OR (iii) end-effector moves outside the workspace
         done = (self.timestep >= self.horizon) and not self.ignore_done or info['is_success'] and self.object_names == [] \
-               or self.fallen_objs_flag or not info['is_inside_workspace']
+               or self.fallen_objs_flag or not info['is_inside_workspace'] or not info['can_see_object']
         
         # 08 Process Reward
         reward = self.compute_reward(env_obs['achieved_goal'], env_obs['desired_goal'], info)
