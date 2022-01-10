@@ -2115,7 +2115,8 @@ class Picking(SingleArmEnv, Serializable):
         d['use_object_obs'] = self.use_object_obs
         d['use_camera_obs'] = self.use_camera_obs
         d['reward_shaping'] = self.reward_shaping
-        
+        d['top_down_grasp'] = self.top_down_grasp
+
         # Controller configuration
         d['controller_config'] = self.robot_configs[0]['controller_config']
 
@@ -2166,6 +2167,7 @@ class Picking(SingleArmEnv, Serializable):
         self.use_camera_obs                     = d['use_camera_obs']
         self.reward_shaping                     = d['reward_shaping']        
         self.variant                            = d['variant']
+        self.top_down_grasp                     = d['top_down_grasp']
 
         # May not need these as you will select custom values to display policy
         self.horizon                            = d['horizon']
