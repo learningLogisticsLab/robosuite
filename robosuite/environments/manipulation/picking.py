@@ -2088,10 +2088,8 @@ class Picking(SingleArmEnv, Serializable):
         # 08 Process Reward
         if info['is_success']:
             reward = 5*self.compute_reward(env_obs['achieved_goal'], env_obs['desired_goal'], info)
-            print("sparse reward: ", reward)
         else:
             reward = 0-self.grippper_obj_dist
-            print("dense reward: ", reward)
 
     
         return env_obs, reward, done, info       
