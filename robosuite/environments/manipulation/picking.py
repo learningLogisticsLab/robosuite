@@ -1690,9 +1690,10 @@ class Picking(SingleArmEnv, Serializable):
 
         if self.use_camera_obs:
             if not self.use_depth_obs:
-                # image_obs = obs[self.camera_names[0]+'_image']
-                seg_image_obs = obs[self.camera_names[0]+'_segmentation_instance']
-                proc_image_obs = self.process_seg_image(seg_image_obs, output_size=(self.camera_image_height, self.camera_image_width))
+                raw_image_obs = obs[self.camera_names[0]+'_image']
+                proc_image_obs = self.process_raw_image(raw_image_obs, output_size=(self.camera_image_height, self.camera_image_width))
+                # seg_image_obs = obs[self.camera_names[0]+'_segmentation_instance']
+                # proc_image_obs = self.process_seg_image(seg_image_obs, output_size=(self.camera_image_height, self.camera_image_width))
             else:
                 seg_image_obs = obs[self.camera_names[0]+'_segmentation_instance']
                 proc_seg_image = self.process_seg_image(seg_image_obs, output_size=(self.camera_image_height, self.camera_image_width))
@@ -1896,6 +1897,12 @@ class Picking(SingleArmEnv, Serializable):
 
         return cv2.resize(image_float, output_size)
 
+    def process_raw_image(self, raw_im, output_size):
+
+        image_float = np.ascontiguousarray(raw_im, dtype=np.float32) / 255
+
+        return cv2.resize(image_float, output_size)
+
     def process_depth_image(self, depth_im, output_size):
         """
         Process depth map. Unscale and flip.
@@ -2039,7 +2046,8 @@ class Picking(SingleArmEnv, Serializable):
                 if not self.use_depth_obs:
                     inset1 = env_obs['image_'+self.camera_names[0]]
                     inset1 = np.uint8(inset1 * 255.0)
-                    inset1 = cv2.merge([inset1,inset1,inset1])
+                    if len(inset1.shape) == 2:
+                        inset1 = cv2.merge([inset1,inset1,inset1])
                     inset1 = cv2.resize(inset1, (80,80))
 
                     im[:np.shape(inset1)[0],-np.shape(inset1)[1]:,:] = inset1
