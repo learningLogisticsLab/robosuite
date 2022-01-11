@@ -1821,7 +1821,6 @@ class Picking(SingleArmEnv, Serializable):
             #     object_rel_rot[4*i:4*(i+1)].ravel()  # 4
             # ])
 
-            self.grippper_obj_dist = np.linalg.norm(object_rel_pos[3*i:3*(i+1)].ravel())
             ## TODO: Additional observations
             # (1) End-effector type: use robosuites list to provide an appropriate number to these
             # (2) QT-OPTs DONE parameter for reactivity.
@@ -2095,13 +2094,7 @@ class Picking(SingleArmEnv, Serializable):
                or self.fallen_objs_flag or not info['is_inside_workspace']
         
         # 08 Process Reward
-        if info['is_success']:
-            reward = 5*self.compute_reward(env_obs['achieved_goal'], env_obs['desired_goal'], info)
-            print("sparse reward: ", reward)
-        else:
-            reward = 0-self.grippper_obj_dist
-            print("dense reward: ", reward)
-
+        reward = self.compute_reward(env_obs['achieved_goal'], env_obs['desired_goal'], info)
     
         return env_obs, reward, done, info       
 
