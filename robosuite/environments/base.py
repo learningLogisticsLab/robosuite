@@ -7,6 +7,7 @@ import robosuite.utils.macros as macros
 from robosuite.models.base import MujocoModel
 
 import numpy as np
+import ipdb
 
 REGISTERED_ENVS = {}
 picking_dict = {}
@@ -307,11 +308,11 @@ class MujocoEnv(metaclass=EnvMeta):
         """
         set_site_visualization = True
 
-        # Use hard reset if requested (set by object_randomization) when all objects are picked up
-        #TODO: investigate increasing memory consumption when calling this every rollout
+        # Use hard reset if requested (set by object_randomization) when all objects are picked up        
         if (self.hard_reset                                     and 
            len(self.objects_in_target_bin) == self.num_blocks   and 
-           not self.deterministic_reset): 
+           not self.deterministic_reset                         or 
+           self.first_reset): 
            
             self._destroy_viewer()
             self._load_model()              #  Create a manipulation task objec (arena/robot/object/placement of objects/goal objects)
@@ -329,12 +330,19 @@ class MujocoEnv(metaclass=EnvMeta):
         # Setup observables, reloading if hard reset
         self._obs_cache = {}
         
-        if self.hard_reset: # and len(self.objects_in_target_bin) == self.num_blocks :
-
+        # Re-set upservables when new mujoco objects are created. This happens in hard_resets. 
+        # ** Note at at beginning gym_wrapper, if present, calls reset with first_reset flag as True. 
+        # ** Since new mujoco_objects are created, we need to reset observables and then turn off that flag.
+        if (self.hard_reset                                     and 
+           len(self.objects_in_target_bin) == self.num_blocks   and 
+           not self.deterministic_reset                         or 
+           self.first_reset): 
             # If we're using hard reset, must re-update sensor object references
             self._observables = self._setup_observables() ## TODO: original this code was _observables = self._setup_observables(). New changes only kept in local variable. I modified it to use the self._observables as the modifier uses that list to make its calculations.
             for obs_name, obs in self._observables.items():
                 self.modify_observable(observable_name=obs_name, attribute="sensor", modifier=obs._sensor)
+
+            self.first_reset = False
         
         # Make sure that all sites are toggled OFF by default
         self.visualize(vis_settings={vis: set_site_visualization for vis in self._visualizations})        

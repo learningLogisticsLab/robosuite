@@ -974,7 +974,7 @@ class Picking(SingleArmEnv, Serializable):
                 actives     += [using_obj] * num_obj_sensors
                 self.object_id_to_sensors[i] = obj_sensor_names
 
-            # Create observables
+            # Create observables: world_pose_in_gripper | objX_pos | objX_quat | objx_velp | objx_velr | objx_to_robot0_eef_pos | objx_to_robot0_eef_quat
             for name, s, enabled, active in zip(names, sensors, enableds, actives):
                 observables[name] = Observable(
                     name=name,
@@ -1285,7 +1285,9 @@ class Picking(SingleArmEnv, Serializable):
 
             if self.first_reset:
                 super()._reset_internal() # observables | action_dim | controllers | robots | cameras | model | render
-                self.first_reset = False # reset() is called during base.py:MujocoEnv.__init__(), then by robosuite/wrappers/gym_wrappery.py:GymWrapper.__init__, and then when starting to train (batch/online) rlkit/core/rl_algorithm.py:RLAlgorithm._start_new_rollout 
+
+                # Switch off in base.py:Mujoco_env.reset() after calling setup_observables. If turn off here, setup_observables skipped.
+                #self.first_reset = False # reset() is called during base.py:MujocoEnv.__init__(), then by robosuite/wrappers/gym_wrappery.py:GymWrapper.__init__, and then when starting to train (batch/online) rlkit/core/rl_algorithm.py:RLAlgorithm._start_new_rollout 
 
                 # After first reset, if object_randomization is true, turn on the self.hard_reset flag to be used in the next reset
                 if self.object_randomization:
