@@ -1726,8 +1726,8 @@ class Picking(SingleArmEnv, Serializable):
             grip_pos.ravel(),       # 3
             grip_quat.ravel(),      # 4
 
-            grip_velp.ravel(),      # 3
-            grip_velr.ravel(),      # 3
+            # grip_velp.ravel(),      # 3
+            # grip_velr.ravel(),      # 3
 
             gripper_state.ravel(),  # 2
             gripper_vel.ravel(),    # 2
