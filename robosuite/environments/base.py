@@ -312,7 +312,8 @@ class MujocoEnv(metaclass=EnvMeta):
         if (self.hard_reset                                     and 
            len(self.objects_in_target_bin) == self.num_blocks   and 
            not self.deterministic_reset                         or 
-           self.first_reset): 
+           self.first_reset                                     or
+           self.fallen_objs_flag): 
            
             self._destroy_viewer()
             self._load_model()              #  Create a manipulation task objec (arena/robot/object/placement of objects/goal objects)
@@ -331,12 +332,14 @@ class MujocoEnv(metaclass=EnvMeta):
         self._obs_cache = {}
         
         # Re-set upservables when new mujoco objects are created. This happens in hard_resets. 
-        # ** Note at at beginning gym_wrapper, if present, calls reset with first_reset flag as True. 
-        # ** Since new mujoco_objects are created, we need to reset observables and then turn off that flag.
+        #   ** Note at at beginning gym_wrapper, if present, calls reset with first_reset flag as True. 
+        #   ** Since new mujoco_objects are created, we need to reset observables and then turn off that flag.
         if (self.hard_reset                                     and 
            len(self.objects_in_target_bin) == self.num_blocks   and 
            not self.deterministic_reset                         or 
-           self.first_reset): 
+           self.first_reset                                     or
+           self.fallen_objs_flag): 
+
             # If we're using hard reset, must re-update sensor object references
             self._observables = self._setup_observables() ## TODO: original this code was _observables = self._setup_observables(). New changes only kept in local variable. I modified it to use the self._observables as the modifier uses that list to make its calculations.
             for obs_name, obs in self._observables.items():

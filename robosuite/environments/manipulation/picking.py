@@ -1069,27 +1069,35 @@ class Picking(SingleArmEnv, Serializable):
         offset = 0.03
         # maximum gripping space
         longitude_max = 0.07
+        
         # HER flag for activating HER 100% all the time
         # HER = True
         if HER:
+            
             # Rename goal object pos as eef pos, goal object quat
             HER_pos = self._eef_xpos
             HER_quat = obj_quat
             min_longitude = min(obj.x_radius * 2, obj.y_radius * 2, obj.vertical_radius)
+           
             # Gripping strategy if horizontal radius is the shorter side
             if min_longitude == (obj.x_radius * 2) or min_longitude == (obj.y_radius * 2):
+                
                 # Check for offset
                 if (obj.vertical_radius > offset):
                     HER_pos[2] -= (obj.vertical_radius / 2 - offset)
+                
                 # Rotate if current orientation is too long
                 if (obj.x_radius * 2 >= longitude_max):
+                    
                     # y_radius gripping strategy
                     # quat = (x,y,z,w)
                     # rx 90 degrees
                     HER_quat = [0.98, 0, 0, 0]
+                    
                     # Set left & right fingers to reach the goal obj
                     self.sim.data.set_joint_qpos('gripper0_finger_joint1', obj.y_radius)
                     self.sim.data.set_joint_qpos('gripper0_finger_joint2', -obj.y_radius)
+                
                 # Otherwise revert back to obj default orientation
                 else:
                     # x_radius gripping strategy
@@ -1097,12 +1105,15 @@ class Picking(SingleArmEnv, Serializable):
                     # Set left & right fingers to reach the goal obj
                     self.sim.data.set_joint_qpos('gripper0_finger_joint1', obj.x_radius)
                     self.sim.data.set_joint_qpos('gripper0_finger_joint2', -obj.x_radius)
+            
             # Gripping strategy if the vertical radius is the shorter side
             else:  # rz 90 degreez
                 HER_quat = [0, 0, 0.7, -0.7]
+                
                 # Check for offset
                 if obj.y_radius > offset:
                     HER_pos[2] -= (obj.y_radius - offset)
+                
                 # Set left & right fingers to reach the goal obj
                 self.sim.data.set_joint_qpos('gripper0_finger_joint1', obj.vertical_radius / 2)
                 self.sim.data.set_joint_qpos('gripper0_finger_joint2', -obj.vertical_radius / 2)
@@ -1112,6 +1123,7 @@ class Picking(SingleArmEnv, Serializable):
             self.goal_object['pos'] = HER_pos
             self.goal_object['quat'] = HER_quat
             self.sim.data.set_joint_qpos(obj.joints[0], np.concatenate([np.array(HER_pos), np.array(HER_quat)]))
+        
         else:
             self.sim.data.set_joint_qpos(obj.joints[0], np.concatenate([np.array(obj_pos), np.array(obj_quat)]))
 
@@ -1302,11 +1314,11 @@ class Picking(SingleArmEnv, Serializable):
                 # Not all object picked up and no ill conditions: update placements before reset
                 if not _reset_internal_after_picking_all_objs and not self.terminal and not self.fallen_objs_flag and not self.workspace:                                        
 
+                 # Reset parent internals
+                    super()._reset_internal() # observables | references | action_dim | controllers | robots | cameras | model | render                                                              
+                    
                     # Update object placements. object_placements contains [pos|quat|object instance]            
                     self.update_object_goal_her_poses()                    
-                    
-                    # Reset parent internals
-                    super()._reset_internal() # observables | references | action_dim | controllers | robots | cameras | model | render                      
                     
                     # Reset local internals
                     self.terminal           = False
@@ -1339,6 +1351,7 @@ class Picking(SingleArmEnv, Serializable):
                     super()._reset_internal()   # observables | references | action_dim | controllers | robots | cameras | model | render                    
 
                     # (C) After resetting object lists, update object placements. object_placements contains [pos|quat|object instance]            
+                    # Should we call in reset after observables set?
                     self.update_object_goal_her_poses()     
 
                     if self.debug: 
@@ -1613,7 +1626,7 @@ class Picking(SingleArmEnv, Serializable):
 
         return True
 
-    def _is_inside_workspace(self, robot0_proprio_obs):
+    def _is_inside_workspace(self):
         """
         Check if the robot end-effector is inside a box-like workspace.
 
@@ -1625,11 +1638,11 @@ class Picking(SingleArmEnv, Serializable):
 
         """
 
-        robot0_gripper_position = robot0_proprio_obs[21:24] # extract end-effector position for robot propoprioception observation vector
-
+        #robot0_gripper_position = robot0_proprio_obs[21:24] # extract end-effector position for robot propoprioception observation vector
+        robot0_gripper_position = self._observables['robot0_eef_pos'].obs # eef pos
         # bin size
-        bin_x_half = self.model.mujoco_arena.table_full_size[0] / 2 - 0.05  # half of bin - edges (2*0.025 half of each side of each wall so that we don't hit the wall)
-        bin_y_half = self.model.mujoco_arena.table_full_size[1] / 2 - 0.05
+        bin_x_half = self.model.mujoco_arena.table_full_size[0] / 2 #- 0.05  # half of bin - edges (2*0.025 half of each side of each wall so that we don't hit the wall)
+        bin_y_half = self.model.mujoco_arena.table_full_size[1] / 2 #- 0.05
 
         workspace_min = np.array([self.bin1_pos[0]-bin_x_half, self.bin1_pos[1]-bin_y_half, self.bin1_pos[2]+self.bin1_surface[2]])
         workspace_max = np.array([self.bin1_pos[0]+bin_x_half, self.bin1_pos[1]+bin_y_half, self.bin1_pos[2]+self.bin1_surface[2]+0.3])
@@ -1889,8 +1902,10 @@ class Picking(SingleArmEnv, Serializable):
         # *Note: there are three quantities of interest: (i) (total) num_objs_to_load, (ii) num_objs (to_model), and (iii) goal object. 
         # We report data for num_objs that are closest to goal_object and ignore the rest. This list is updated when is_success is True.
         # We only consider the relative position between the goal object and end-effector, all the rest are set to 0.
-        # Check, remove & update fallen objs list/dicts
-        self.fallen_objs = self.return_fallen_objs() # remove obj from self.obj_names
+        
+        # Check, remove & update fallen objs list/dicts. Only check if flag is False. If True, no need to check again under control loop. 
+        # if not self.fallen_objs:
+        #     self.fallen_objs = self.return_fallen_objs() # remove obj from self.obj_names
         
         # Place goal object at the front
         if self.fallen_objs == []:
@@ -2114,7 +2129,7 @@ class Picking(SingleArmEnv, Serializable):
                 print(F"action {action}") 
 
             # 05 Update observables and get new observations
-            #self._update_observables() no need to call this here. Can do it by setting force_update=True below.
+            
             env_obs = self._get_obs(force_update=True)
             assert np.any(env_obs['robot0_proprio-state'][21:24]), print(env_obs)
             
@@ -2125,7 +2140,7 @@ class Picking(SingleArmEnv, Serializable):
 
         # 06 Process info
         info = { 'is_success':          self._is_success( env_obs['achieved_goal'], env_obs['desired_goal'] ),
-                 'is_inside_workspace': self._is_inside_workspace( env_obs['robot0_proprio-state'] ) 
+                 'is_inside_workspace': self._is_inside_workspace() 
                  }
 
         if info['is_success']: 
