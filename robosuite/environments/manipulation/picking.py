@@ -2090,7 +2090,7 @@ class Picking(SingleArmEnv, Serializable):
 
         # 07 Process Done: 
         # If (i) time_step is past horizon OR (ii) we have succeeded, set to true OR (iii) end-effector moves outside the workspace
-        done = (self.timestep >= self.horizon) and not self.ignore_done or info['is_success'] and self.object_names == [] \
+        done = (self.timestep >= self.horizon) or info['is_success'] and self.object_names == [] \
                or self.fallen_objs_flag or not info['is_inside_workspace']
         
         # 08 Process Reward
