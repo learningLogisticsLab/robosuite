@@ -40,7 +40,7 @@ def register_env(target_class):
                                 for object_reset_strategy in RESET_STRATEGY:
 
                                     # Generate the class name 
-                                    className = F"picking_{objs}objs_{num_blocks}model_{num_relational_blocks}nrb_{num_query_heads}nqh_{reward}Rew_{obs_type}Obs_{object_reset_strategy}Strat"
+                                    className = F"sequential_picking_{objs}objs_{num_blocks}model_{num_relational_blocks}nrb_{num_query_heads}nqh_{reward}Rew_{obs_type}Obs_{object_reset_strategy}Strat"
                                     REGISTERED_ENVS[className] = target_class
     else:
         REGISTERED_ENVS[target_class.__name__] = target_class
