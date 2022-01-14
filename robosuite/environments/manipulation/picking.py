@@ -1327,14 +1327,6 @@ class Picking(SingleArmEnv, Serializable):
 
         return fallen_objs
 
-    def _is_partial_success(self):
-
-        check_grasp = self._check_grasp(
-                            gripper=self.robots[0].gripper,
-                            object_geoms=[g for g in self.object_placements[self.goal_object['name']][2].contact_geoms])
-
-        return check_grasp
-
     def _is_success(self, achieved_goal, desired_goal):
         """
         01 Success Determination
@@ -2080,11 +2072,6 @@ class Picking(SingleArmEnv, Serializable):
         # Note: this is done all at once to avoid floating point inaccuracies
         self.cur_time += self.control_timestep        
 
-        if self._is_partial_success():
-            grasping_reward = 0.1
-        else:
-            grasping_reward = 0.0
-
         # 06 Process info
         info = { 'is_success': self._is_success(env_obs['achieved_goal'], env_obs['desired_goal']),
                  'is_inside_workspace': self._is_inside_workspace(env_obs['robot0_proprio-state']) }
@@ -2107,7 +2094,7 @@ class Picking(SingleArmEnv, Serializable):
                or self.fallen_objs_flag or not info['is_inside_workspace']
         
         # 08 Process Reward
-        reward = self.compute_reward(env_obs['achieved_goal'], env_obs['desired_goal'], info) + grasping_reward
+        reward = self.compute_reward(env_obs['achieved_goal'], env_obs['desired_goal'], info)
     
         return env_obs, reward, done, info       
 
