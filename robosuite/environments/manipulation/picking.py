@@ -1314,11 +1314,12 @@ class Picking(SingleArmEnv, Serializable):
                 # Not all object picked up and no ill conditions: update placements before reset
                 if not _reset_internal_after_picking_all_objs and not self.terminal and not self.fallen_objs_flag and not self.workspace:                                        
 
-                 # Reset parent internals
-                    super()._reset_internal() # observables | references | action_dim | controllers | robots | cameras | model | render                                                              
-                    
                     # Update object placements. object_placements contains [pos|quat|object instance]            
-                    self.update_object_goal_her_poses()                    
+                    self.update_object_goal_her_poses()   
+
+                    # Reset parent internals
+                    super()._reset_internal() # observables | references | action_dim | controllers | robots | cameras | model | render                                                              
+                                     
                     
                     # Reset local internals
                     self.terminal           = False
