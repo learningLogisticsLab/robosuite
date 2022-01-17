@@ -1301,7 +1301,7 @@ class Picking(SingleArmEnv, Serializable):
                 super()._reset_internal() # observables | action_dim | controllers | robots | cameras | model | render
 
                 # Switch off in base.py:Mujoco_env.reset() after calling setup_observables. If turn off here, setup_observables skipped.
-                #self.first_reset = False # reset() is called during base.py:MujocoEnv.__init__(), then by robosuite/wrappers/gym_wrappery.py:GymWrapper.__init__, and then when starting to train (batch/online) rlkit/core/rl_algorithm.py:RLAlgorithm._start_new_rollout 
+                self.first_reset = False # reset() is called during base.py:MujocoEnv.__init__(), then by robosuite/wrappers/gym_wrappery.py:GymWrapper.__init__, and then when starting to train (batch/online) rlkit/core/rl_algorithm.py:RLAlgorithm._start_new_rollout
 
                 # After first reset, if object_randomization is true, turn on the self.hard_reset flag to be used in the next reset
                 if self.object_randomization:

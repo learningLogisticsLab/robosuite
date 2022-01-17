@@ -311,10 +311,8 @@ class MujocoEnv(metaclass=EnvMeta):
         # Use hard reset if requested (set by object_randomization) when all objects are picked up        
         if (self.hard_reset                                     and 
            len(self.objects_in_target_bin) == self.num_blocks   and 
-           not self.deterministic_reset                         or 
-           self.first_reset                                     or
-           self.fallen_objs_flag): 
-           
+           not self.deterministic_reset):
+
             self._destroy_viewer()
             self._load_model()              #  Create a manipulation task objec (arena/robot/object/placement of objects/goal objects)
             self._postprocess_model()
@@ -346,8 +344,6 @@ class MujocoEnv(metaclass=EnvMeta):
             for obs_name, obs in self._observables.items():
                 self.modify_observable(observable_name=obs_name, attribute="sensor", modifier=obs._sensor)
 
-            self.first_reset = False
-        
         # Make sure that all sites are toggled OFF by default
         self.visualize(vis_settings={vis: set_site_visualization for vis in self._visualizations})        
         
