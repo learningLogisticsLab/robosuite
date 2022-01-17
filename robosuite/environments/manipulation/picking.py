@@ -1723,7 +1723,8 @@ class Picking(SingleArmEnv, Serializable):
 
         all_objects = list(range(num_objs_in_db))
         if self.simple_objects:
-            all_objects = [13, 14, 15, 17, 18]        
+            #all_objects = [13, 14, 15, 17, 18]
+            all_objects = [15]        
 
         # Load objects (can simplify to only load simple circular objects)        
         objs_to_consider = random.sample( all_objects, num_objs_to_load) # i.e.objs_to_consider = [69, 66, 64, 55, 65]
