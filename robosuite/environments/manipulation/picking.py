@@ -282,10 +282,11 @@ class Picking(SingleArmEnv, Serializable):
         goal_pos_error_thresh   = 0.05,         # Used to determine if the current position of the object is within a threshold of goal position
 
         # Camera: RGB
-        camera_names            = "agentview",
+        camera_names            = "robot0_eye_in_hand",
         camera_heights          = 256,
         camera_widths           = 256,
         camera_depths           = False,
+        camera_segmentations    = "instance",
 
         has_renderer            = False,
         has_offscreen_renderer  = True,
@@ -441,6 +442,7 @@ class Picking(SingleArmEnv, Serializable):
             camera_heights          = camera_heights,
             camera_widths           = camera_widths,
             camera_depths           = camera_depths,
+            camera_segmentations    = "instance",
 
             has_renderer            = has_renderer,
             has_offscreen_renderer  = has_offscreen_renderer,
@@ -1867,6 +1869,13 @@ class Picking(SingleArmEnv, Serializable):
         # Get robosuite observations as an Ordered dict. keep a local obs reference for convencience (vs. self_observables)
         obs = self._get_observations(force_update) # if called by reset() [see base class] this will be set to True.        
 
+        if self.use_camera_obs:
+            image_obs = obs[self.camera_names[0]+'_image']
+            seg_image_obs = obs[self.camera_names[0]+'_segmentation_instance']
+        else:
+            image_obs = []
+            seg_image_obs = []
+
         # Get prefix for robot to extract observation keys
         pf = self.robots[0].robot_model.naming_prefix
         dt = self.sim.nsubsteps * self.sim.model.opt.timestep  # dt is equivalent to the amount of time across number of substeps. But xvelp is already the velocity in 1 substep. It seems to make more sense to simply scale xvel by the number of substeps in 1 env step.        
@@ -2020,6 +2029,8 @@ class Picking(SingleArmEnv, Serializable):
             'desired_goal':  desired_goal.copy(),   # [goal_obj_xyz, goal_obj_quat]
 
             # TODO: Should we also include modalities [image-state, object-state] from observables? 
+            self.camera_names[0]+'_image' : image_obs.copy(),
+            self.camera_names[0]+'_segmentation_instance' : seg_image_obs.copy(),
             # GymWrapper checks for it, but we may not need GymWrapper.
             # Alternatively we could change GymWrapper to look for the 'obsevation' key and these last two. 
             pf+'proprio-state': obs[pf+'proprio-state'],
