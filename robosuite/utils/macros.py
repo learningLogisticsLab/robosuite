@@ -25,7 +25,8 @@ CACHE_NUMBA = True
 # applications assume an OpenCV coordinate frame convention. For consistency, you can set the image convention
 # here; this will assure that any rendered frames will match the associated convention.
 # See the figure at the bottom of https://amytabb.com/ts/2019_06_28/ for an informative overview.
-IMAGE_CONVENTION = "opengl"     # Options are {"opengl", "opencv"}
+#IMAGE_CONVENTION = "opengl"     # Options are {"opengl", "opencv"}
+IMAGE_CONVENTION = "opencv"
 
 # Image concatenation
 # In general, observations are concatenated together by modality. However, image observations are expensive memory-wise,

@@ -282,10 +282,11 @@ class Picking(SingleArmEnv, Serializable):
         goal_pos_error_thresh   = 0.05,         # Used to determine if the current position of the object is within a threshold of goal position
 
         # Camera: RGB
-        camera_names            = "agentview",
+        camera_names            = "robot0_eye_in_hand",
         camera_heights          = 256,
         camera_widths           = 256,
         camera_depths           = False,
+        camera_segmentations     = "instance",
 
         has_renderer            = False,
         has_offscreen_renderer  = True,
@@ -441,6 +442,7 @@ class Picking(SingleArmEnv, Serializable):
             camera_heights          = camera_heights,
             camera_widths           = camera_widths,
             camera_depths           = camera_depths,
+            camera_segmentations    = "instance",
 
             has_renderer            = has_renderer,
             has_offscreen_renderer  = has_offscreen_renderer,
@@ -1502,6 +1504,7 @@ class Picking(SingleArmEnv, Serializable):
                         object_geoms=[g for g in self.object_placements[self.goal_object['name']][2].contact_geoms])
 
         # If successfully placed
+        self.goal_pos_error_thresh = 0.05
         if target_dist_error <= self.goal_pos_error_thresh:
 
             # If check_grasp is activated and it is false, no success.
@@ -1723,7 +1726,8 @@ class Picking(SingleArmEnv, Serializable):
 
         all_objects = list(range(num_objs_in_db))
         if self.simple_objects:
-            all_objects = [13, 14, 15, 17, 18]        
+            #all_objects = [13, 14, 15, 17, 18]
+            all_objects = [15]
 
         # Load objects (can simplify to only load simple circular objects)        
         objs_to_consider = random.sample( all_objects, num_objs_to_load) # i.e.objs_to_consider = [69, 66, 64, 55, 65]
@@ -1865,6 +1869,13 @@ class Picking(SingleArmEnv, Serializable):
 
         # Get robosuite observations as an Ordered dict. keep a local obs reference for convencience (vs. self_observables)
         obs = self._get_observations(force_update) # if called by reset() [see base class] this will be set to True.        
+
+        if self.use_camera_obs:
+            image_obs = obs[self.camera_names[0]+'_image']
+            seg_image_obs = obs[self.camera_names[0]+'_segmentation_instance']
+        else:
+            image_obs = []
+            seg_image_obs = []
 
         # Get prefix for robot to extract observation keys
         pf = self.robots[0].robot_model.naming_prefix
@@ -2018,7 +2029,9 @@ class Picking(SingleArmEnv, Serializable):
             'achieved_goal': achieved_goal.copy(),  # [ag_ob0_xyz, ag_ob1_xyz, ... rob_xyz]
             'desired_goal':  desired_goal.copy(),   # [goal_obj_xyz, goal_obj_quat]
 
-            # TODO: Should we also include modalities [image-state, object-state] from observables? 
+            # TODO: Should we also include modalities [image-state, object-state] from observables?
+            self.camera_names[0]+'_image' : image_obs.copy(),
+            self.camera_names[0]+'_segmentation_instance' : seg_image_obs.copy(),
             # GymWrapper checks for it, but we may not need GymWrapper.
             # Alternatively we could change GymWrapper to look for the 'obsevation' key and these last two. 
             pf+'proprio-state': obs[pf+'proprio-state'],
