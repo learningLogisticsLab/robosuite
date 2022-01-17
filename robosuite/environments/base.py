@@ -309,10 +309,10 @@ class MujocoEnv(metaclass=EnvMeta):
         set_site_visualization = True
 
         # Use hard reset if requested (set by object_randomization) when all objects are picked up        
-        if (self.hard_reset                                     and 
-           len(self.objects_in_target_bin) == self.num_blocks   and 
-           not self.deterministic_reset                         or 
-           self.first_reset                                     or
+        if (self.hard_reset                                         and 
+           len(self.objects_in_target_bin) == self.num_objs_to_load and 
+           not self.deterministic_reset                             or 
+           self.first_reset                                         or
            self.fallen_objs_flag): 
            
             self._destroy_viewer()
@@ -335,10 +335,10 @@ class MujocoEnv(metaclass=EnvMeta):
         #   ** Note at at beginning gym_wrapper, if present, calls reset with first_reset flag as True. 
         #   ** Since new mujoco_objects are created, we need to reset observables and then turn off that flag.
         if self.hard_reset:
-        # if (self.hard_reset                                     and 
-        #    len(self.objects_in_target_bin) == self.num_blocks   and 
-        #    not self.deterministic_reset                         or 
-        #    self.first_reset                                     or
+        # if (self.hard_reset                                           and 
+        #    len(self.objects_in_target_bin) == sself.num_objs_to_load  and 
+        #    not self.deterministic_reset                               or 
+        #    self.first_reset                                           or
         #    self.fallen_objs_flag): 
 
             # If we're using hard reset, must re-update sensor object references
@@ -350,7 +350,7 @@ class MujocoEnv(metaclass=EnvMeta):
         
         # Make sure that all sites are toggled OFF by default
         self.visualize(vis_settings={vis: set_site_visualization for vis in self._visualizations})        
-        
+        # TODO: should i get_obs first and then update_poses?
         return self._get_obs(force_update=True) # Update observables and return their values
 
     def _reset_internal(self):
