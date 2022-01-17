@@ -286,7 +286,7 @@ class Picking(SingleArmEnv, Serializable):
         camera_heights          = 256,
         camera_widths           = 256,
         camera_depths           = False,
-        camera_segmentations    = "instance",
+        camera_segmentations     = "instance",
 
         has_renderer            = False,
         has_offscreen_renderer  = True,
@@ -1504,6 +1504,7 @@ class Picking(SingleArmEnv, Serializable):
                         object_geoms=[g for g in self.object_placements[self.goal_object['name']][2].contact_geoms])
 
         # If successfully placed
+        self.goal_pos_error_thresh = 0.05
         if target_dist_error <= self.goal_pos_error_thresh:
 
             # If check_grasp is activated and it is false, no success.
@@ -2028,7 +2029,7 @@ class Picking(SingleArmEnv, Serializable):
             'achieved_goal': achieved_goal.copy(),  # [ag_ob0_xyz, ag_ob1_xyz, ... rob_xyz]
             'desired_goal':  desired_goal.copy(),   # [goal_obj_xyz, goal_obj_quat]
 
-            # TODO: Should we also include modalities [image-state, object-state] from observables? 
+            # TODO: Should we also include modalities [image-state, object-state] from observables?
             self.camera_names[0]+'_image' : image_obs.copy(),
             self.camera_names[0]+'_segmentation_instance' : seg_image_obs.copy(),
             # GymWrapper checks for it, but we may not need GymWrapper.
