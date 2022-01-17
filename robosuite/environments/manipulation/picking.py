@@ -2094,7 +2094,12 @@ class Picking(SingleArmEnv, Serializable):
                or self.fallen_objs_flag or not info['is_inside_workspace']
         
         # 08 Process Reward
-        reward = self.compute_reward(env_obs['achieved_goal'], env_obs['desired_goal'], info)
+        if info['is_success']:
+            reward = 1.
+        else:
+            reward = 0.
+            
+        # reward =  self.compute_reward(env_obs['achieved_goal'], env_obs['desired_goal'], info)
     
         return env_obs, reward, done, info       
 
