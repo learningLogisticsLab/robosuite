@@ -1839,11 +1839,12 @@ class Picking(SingleArmEnv, Serializable):
         #--------------------------------------------------------------------------
         # 03 Desired Goal
         #--------------------------------------------------------------------------
-        desired_goal = []
-        desired_goal = np.concatenate([ # 3             # 7
-            self.goal_object['pos'],    # 3             # Try pos only first.
-            # self.goal_object['quat']    # 4
-        ])
+        # desired_goal = []
+        # desired_goal = np.concatenate([ # 3             # 7
+        #     self.goal_object['pos'],    # 3             # Try pos only first.
+        #     # self.goal_object['quat']    # 4
+        # ])
+        desired_goal = np.array([0,0,0])
 
         # Returns obs, ag, and also dg
         return_dict = {
