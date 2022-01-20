@@ -68,8 +68,9 @@ class GymWrapper(Wrapper, Env, Serializable):
             
             # Add image obs if requested
             if self.env.use_camera_obs:
+                pass
                 # keys += [f"{cam_name}_image" for cam_name in self.env.camera_names]
-                keys += [f"image_{cam_name}" for cam_name in self.env.camera_names]
+                # keys += [f"image_{cam_name}" for cam_name in self.env.camera_names]
 
             # Iterate over all robots to add to state
             for idx in range(len(self.env.robot_names)): # for idx in range(len(self.env.robos)):
@@ -123,7 +124,6 @@ class GymWrapper(Wrapper, Env, Serializable):
                     desired_goal  = spaces.Box(-np.inf, np.inf, shape=obs['desired_goal'].shape, dtype='float32'),
                     achieved_goal = spaces.Box(-np.inf, np.inf, shape=obs['achieved_goal'].shape, dtype='float32'),
                     observation   = spaces.Box(-np.inf, np.inf, shape=obs['observation'].shape, dtype='float32'),
-                    image_robot0_eye_in_hand = spaces.Box(0, 1, shape=obs['image_robot0_eye_in_hand'].shape, dtype='float32'),
                 ))       
 
                 # Action Dimensions... 

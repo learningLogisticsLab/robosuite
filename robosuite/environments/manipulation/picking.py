@@ -20,6 +20,8 @@ from robosuite.models.objects import *
 
 import matplotlib.cm as cm
 import cv2
+from test_model import GGCNN_SIM
+
 
 # After importing we can extract objects by getting the modules via dir()
 mods = dir()
@@ -407,6 +409,8 @@ class Picking(SingleArmEnv, Serializable):
         self.use_pygame_render           = use_pygame_render
         self.visualize_camera_obs        = visualize_camera_obs
         self.top_down_grasp              = top_down_grasp,
+        self.ggcnn_model = GGCNN_SIM(num_graps=1)
+
 
         if use_pygame_render:
             import pygame
@@ -1694,13 +1698,15 @@ class Picking(SingleArmEnv, Serializable):
                 seg_image_obs = obs[self.camera_names[0]+'_segmentation_instance']
                 proc_image_obs = self.process_seg_image(seg_image_obs, output_size=(self.camera_image_height, self.camera_image_width))
             else:
-                seg_image_obs = obs[self.camera_names[0]+'_segmentation_instance']
-                proc_seg_image = self.process_seg_image(seg_image_obs, output_size=(self.camera_image_height, self.camera_image_width))
+                raw_image_obs = obs[self.camera_names[0]+'_image']
+                proc_image_obs = self.process_raw_image(raw_image_obs, output_size=(50, 50))
 
-                depth_image_obs = obs[self.camera_names[0]+'_depth']
-                proc_depth_image = self.process_depth_image(depth_image_obs, output_size=(self.camera_image_height, self.camera_image_width))
+                depth_image_raw = obs[self.camera_names[0]+'_depth']
+                depth_image_real = camera_utils.get_real_depth_map(self.sim, depth_image_raw).squeeze(-1).astype('float64')
+                
+                proc_depth_image = self.process_depth_image(depth_image_real, crop_size=250, output_size=(300,300))
+                proc_color_image = self.ggcnn_model.process_color_image(raw_image_obs, crop_size=250, output_size=(300,300))
 
-                proc_image_obs = cv2.merge([proc_seg_image, proc_depth_image])
 
 
         # Get prefix for robot to extract observation keys
@@ -1731,6 +1737,19 @@ class Picking(SingleArmEnv, Serializable):
             gripper_state.ravel(),  # 2
             gripper_vel.ravel(),    # 2
         ])
+
+        if grip_pos[2] > 0.98:
+            self.grasp_point = np.array([0,0,0])
+            self.grasp_angle = np.array([0])
+
+        elif grip_pos[2] <= 0.98 and grip_pos[2] > 0.90 and not np.any(self.grasp_point):
+            grasp_params = self.ggcnn_model.predict_grasp(proc_color_image, proc_depth_image, visualize=False)
+            max_pixel = ((np.array(grasp_params['center']) / 300.0 * 250) + np.array([(300 - 250)//2, (300 - 250) // 2]))
+            max_pixel = np.round(max_pixel).astype(np.int)
+
+            world_to_camera_transform = camera_utils.get_camera_transform_matrix(self.sim, self.camera_names[0], self.camera_image_height, self.camera_image_width)
+            self.grasp_point = camera_utils.transform_from_pixels_to_world(max_pixel, depth_image_real[..., np.newaxis], T.matrix_inverse(world_to_camera_transform))
+            self.grasp_angle = np.array(grasp_params['angle'])
 
         #-------------------------------------------------------------------------- 
         # 01b) Object observations *We do not follow relationalRL here and do not add all objects + grip to achieved goals. Instead just add goal_object
@@ -1808,17 +1827,11 @@ class Picking(SingleArmEnv, Serializable):
             #     object_rel_pos.ravel(), # 3
             #     object_rel_rot.ravel()  # 4
             # ])
-            # env_obs = np.concatenate([  # 17 + (20 * num_objects)
-            #     env_obs,
-            #     object_i_pos[3*i:3*(i+1)].ravel(),  # 3
-            #     object_i_quat[4*i:4*(i+1)].ravel(),  # 4
-
-            #     object_velp[3*i:3*(i+1)].ravel(),  # 3
-            #     object_velr[3*i:3*(i+1)].ravel(),  # 3
-
-            #     object_rel_pos[3*i:3*(i+1)].ravel(),  # 3
-            #     object_rel_rot[4*i:4*(i+1)].ravel()  # 4
-            # ])
+            env_obs = np.concatenate([  # 17 + 4
+                env_obs,
+                self.grasp_point.ravel(),
+                self.grasp_angle.ravel()
+            ])
 
             ## TODO: Additional observations
             # (1) End-effector type: use robosuites list to provide an appropriate number to these
@@ -1896,16 +1909,17 @@ class Picking(SingleArmEnv, Serializable):
 
         return cv2.resize(image_float, output_size)
 
-    def process_depth_image(self, depth_im, output_size):
-        """
-        Process depth map. Unscale and flip.
-        """
+    def process_raw_image(self, raw_im, output_size):
 
-        depth_im = camera_utils.get_real_depth_map(self.sim, depth_im)
-        # depth_im = np.flip(depth_im.transpose((1, 0, 2)), 1).squeeze(-1).astype('float64')
-        depth_im = depth_im.squeeze(-1).astype('float64')
+        image_float = np.ascontiguousarray(raw_im, dtype=np.float32) / 255
 
-        return cv2.resize(depth_im, output_size)
+        return cv2.resize(image_float, output_size)
+
+    def process_depth_image(self, depth_im, crop_size, output_size):
+
+        proc_depth_image = self.ggcnn_model.process_depth_image(depth_im, crop_size=crop_size, output_size=output_size)
+
+        return proc_depth_image
 
     def step(self, action):
         '''
@@ -2046,17 +2060,16 @@ class Picking(SingleArmEnv, Serializable):
 
 
                 else:
-                    inset1 = env_obs['image_'+self.camera_names[0]][:,:,0]
+                    inset1 = env_obs['image_'+self.camera_names[0]]
                     inset1 = np.uint8(inset1 * 255.0)
-                    inset1 = cv2.merge([inset1,inset1,inset1])
                     inset1 = cv2.resize(inset1, (80,80))
                     im[:np.shape(inset1)[0],-np.shape(inset1)[1]:,:] = inset1
 
-                    inset2 = env_obs['image_'+self.camera_names[0]][:,:,1]
-                    inset2 = np.uint8(inset2 * 255.0)
-                    inset2 = cv2.merge([inset2,inset2,inset2])
-                    inset2 = cv2.resize(inset2, (80,80))
-                    im[-np.shape(inset2)[0]:,-np.shape(inset2)[1]:,:] = inset2
+                    # inset2 = env_obs['image_'+self.camera_names[0]][:,:,1]
+                    # inset2 = np.uint8(inset2 * 255.0)
+                    # inset2 = cv2.merge([inset2,inset2,inset2])
+                    # inset2 = cv2.resize(inset2, (80,80))
+                    # im[-np.shape(inset2)[0]:,-np.shape(inset2)[1]:,:] = inset2
 
             pygame.pixelcopy.array_to_surface(self.screen, im)
             pygame.display.update()
