@@ -1738,12 +1738,12 @@ class Picking(SingleArmEnv, Serializable):
             gripper_vel.ravel(),    # 2
         ])
 
-        if grip_pos[2] > 0.98:
+        if grip_pos[2] > 0.97:
             self.grasp_point = np.array([0,0,0])
             self.grasp_angle = np.array([0])
 
-        elif grip_pos[2] <= 0.98 and grip_pos[2] > 0.90 and not np.any(self.grasp_point):
-            grasp_params = self.ggcnn_model.predict_grasp(proc_color_image, proc_depth_image, visualize=False)
+        elif grip_pos[2] <= 0.97 and grip_pos[2] > 0.88 and not np.any(self.grasp_point):
+            grasp_params = self.ggcnn_model.predict_grasp(proc_color_image, proc_depth_image, visualize=True)
             max_pixel = ((np.array(grasp_params['center']) / 300.0 * 250) + np.array([(300 - 250)//2, (300 - 250) // 2]))
             max_pixel = np.round(max_pixel).astype(np.int)
 
