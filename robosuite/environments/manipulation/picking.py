@@ -1374,7 +1374,7 @@ class Picking(SingleArmEnv, Serializable):
                     object_geoms=[g for g in self.object_placements[self.goal_object['name']][2].contact_geoms])
 
         # If successfully placed
-        if check_grasp: #target_dist_error <= self.goal_pos_error_thresh:
+        if target_dist_error <= self.goal_pos_error_thresh:
 
             print("Successfully picked {}". format(self.goal_object['name']))
             # 02 Object Handling
@@ -2086,12 +2086,7 @@ class Picking(SingleArmEnv, Serializable):
                or self.fallen_objs_flag or not info['is_inside_workspace']
         
         # 08 Process Reward
-        if info['is_success']:
-            reward = 1.
-        else:
-            reward = 0.
-            
-        # reward =  self.compute_reward(env_obs['achieved_goal'], env_obs['desired_goal'], info)
+        reward = self.compute_reward(env_obs['achieved_goal'], env_obs['desired_goal'], info)
     
         return env_obs, reward, done, info       
 
