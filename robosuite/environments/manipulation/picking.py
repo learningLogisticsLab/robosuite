@@ -1856,6 +1856,7 @@ class Picking(SingleArmEnv, Serializable):
             self.goal_object['pos'],    # 3             # Try pos only first.
             # self.goal_object['quat']    # 4
         ])
+        desired_goal = np.array([0,0,0])
 
         # Returns obs, ag, and also dg
         return_dict = {
