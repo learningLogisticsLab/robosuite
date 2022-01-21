@@ -1374,7 +1374,7 @@ class Picking(SingleArmEnv, Serializable):
                     object_geoms=[g for g in self.object_placements[self.goal_object['name']][2].contact_geoms])
 
         # If successfully placed
-        if check_grasp: #target_dist_error <= self.goal_pos_error_thresh:
+        if target_dist_error <= self.goal_pos_error_thresh:
 
             print("Successfully picked {}". format(self.goal_object['name']))
             # 02 Object Handling
@@ -1839,12 +1839,11 @@ class Picking(SingleArmEnv, Serializable):
         #--------------------------------------------------------------------------
         # 03 Desired Goal
         #--------------------------------------------------------------------------
-        # desired_goal = []
-        # desired_goal = np.concatenate([ # 3             # 7
-        #     self.goal_object['pos'],    # 3             # Try pos only first.
-        #     # self.goal_object['quat']    # 4
-        # ])
-        desired_goal = np.array([0,0,0])
+        desired_goal = []
+        desired_goal = np.concatenate([ # 3             # 7
+            self.goal_object['pos'],    # 3             # Try pos only first.
+            # self.goal_object['quat']    # 4
+        ])
 
         # Returns obs, ag, and also dg
         return_dict = {
@@ -2094,13 +2093,7 @@ class Picking(SingleArmEnv, Serializable):
         done = (self.timestep >= self.horizon) and not self.ignore_done or info['is_success'] and self.object_names == [] \
                or self.fallen_objs_flag or not info['is_inside_workspace']
         
-        # 08 Process Reward
-        if info['is_success']:
-            reward = 1.
-        else:
-            reward = 0.
-            
-        # reward =  self.compute_reward(env_obs['achieved_goal'], env_obs['desired_goal'], info)
+        reward =  self.compute_reward(env_obs['achieved_goal'], env_obs['desired_goal'], info)
     
         return env_obs, reward, done, info       
 
