@@ -292,7 +292,7 @@ class Picking(SingleArmEnv, Serializable):
         has_offscreen_renderer  = True,
         # "camera" names = ('frontview', 'birdview', 'agentview', 'robot0_robotview', 'robot0_eye_in_hand').
         render_camera           = "agentview", #TODO: may need to adjust here for better angle for our work
-        camera_segmentations     = "instance",
+        camera_segmentations     = "None",
         render_collision_mesh   = False,
         render_visual_mesh      = False,
         use_pygame_render       = False,
