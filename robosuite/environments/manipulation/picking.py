@@ -408,6 +408,8 @@ class Picking(SingleArmEnv, Serializable):
         self.visualize_camera_obs        = visualize_camera_obs
         self.top_down_grasp              = top_down_grasp,
 
+        self.is_grasping = np.asarray(False).astype(np.float32)
+
         if use_pygame_render:
             import pygame
             if self.visualize_camera_obs:
@@ -521,7 +523,7 @@ class Picking(SingleArmEnv, Serializable):
 
         return goal_obj.copy(), other_objs_to_consider.copy()
     
-    def compute_reward(self, achieved_goal, desired_goal, info):
+    def compute_reward(self, achieved_goal, desired_goal, is_grasping, info):
         """
         Computes discrete sparse reward, perhaps in an off-policy way during training. 
         
@@ -551,9 +553,10 @@ class Picking(SingleArmEnv, Serializable):
         # Sparse reward calculation: positive format
         # - If we do not reach target, a 0 will be assigned as the reard, otherwise 1.
         # - a perfect policy would get returns equivalent to 1
-        reward = (dist < self.distance_threshold).astype(np.float32)
+        reward_goal = (dist < self.distance_threshold).astype(np.float32)
+        reward_grasping = 0.05*is_grasping
 
-        reward = np.asarray(reward)            
+        reward = np.asarray(reward_grasping+reward_goal)
         return reward          
 
     def reward(self, action=None):
@@ -1373,6 +1376,8 @@ class Picking(SingleArmEnv, Serializable):
                     gripper=self.robots[0].gripper,
                     object_geoms=[g for g in self.object_placements[self.goal_object['name']][2].contact_geoms])
 
+        self.is_grasping = np.asarray(check_grasp).astype(np.float32)
+
         # If successfully placed
         if target_dist_error <= self.goal_pos_error_thresh:
 
@@ -1728,6 +1733,8 @@ class Picking(SingleArmEnv, Serializable):
 
             grip_velp.ravel(),      # 3
             grip_velr.ravel(),      # 3
+
+            self.is_grasping.ravel()
 
             # gripper_state.ravel(),  # 2
             # gripper_vel.ravel(),    # 2
@@ -2093,7 +2100,7 @@ class Picking(SingleArmEnv, Serializable):
         done = (self.timestep >= self.horizon) and not self.ignore_done or info['is_success'] and self.object_names == [] \
                or self.fallen_objs_flag or not info['is_inside_workspace']
         
-        reward =  self.compute_reward(env_obs['achieved_goal'], env_obs['desired_goal'], info)
+        reward =  self.compute_reward(env_obs['achieved_goal'], env_obs['desired_goal'], self.is_grasping, info)
     
         return env_obs, reward, done, info       
 
