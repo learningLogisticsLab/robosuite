@@ -815,7 +815,7 @@ class Picking(SingleArmEnv, Serializable):
                 rotation_axis                   = 'z',                              # Currently only accepts one axis. TODO: extend to multiple axes.
                 ensure_object_boundary_in_range = True,
                 ensure_valid_placement          = True,
-                reference_pos                   = self.bin1_pos + self.bin1_surface + np.array([0,0,0.03]),
+                reference_pos                   = self.bin1_pos + self.bin1_surface + 0.03,
                 z_offset                        = 0.10,                             # Set a vertical offset of XXcm above the bin
                 z_offset_prob                   = 0.50,  # probability with which to set the z_offset
             )
