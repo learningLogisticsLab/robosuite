@@ -226,7 +226,7 @@ class GymWrapper(Wrapper, Env, Serializable):
             except:
                 TypeError("Seed must be an integer type!")
 
-    def compute_reward(self, achieved_goal, desired_goal, is_grasping, info):
+    def compute_reward(self, achieved_goal, desired_goal, info):
         """
         Dummy function to be compatible with gym interface that simply returns environment reward
 
@@ -240,7 +240,7 @@ class GymWrapper(Wrapper, Env, Serializable):
         """
         # Dummy args used to mimic Wrapper interface
         if self.rlkit_relational:
-            return self.env.compute_reward(achieved_goal, desired_goal, is_grasping, info)
+            return self.env.compute_reward(achieved_goal, desired_goal, info)
         else:
             return self.env.reward()
 
