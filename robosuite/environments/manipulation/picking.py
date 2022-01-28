@@ -2048,6 +2048,7 @@ class Picking(SingleArmEnv, Serializable):
                     inset1 = second_image #env_obs['image_'+self.camera_names[0]]
                     inset1 = np.uint8(inset1 * 255.0)
                     inset1 = cv2.merge([inset1,inset1,inset1])
+                    inset1 = np.flip(inset1.transpose((1, 0, 2)), 0)[::-1] #for obs image visualization in pygame
                     inset1 = cv2.resize(inset1, (80,80))
 
                     im[:np.shape(inset1)[0],-np.shape(inset1)[1]:,:] = inset1
