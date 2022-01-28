@@ -408,6 +408,8 @@ class Picking(SingleArmEnv, Serializable):
         self.visualize_camera_obs        = visualize_camera_obs
         self.top_down_grasp              = top_down_grasp,
 
+        self.is_grasping = np.asarray(False).astype(np.float32)
+
         if use_pygame_render:
             import pygame
             if self.visualize_camera_obs:
@@ -521,7 +523,7 @@ class Picking(SingleArmEnv, Serializable):
 
         return goal_obj.copy(), other_objs_to_consider.copy()
     
-    def compute_reward(self, achieved_goal, desired_goal, info):
+    def compute_reward(self, achieved_goal, desired_goal, is_grasping, info):
         """
         Computes discrete sparse reward, perhaps in an off-policy way during training. 
         
@@ -551,9 +553,17 @@ class Picking(SingleArmEnv, Serializable):
         # Sparse reward calculation: positive format
         # - If we do not reach target, a 0 will be assigned as the reard, otherwise 1.
         # - a perfect policy would get returns equivalent to 1
-        reward = (dist < self.distance_threshold).astype(np.float32)
+        # reward_goal = (dist < self.distance_threshold).astype(np.float32)
+        # reward_grasping = 0.05*is_grasping
 
-        reward = np.asarray(reward)            
+        if achieved_goal[2]>0.90 and is_grasping==1:
+            reward = 50
+        elif is_grasping:
+            reward = 10
+        else:
+            reward = 0
+
+        reward = np.asarray(reward)
         return reward          
 
     def reward(self, action=None):
@@ -1373,8 +1383,10 @@ class Picking(SingleArmEnv, Serializable):
                     gripper=self.robots[0].gripper,
                     object_geoms=[g for g in self.object_placements[self.goal_object['name']][2].contact_geoms])
 
+        self.is_grasping = np.asarray(check_grasp).astype(np.float32)
+
         # If successfully placed
-        if target_dist_error <= self.goal_pos_error_thresh:
+        if achieved_goal[2]>0.90 and self.is_grasping==1: #target_dist_error <= self.goal_pos_error_thresh:
 
             print("Successfully picked {}". format(self.goal_object['name']))
             # 02 Object Handling
@@ -1474,7 +1486,7 @@ class Picking(SingleArmEnv, Serializable):
         bin_x_half = self.model.mujoco_arena.table_full_size[0] / 2 - 0.05  # half of bin - edges (2*0.025 half of each side of each wall so that we don't hit the wall)
         bin_y_half = self.model.mujoco_arena.table_full_size[1] / 2 - 0.05
 
-        workspace_min = np.array([self.bin1_pos[0]-bin_x_half, self.bin1_pos[1]-bin_y_half, self.bin1_pos[2]+self.bin1_surface[2]])
+        workspace_min = np.array([self.bin1_pos[0]-bin_x_half, self.bin1_pos[1]-bin_y_half, self.bin1_pos[2]+self.bin1_surface[2]+0.01])
         workspace_max = np.array([self.bin1_pos[0]+bin_x_half, self.bin1_pos[1]+bin_y_half, self.bin1_pos[2]+self.bin1_surface[2]+0.3])
 
         return np.all(np.greater(robot0_gripper_position, workspace_min)) and np.all(np.less(robot0_gripper_position, workspace_max))
@@ -1721,13 +1733,18 @@ class Picking(SingleArmEnv, Serializable):
         gripper_state = obs[f'{pf}gripper_qpos']        
         gripper_vel   = obs[f'{pf}gripper_qvel'] * dt   
 
+        grip_height_from_bin = np.array(grip_pos[2]-self.bin1_pos[2]).astype(np.float32)
+
         # Concatenate and place in env_obs (1)
         env_obs = np.concatenate([  # 17 dims
-            grip_pos.ravel(),       # 3
-            grip_quat.ravel(),      # 4
+            # grip_pos.ravel(),       # 3
+            # grip_quat.ravel(),      # 4
 
-            grip_velp.ravel(),      # 3
-            grip_velr.ravel(),      # 3
+            # grip_velp.ravel(),      # 3
+            # grip_velr.ravel(),      # 3
+
+            grip_height_from_bin.ravel(),
+            self.is_grasping.ravel(),
 
             # gripper_state.ravel(),  # 2
             # gripper_vel.ravel(),    # 2
@@ -1839,11 +1856,12 @@ class Picking(SingleArmEnv, Serializable):
         #--------------------------------------------------------------------------
         # 03 Desired Goal
         #--------------------------------------------------------------------------
-        desired_goal = []
-        desired_goal = np.concatenate([ # 3             # 7
-            self.goal_object['pos'],    # 3             # Try pos only first.
-            # self.goal_object['quat']    # 4
-        ])
+        # desired_goal = []
+        # desired_goal = np.concatenate([ # 3             # 7
+        #     self.goal_object['pos'],    # 3             # Try pos only first.
+        #     # self.goal_object['quat']    # 4
+        # ])
+        desired_goal = np.array([0,0,0]).astype(np.float32)
 
         # Returns obs, ag, and also dg
         return_dict = {
@@ -2094,7 +2112,7 @@ class Picking(SingleArmEnv, Serializable):
         done = (self.timestep >= self.horizon) and not self.ignore_done or info['is_success'] and self.object_names == [] \
                or self.fallen_objs_flag or not info['is_inside_workspace']
         
-        reward =  self.compute_reward(env_obs['achieved_goal'], env_obs['desired_goal'], info)
+        reward =  self.compute_reward(env_obs['achieved_goal'], env_obs['desired_goal'], self.is_grasping, info)
     
         return env_obs, reward, done, info       
 
