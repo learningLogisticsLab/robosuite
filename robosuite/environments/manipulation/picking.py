@@ -559,7 +559,7 @@ class Picking(SingleArmEnv, Serializable):
         if achieved_goal[2]>0.90 and is_grasping==1:
             reward = 50
         elif is_grasping:
-            reward = 10
+            reward = 0.5
         else:
             reward = 0
 
