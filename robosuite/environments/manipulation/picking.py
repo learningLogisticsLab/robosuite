@@ -1901,17 +1901,33 @@ class Picking(SingleArmEnv, Serializable):
         inds = np.arange(256)
         rstate.shuffle(inds)
 
+        object_mask = seg_im.copy()
+        for idx in range(6):
+            if idx==2:
+                object_mask[object_mask==idx]=1
+            else:
+                object_mask[object_mask==idx]=0
+
+        gripper_mask = seg_im.copy()
+        for idx in range(6):
+            if idx==5:
+                gripper_mask[gripper_mask==idx]=1
+            else:
+                gripper_mask[gripper_mask==idx]=0
+
+        composite_mask = cv2.bitwise_or(object_mask, gripper_mask)
+
         # use @inds to map each geom ID to a color
         # gray_image = (cm.gray(inds[seg_im], 3))[..., :1].squeeze(-1).astype('float64')
         
-        seg_im[seg_im==0]=0
-        seg_im[seg_im==1]=0
-        seg_im[seg_im==2]=1 #object to be grasped
-        seg_im[seg_im==3]=0
-        seg_im[seg_im==4]=0
-        seg_im[seg_im==5]=1 #gripper
+        # seg_im[seg_im==0]=0
+        # seg_im[seg_im==1]=0
+        # seg_im[seg_im==2]=1 #object to be grasped
+        # seg_im[seg_im==3]=0
+        # seg_im[seg_im==4]=0
+        # seg_im[seg_im==5]=1 #gripper
 
-        image_float = np.ascontiguousarray(seg_im, dtype=np.float32)
+        image_float = np.ascontiguousarray(composite_mask, dtype=np.float32)
 
         return cv2.resize(image_float, output_size)
 
