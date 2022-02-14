@@ -2021,8 +2021,9 @@ class Picking(SingleArmEnv, Serializable):
             # TODO: Should we also include modalities [image-state, object-state] from observables? 
             # GymWrapper checks for it, but we may not need GymWrapper.
             # Alternatively we could change GymWrapper to look for the 'obsevation' key and these last two. 
-            pf+'proprio-state': obs[pf+'proprio-state'],
-            'object-state': obs['object-state'],
+            
+            # pf+'proprio-state': obs[pf+'proprio-state'],
+            # 'object-state': obs['object-state'],
         }
 
         # Images

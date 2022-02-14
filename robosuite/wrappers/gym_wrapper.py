@@ -63,16 +63,16 @@ class GymWrapper(Wrapper, Env, Serializable):
             keys = []
             
             # Add object obs if requested
-            if self.env.use_object_obs:
-                keys += ["object-state"]
+            # if self.env.use_object_obs:
+            #     keys += ["object-state"]
             
-            # Add image obs if requested
-            if self.env.use_camera_obs:
-                keys += [f"{cam_name}_image" for cam_name in self.env.camera_names]
+            # # Add image obs if requested
+            # if self.env.use_camera_obs:
+            #     keys += [f"{cam_name}_image" for cam_name in self.env.camera_names]
             
-            # Iterate over all robots to add to state
-            for idx in range(len(self.env.robot_names)): # for idx in range(len(self.env.robos)):
-                keys += ["robot{}_proprio-state".format(idx)]
+            # # Iterate over all robots to add to state
+            # for idx in range(len(self.env.robot_names)): # for idx in range(len(self.env.robos)):
+            #     keys += ["robot{}_proprio-state".format(idx)]
         
         self.keys = keys 
 
