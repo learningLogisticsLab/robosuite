@@ -1908,6 +1908,11 @@ class Picking(SingleArmEnv, Serializable):
             else:
                 object_mask[object_mask==idx]=0
 
+        scale_factor = np.random.uniform(0.9,1.1)
+        center = (object_mask.shape[1]//2, object_mask.shape[0]//2)
+        rot_mat = cv2.getRotationMatrix2D(center, 0., scale_factor)
+        object_mask = np.int32(cv2.warpAffine(np.uint8(255*object_mask), rot_mat, (object_mask.shape[1], object_mask.shape[0]))/255.)
+
         gripper_mask = seg_im.copy()
         for idx in range(6):
             if idx==5:
