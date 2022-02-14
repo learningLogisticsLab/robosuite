@@ -2133,7 +2133,7 @@ class Picking(SingleArmEnv, Serializable):
             # 05 Update observables and get new observations
             
             env_obs = self._get_obs(force_update=True)
-            assert np.any(env_obs['robot0_proprio-state'][21:24]), print(env_obs)
+            assert np.any(env_obs['observation'][0:3]), print(env_obs)
             
             policy_step = False
 
