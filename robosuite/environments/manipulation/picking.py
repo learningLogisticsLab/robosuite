@@ -752,8 +752,8 @@ class Picking(SingleArmEnv, Serializable):
                     y_range                         = [-bin_y_half/2, bin_y_half/2],
                     # x_range                         = [-self.curr_learn_dist, self.curr_learn_dist],                # 5 cm from ref
                     # y_range                         = [-self.curr_learn_dist, self.curr_learn_dist],
-                    rotation                        = None,                         # Add uniform random rotation
-                    rotation_axis                   = 'z',                          # Currently only accepts one axis. TODO: extend to multiple axes.
+                    rotation                        = [np.pi/2,np.pi/2,-np.pi/2,np.pi/2,np.pi/2, np.pi/2],                         # Add uniform random rotation
+                    rotation_axis                   = 'x',                          # Currently only accepts one axis. TODO: extend to multiple axes.
                     ensure_object_boundary_in_range = True,
                     ensure_valid_placement          = True,
                     reference_pos                   = self.bin1_pos + self.bin1_surface,
@@ -1559,7 +1559,7 @@ class Picking(SingleArmEnv, Serializable):
         all_objects = list(range(num_objs_in_db))
         # all_objects = [2,5,10,15,18]
         objs_to_consider = random.sample( all_objects, num_objs_to_load) # i.e.objs_to_consider = [69, 66, 64, 55, 65]
-        objs_to_consider = [15]
+        objs_to_consider = [2]
 
         # 01 Sample number of objects to load
         for idx, val in enumerate(objs_to_consider):

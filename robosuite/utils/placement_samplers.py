@@ -4,7 +4,7 @@ import numpy as np
 from copy import copy
 
 from robosuite.utils import RandomizationError
-from robosuite.utils.transform_utils import quat_multiply
+from robosuite.utils.transform_utils import quat_multiply, euler2mat, mat2quat, random_quat
 from robosuite.models.objects import MujocoObject
 from robosuite.models.robots import ManipulatorModel, RobotModel
 
@@ -207,26 +207,37 @@ class UniformRandomSampler(ObjectPositionSampler):
         Raises:
             ValueError: [Invalid rotation axis]
         """
+        # if self.rotation is None:
+        #     rot_angle = np.random.uniform(high=2 * np.pi, low=0)
+        # elif isinstance(self.rotation, collections.abc.Iterable):
+        #     rot_angle = np.random.uniform(
+        #         high=max(self.rotation), low=min(self.rotation)
+        #     )
+        # else:
+        #     rot_angle = self.rotation
         if self.rotation is None:
-            rot_angle = np.random.uniform(high=2 * np.pi, low=0)
-        elif isinstance(self.rotation, collections.abc.Iterable):
-            rot_angle = np.random.uniform(
-                high=max(self.rotation), low=min(self.rotation)
-            )
+            quat = random_quat()
         else:
-            rot_angle = self.rotation
+            random_euler_x = np.random.uniform(self.rotation[0], self.rotation[1])
+            random_euler_y = np.random.uniform(self.rotation[2], self.rotation[3])
+            random_euler_z = np.random.uniform(self.rotation[4], self.rotation[5])
+            random_euler = [random_euler_x,random_euler_y,random_euler_z]
+
+            quat = mat2quat(euler2mat(random_euler))
+
+        return quat
 
         # Return angle based on axis requested
-        if self.rotation_axis == 'x':
-            return np.array([np.cos(rot_angle / 2), np.sin(rot_angle / 2), 0, 0])
-        elif self.rotation_axis == 'y':
-            return np.array([np.cos(rot_angle / 2), 0, np.sin(rot_angle / 2), 0])
-        elif self.rotation_axis == 'z':
-            return np.array([np.cos(rot_angle / 2), 0, 0, np.sin(rot_angle / 2)])
-        else:
-            # Invalid axis specified, raise error
-            raise ValueError(
-                "Invalid rotation axis specified. Must be 'x', 'y', or 'z'. Got: {}".format(self.rotation_axis))
+        # if self.rotation_axis == 'x':
+        #     return np.array([np.cos(rot_angle / 2), np.sin(rot_angle / 2), 0, 0])
+        # elif self.rotation_axis == 'y':
+        #     return np.array([np.cos(rot_angle / 2), 0, np.sin(rot_angle / 2), 0])
+        # elif self.rotation_axis == 'z':
+        #     return np.array([np.cos(rot_angle / 2), 0, 0, np.sin(rot_angle / 2)])
+        # else:
+        #     # Invalid axis specified, raise error
+        #     raise ValueError(
+        #         "Invalid rotation axis specified. Must be 'x', 'y', or 'z'. Got: {}".format(self.rotation_axis))
 
     def sample(self, fixtures=None, reference=None, on_top=True):
         """
