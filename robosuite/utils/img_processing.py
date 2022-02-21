@@ -138,45 +138,50 @@ def compute_blob_orientation(img=None, plot_flag=0):
         y = y- np.mean(y)
         coords = np.vstack([x,y])
 
-        # 03 Calc covariance mat
-        cov = np.cov(coords)
-        evals, evecs = np.linalg.eig(cov) # 3 evals --> 1323, 2942 # evecs--> (2,2)
+        # Also check here for potential [0,0] coordinates
+        if np.any(coords):             
 
-        # 04 Sort eigenvals in decreasing order
-        sort_indices = np.argsort(evals)[::-1]  # np.argsort returns indices in increasing order. # [::-1] reverses the order.
-        x_v1, y_v1 = evecs[:, sort_indices[0]]  # Eigenvector with largest eigenvalue: major-axis
-        x_v2, y_v2 = evecs[:, sort_indices[1]]  # Eigenvector with smaller eigenvalue: minor-axis
+            # 03 Calc covariance mat
+            cov = np.cov(coords)
+            evals, evecs = np.linalg.eig(cov) # 3 evals --> 1323, 2942 # evecs--> (2,2)
 
-        # Plot it
-        if plot_flag:
-            scale = 20
+            # 04 Sort eigenvals in decreasing order
+            sort_indices = np.argsort(evals)[::-1]  # np.argsort returns indices in increasing order. # [::-1] reverses the order.
+            x_v1, y_v1 = evecs[:, sort_indices[0]]  # Eigenvector with largest eigenvalue: major-axis
+            x_v2, y_v2 = evecs[:, sort_indices[1]]  # Eigenvector with smaller eigenvalue: minor-axis
 
-            # Draw major-axis: scale it up to make line longer. Also don't use plot vec, but the anti-vec to get the whole axis (multiply by -scalar)
-            plt.plot([x_v1*-scale*2, x_v1*scale*2],
-                    [y_v1*-scale*2, y_v1*scale*2], 
-                    color='red')
+            # Plot it
+            if plot_flag:
+                scale = 20
 
-            # Draw minor-axis        
-            plt.plot([x_v2*-scale, x_v2*scale],
-                    [y_v2*-scale, y_v2*scale], 
-                    color='blue')
+                # Draw major-axis: scale it up to make line longer. Also don't use plot vec, but the anti-vec to get the whole axis (multiply by -scalar)
+                plt.plot([x_v1*-scale*2, x_v1*scale*2],
+                        [y_v1*-scale*2, y_v1*scale*2], 
+                        color='red')
 
-            # Plots original oval x,y points in black
-            plt.plot(x, y, 'k.')
+                # Draw minor-axis        
+                plt.plot([x_v2*-scale, x_v2*scale],
+                        [y_v2*-scale, y_v2*scale], 
+                        color='blue')
 
-            plt.axis('equal')        # Fixes scaling between y and x
-            plt.gca().invert_yaxis()  # Inverts the y-axis (positive bottom, negative top)
-            plt.show()
+                # Plots original oval x,y points in black
+                plt.plot(x, y, 'k.')
 
-        # # Calculate offset with vertical: simply use arctan(opposite/adjacent) 
-        # #   Where, the adjacent corresponds to the x-axis and the opp corresponds to the y-axis-->arctan(x,y)
-        # theta = np.arctan((y_v1)/(x_v1))
-        # object_orientation = SO2(theta) # # Use inverse rotation matrix to align end-effector with
+                plt.axis('equal')        # Fixes scaling between y and x
+                plt.gca().invert_yaxis()  # Inverts the y-axis (positive bottom, negative top)
+                plt.show()
 
-        # Orientation is equivalent to the eigen-vectors directly. 
-        # Use order F to keep (xx,xy and yx, yy)
-        # The first eigenvector is enough to indicate the main orientation
-        object_orientation = evecs[:,0].reshape(1,-1, order='F')
+            # # Calculate offset with vertical: simply use arctan(opposite/adjacent) 
+            # #   Where, the adjacent corresponds to the x-axis and the opp corresponds to the y-axis-->arctan(x,y)
+            # theta = np.arctan((y_v1)/(x_v1))
+            # object_orientation = SO2(theta) # # Use inverse rotation matrix to align end-effector with
+
+            # Orientation is equivalent to the eigen-vectors directly. 
+            # Use order F to keep (xx,xy and yx, yy)
+            # The first eigenvector is enough to indicate the main orientation
+            object_orientation = evecs[:,0].reshape(1,-1, order='F')
+        else:
+            object_orientation = np.zeros([1,2])
     
     return object_orientation
 
