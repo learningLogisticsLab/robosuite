@@ -126,9 +126,9 @@ def compute_blob_orientation(img=None, plot_flag=0):
     raises:
 
     '''
-    # Verify there is a blob
-    if not np.all(img): 
-        object_orientation = np.zeros(1,2)
+    # Verify there is a blob. Otherwise, if all values are zero return null vec
+    if not np.any(img):  
+        object_orientation = np.zeros([1,2])
     else:
         # We want the indexes of the white pixels to find the axes of the blob.
         y,x = np.nonzero(img) # still not clear 
