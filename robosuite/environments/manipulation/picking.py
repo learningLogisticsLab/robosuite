@@ -8,7 +8,6 @@ import numpy as np
 from collections import OrderedDict
 
 # Utilities
-import robosuite as suite
 import robosuite.utils.transform_utils as T
 import robosuite.utils.camera_utils as camera_utils
 
@@ -54,8 +53,12 @@ from gym import spaces
 
 # 08 Serializable to resolve pickle
 from rlkit.core.serializable import Serializable
+
+# 09 Image Processing: segmentation, depth, orientation of blob
+from robosuite.utils.img_processing import * 
+
 # Used in Reconstructing the original object
-import robosuite as suite                                                           # will call all __init__ inside suite loading all relevant classes
+import robosuite as suite                              # will call all __init__ inside suite loading all relevant classes
 from robosuite.wrappers import GymWrapper  
 from rlkit.envs.wrappers import NormalizedBoxEnv 
 
@@ -1557,22 +1560,21 @@ class Picking(SingleArmEnv, Serializable):
         not_yet_modelled_visual_object_names= []
 
         all_objects = list(range(num_objs_in_db))
-        # all_objects = [2,5,10,15,18]
         objs_to_consider = random.sample( all_objects, num_objs_to_load) # i.e.objs_to_consider = [69, 66, 64, 55, 65]
-        objs_to_consider = [15]
+        objs_to_consider = [69] #  [5] will pull out a box
 
         # 01 Sample number of objects to load
         for idx, val in enumerate(objs_to_consider):
 
             # Collect all objects whose file name starts with an 'o' and contain 'Object' as in OXXXXObject (substract idx by 1 since list obj1 is indexed at 0)
-            if objs_in_db[ objs_to_consider[idx]-1 ][0] == 'o' and "Object" in objs_in_db[ objs_to_consider[idx] ]:
+            if objs_in_db[ objs_to_consider[idx]-1 ][0] == 'o' and "Object" in objs_in_db[ objs_to_consider[idx]-1 ]:
                 digit = objs_in_db[ objs_to_consider[idx] -1 ]
-                digits.append(digit)                            # Keep list of existing objects
+                digits.append(digit)                                            # Keep list of existing objects
                 
                 # Create map name:id
-                object_to_id.update({digit:idx+1})             # idx starts from 1 for diff objs: o00X8:1, oOOX3:2, oOOX9:3
-                object_names.append(digit)                     # o0001, o0002,...,o0010...
-                visual_object_names.append(digit[:5]+'VisualObject')          # o0001VisualObject
+                object_to_id.update({digit:idx+1})                              # idx starts from 1 for diff objs: o00X8:1, oOOX3:2, oOOX9:3
+                object_names.append(digit)                                      # o0001, o0002,...,o0010...
+                visual_object_names.append(digit[:5]+'VisualObject')            # o0001VisualObject
             
             # Otherwise keep a list of faulty object files 
             else:
@@ -1699,22 +1701,31 @@ class Picking(SingleArmEnv, Serializable):
         # Get robosuite observations as an Ordered dict. keep a local obs reference for convencience (vs. self_observables)
         obs = self._get_observations(force_update) # if called by reset() [see base class] this will be set to True.
 
-
-        if self.use_camera_obs:
+        if self.use_camera_obs:            
             if not self.use_depth_obs:
-                # image_obs = obs[self.camera_names[0]+'_image']
-                seg_image_obs = obs[self.camera_names[0]+'_segmentation_instance']
-                proc_image_obs = self.process_seg_image(seg_image_obs, output_size=(self.camera_image_height, self.camera_image_width))
-                proc_image_obs = cv2.merge([proc_image_obs,proc_image_obs])
-            else:
-                seg_image_obs = obs[self.camera_names[0]+'_segmentation_instance']
-                proc_seg_image = self.process_seg_image(seg_image_obs, output_size=(self.camera_image_height, self.camera_image_width))
 
-                depth_image_obs = obs[self.camera_names[0]+'_depth']
-                proc_depth_image = self.process_depth_image(depth_image_obs, output_size=(self.camera_image_height, self.camera_image_width))
+                # image_obs = obs[self.camera_names[0]+'_image']
+                seg_image_obs = obs[self.camera_names[0]+'_segmentation_instance'] # robot0_eye_in_hand_segmentation_instance
+
+                # Process seg image to only retain instances for gripper and object
+                proc_image_obs = process_seg_image(seg_image_obs, output_size=(self.camera_image_height, self.camera_image_width))
+
+                # Keep two channels of the image
+                proc_image_obs = cv2.merge([proc_image_obs,proc_image_obs])
+
+                # Need another slightly different copy only for major-axis and orientation extraction for the object
+                seg_obj_img = process_seg_obj_image(seg_image_obs, output_size=(self.camera_image_height, self.camera_image_width))
+                blob_ori    = compute_blob_orientation(seg_obj_img)
+           
+            else:
+                # Process semented instance and depth
+                seg_image_obs  = obs[self.camera_names[0]+'_segmentation_instance']
+                proc_seg_image = process_seg_image(seg_image_obs, output_size=(self.camera_image_height, self.camera_image_width))
+
+                depth_image_obs  = obs[self.camera_names[0]+'_depth']
+                proc_depth_image = process_depth_image(depth_image_obs, output_size=(self.camera_image_height, self.camera_image_width))
 
                 proc_image_obs = cv2.merge([proc_seg_image, proc_depth_image])
-
 
         # Get prefix for robot to extract observation keys
         pf = self.robots[0].robot_model.naming_prefix
@@ -1736,6 +1747,10 @@ class Picking(SingleArmEnv, Serializable):
         grip_height_from_bin = np.array(grip_pos[2]-self.bin1_pos[2]).astype(np.float32)
 
         # Concatenate and place in env_obs (1)
+        # Note: when we change these, also update the robot/object/goal dims of:
+        #  rlkit-relational/examples/relationalrl/train_binPicking and train_binPicking_basic
+        #  rlkit-relational/rlkit/torch/relational/modules.py:FetchInputPreprocessing.forward()
+        #  rlkit-relational/rlkit/torch/relational/relational_util.py.fetch_preprocessing
         env_obs = np.concatenate([  # 17 dims
             # grip_pos.ravel(),       # 3
             # grip_quat.ravel(),      # 4
@@ -1745,6 +1760,7 @@ class Picking(SingleArmEnv, Serializable):
 
             # grip_height_from_bin.ravel(),
             self.is_grasping.ravel(),
+            blob_ori.ravel(),
 
             # gripper_state.ravel(),  # 2
             # gripper_vel.ravel(),    # 2
@@ -1884,48 +1900,6 @@ class Picking(SingleArmEnv, Serializable):
         #if obs[]
         return return_dict
 
-    def process_seg_image(self, seg_im, output_size):
-        """
-        Helper function to visualize segmentations as grayscale frames.
-        NOTE: assumes that geom IDs go up to 255 at most - if not,
-        multiple geoms might be assigned to the same color.
-        """
-        
-        # flip and ensure all values lie within [0, 255]
-        # seg_im = np.mod(np.flip(seg_im.transpose((1, 0, 2)), 1).squeeze(-1)[::-1], 256)
-        seg_im = np.mod(seg_im.squeeze(-1), 256)
-
-
-        # deterministic shuffling of values to map each geom ID to a random int in [0, 255]
-        rstate = np.random.RandomState(seed=10)
-        inds = np.arange(256)
-        rstate.shuffle(inds)
-
-        # use @inds to map each geom ID to a color
-        # gray_image = (cm.gray(inds[seg_im], 3))[..., :1].squeeze(-1).astype('float64')
-        
-        seg_im[seg_im==0]=0
-        seg_im[seg_im==1]=0
-        seg_im[seg_im==2]=1 #object to be grasped
-        seg_im[seg_im==3]=0
-        seg_im[seg_im==4]=0
-        seg_im[seg_im==5]=1 #gripper
-
-        image_float = np.ascontiguousarray(seg_im, dtype=np.float32)
-
-        return cv2.resize(image_float, output_size)
-
-    def process_depth_image(self, depth_im, output_size):
-        """
-        Process depth map. Unscale and flip.
-        """
-
-        depth_im = camera_utils.get_real_depth_map(self.sim, depth_im)
-        # depth_im = np.flip(depth_im.transpose((1, 0, 2)), 1).squeeze(-1).astype('float64')
-        depth_im = depth_im.squeeze(-1).astype('float64')
-
-        return cv2.resize(depth_im, output_size)
-
     def step(self, action):
         '''
 
@@ -1954,7 +1928,13 @@ class Picking(SingleArmEnv, Serializable):
         02 Clip action 
             Note: not necessary when we wrap the env with the NormalizedBoxEnv class). TODO NormalizedBoxEnv currently clips at [-1,+1] and all the same for eef and fingers. Need to fix.
 
-        03 Set data to mujoco sim.data.ctrl
+        03 Set action
+            :3  -> dx dy dz
+            3:6 -> angle-axis representations (ax ay az)
+            6   -> gripper command. 
+            Passed in by self.controller.set_goal(arm_action) --> 
+                self.interpolator_pos.set_goal
+                self.interpolator_ori.set_goal 
 
         04 Step (steps 1-24)
             

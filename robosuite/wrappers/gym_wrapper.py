@@ -62,18 +62,19 @@ class GymWrapper(Wrapper, Env, Serializable):
         if keys is None:
             keys = []
             
+            # TODO: we have currently removed these because we do not want dependence on proprio data. Best way however, is to normalize this class and adjust the rest of the code so it does not have dependencies on gym_wrapper.
             # Add object obs if requested
-            if self.env.use_object_obs:
-                keys += ["object-state"]
+            # if self.env.use_object_obs:
+            #     keys += ["object-state"]
             
-            # Add image obs if requested
-            if self.env.use_camera_obs:
-                # keys += [f"{cam_name}_image" for cam_name in self.env.camera_names]
-                keys += [f"image_{cam_name}" for cam_name in self.env.camera_names]
+            # # Add image obs if requested
+            # if self.env.use_camera_obs:
+            #     # keys += [f"{cam_name}_image" for cam_name in self.env.camera_names]
+            #     keys += [f"image_{cam_name}" for cam_name in self.env.camera_names]
 
-            # Iterate over all robots to add to state
-            for idx in range(len(self.env.robot_names)): # for idx in range(len(self.env.robos)):
-                keys += ["robot{}_proprio-state".format(idx)]
+            # # Iterate over all robots to add to state
+            # for idx in range(len(self.env.robot_names)): # for idx in range(len(self.env.robos)):
+            #     keys += ["robot{}_proprio-state".format(idx)]
         
         self.keys = keys 
 

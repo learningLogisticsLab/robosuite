@@ -23,8 +23,8 @@ class Manipulator(Robot):
         """
         actuator_idxs = [self.sim.model.actuator_name2id(actuator) for actuator in gripper.actuators]
 
-        # Formats actions to be binary. TODO: Seems behaving differently?
-        gripper_action_actual = gripper.format_action(gripper_action)   # TODO: Juan: not so sure about the efficacy of this call. Supposed to yield a binary output, it is not doing that....
+        # Formats actions to be binary (in concert with the control steps required to complete the policy step)
+        gripper_action_actual = gripper.format_action(gripper_action)   
        
         # Rescale normalized gripper action to control ranges
         ctrl_range = self.sim.model.actuator_ctrlrange[actuator_idxs]   
