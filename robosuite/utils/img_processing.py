@@ -111,27 +111,43 @@ def process_depth_image(depth_im, output_size):
 
 def compute_blob_orientation(img=None, plot_flag=0):
     '''
-    This method computes the major-minor axis of the segmented blob. 
-    It computes the eigen vectors of the blob and arranages them in order of decreasing eigenvalue order
-    The eigenvector with the largest eigenvector will indicate a vector along the major axes.
+    This method wishes to compute the necessary z-world rotation needed by the gripper to properly grasp 
+    an object. Namely, to place its fingers around the minor-axis of the segmented-blob of the object. 
+    
+    To do this, we must first:
+    1. Get a segmented image
+    2. Compute the x,y mean-centered coordinates
+    3. Compute the covariance of the coordinates
+    4. Compute the eigenvals/eigenvecs of the covariance
+    
+    A plot analysis, compared with the original segmented will show that the vector representing the minor axis
+    is the exact rotation that we have for the gripper to place its fingers along the minor (shorter) edge of an object.
+    
+    Note that if the evec of the minor axis starts with a negative x-value, we can simply take the negative 
+    of the evec, to always get a rotation along the 1st and 2nd quadrants. 
+    
+    We will return the minor eigenvector in the first two quadrants. 
 
     If there is no blob, we return a null vector
 
     params:
-        img (ndarray): a gray image (1-channel) of segmented object
+        img (ndarray): a gray image (1-channel) of segmented object (x,y) starting on top left
     
     returns:
         object_orientation (ndarray): 2D vector for major axes
     
     raises:
-
+        NotImplementedError for no ndarray
     '''
+    if type(img) is not np.ndarray:
+        raise NotImplementedError('The input to compute_blob_orientation should be a gray image')
+
     # Verify there is a blob. Otherwise, if all values are zero return null vec
     if not np.any(img):  
-        object_orientation = np.zeros([1,2])
+        object_orientation = np.zeros(2)
     else:
         # We want the indexes of the white pixels to find the axes of the blob.
-        y,x = np.nonzero(img) # still not clear 
+        y,x = np.nonzero(img) # returns idx pos [....x.....],[....y....]. Ie for an np.eye(3): [0,1,2][0,1,2]
 
         # 02 Subtract mean
         x = x- np.mean(x)
@@ -145,13 +161,18 @@ def compute_blob_orientation(img=None, plot_flag=0):
             cov = np.cov(coords)
             evals, evecs = np.linalg.eig(cov) # 3 evals --> 1323, 2942 # evecs--> (2,2)
 
-            # 04 Sort eigenvals in decreasing order
-            sort_indices = np.argsort(evals)[::-1]  # np.argsort returns indices in increasing order. # [::-1] reverses the order.
-            x_v1, y_v1 = evecs[:, sort_indices[0]]  # Eigenvector with largest eigenvalue: major-axis
-            x_v2, y_v2 = evecs[:, sort_indices[1]]  # Eigenvector with smaller eigenvalue: minor-axis
+            # 04 Sort eigenvals in INCREASING order (minor axis first)
+            sort_indices = np.argsort(evals)  # np.argsort returns indices in increasing order. # [::-1] reverses the order.
+            evecs = evecs[sort_indices]
 
             # Plot it
             if plot_flag:
+                
+                # Plot major-minor...Sort eigenvals in decreasing order
+                sort_indices = np.argsort(evals)[::-1]  # np.argsort returns indices in increasing order. # [::-1] reverses the order.
+                x_v1, y_v1 = evecs[:, sort_indices[0]]  # Eigenvector with largest eigenvalue: major-axis
+                x_v2, y_v2 = evecs[:, sort_indices[1]]  # Eigenvector with smaller eigenvalue: minor-axis
+                    
                 scale = 20
 
                 # Draw major-axis: scale it up to make line longer. Also don't use plot vec, but the anti-vec to get the whole axis (multiply by -scalar)
@@ -171,17 +192,14 @@ def compute_blob_orientation(img=None, plot_flag=0):
                 plt.gca().invert_yaxis()  # Inverts the y-axis (positive bottom, negative top)
                 plt.show()
 
-            # # Calculate offset with vertical: simply use arctan(opposite/adjacent) 
-            # #   Where, the adjacent corresponds to the x-axis and the opp corresponds to the y-axis-->arctan(x,y)
-            # theta = np.arctan((y_v1)/(x_v1))
-            # object_orientation = SO2(theta) # # Use inverse rotation matrix to align end-effector with
+            # Check if minor-axis is pointing in the negative direction, if so, multiply (x,y) by -1
+            if evecs[0,0] < 0: 
+                evecs = -1*evecs
 
-            # Orientation is equivalent to the eigen-vectors directly. 
-            # Use order F to keep (xx,xy and yx, yy)
-            # The first eigenvector is enough to indicate the main orientation
-            object_orientation = evecs[:,0].reshape(1,-1, order='F')
+            # Return the minor axis [:,0]
+            object_orientation = evecs[:,0].reshape(1,-1, order='F').ravel()
         else:
-            object_orientation = np.zeros([1,2])
+            object_orientation = np.zeros(2)
     
     return object_orientation
 

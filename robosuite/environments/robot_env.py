@@ -331,6 +331,7 @@ class RobotEnv(MujocoEnv):
             OrderedDict: Dictionary mapping observable names to its corresponding Observable object
         """
         observables = super()._setup_observables()
+
         # Loop through all robots and grab their observables, adding it to the proprioception modality
         for robot in self.robots:
             robot_obs = robot.setup_observables() # rets robot0_joint_pos/pos_cos/pos_sin/joint_vel/eef_pos/eef_velp/eef_velr/gripper_qpos/gripper_qvel

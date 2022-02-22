@@ -57,6 +57,9 @@ from rlkit.core.serializable import Serializable
 # 09 Image Processing: segmentation, depth, orientation of blob
 from robosuite.utils.img_processing import * 
 
+# 10 Renderer
+import pygame
+
 # Used in Reconstructing the original object
 import robosuite as suite                              # will call all __init__ inside suite loading all relevant classes
 from robosuite.wrappers import GymWrapper  
@@ -411,7 +414,9 @@ class Picking(SingleArmEnv, Serializable):
         self.visualize_camera_obs        = visualize_camera_obs
         self.top_down_grasp              = top_down_grasp,
 
+        # Robot Observations
         self.is_grasping = np.asarray(False).astype(np.float32)
+        self.blob_ori = np.zeros([1,2])
 
         if use_pygame_render:
             import pygame
@@ -1028,7 +1033,6 @@ class Picking(SingleArmEnv, Serializable):
         def obj_velr(obs_cache):
             return np.array(self.sim.data.get_site_xvelr("gripper0_grip_site"))
 
-
         @sensor(modality=modality)
         def obj_to_eef_pos(obs_cache):
             # Immediately return default value if cache is empty
@@ -1561,7 +1565,7 @@ class Picking(SingleArmEnv, Serializable):
 
         all_objects = list(range(num_objs_in_db))
         objs_to_consider = random.sample( all_objects, num_objs_to_load) # i.e.objs_to_consider = [69, 66, 64, 55, 65]
-        objs_to_consider = [69] #  [5] will pull out a box
+        objs_to_consider = [10 ]# boxed objects [3,4,8,9,10,69] 
 
         # 01 Sample number of objects to load
         for idx, val in enumerate(objs_to_consider):
@@ -1715,7 +1719,7 @@ class Picking(SingleArmEnv, Serializable):
 
                 # Need another slightly different copy only for major-axis and orientation extraction for the object
                 seg_obj_img = process_seg_obj_image(seg_image_obs, output_size=(self.camera_image_height, self.camera_image_width))
-                blob_ori    = compute_blob_orientation(seg_obj_img)
+                self.blob_ori = compute_blob_orientation(seg_obj_img)
            
             else:
                 # Process semented instance and depth
@@ -1760,7 +1764,7 @@ class Picking(SingleArmEnv, Serializable):
 
             # grip_height_from_bin.ravel(),
             self.is_grasping.ravel(),
-            blob_ori.ravel(),
+            self.blob_ori.ravel(),      # 2 (minor-axis)
 
             # gripper_state.ravel(),  # 2
             # gripper_vel.ravel(),    # 2
@@ -2019,7 +2023,6 @@ class Picking(SingleArmEnv, Serializable):
         env_obs['image_'+self.camera_names[0]] = cv2.merge([first_image, second_image])
 
         if self.use_pygame_render:
-            import pygame
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     sys.exit()
