@@ -1983,27 +1983,19 @@ class Picking(SingleArmEnv, Serializable):
         policy_step = True
 
         self._update_observables()
-        first_image = self._get_obs()['image_'+self.camera_names[0]][:,:,0]
+        first_image = self._get_obs(force_update=True)['image_'+self.camera_names[0]][:,:,0]
 
         # Loop through the simulation at the model timestep rate until we're ready to take the next policy step
         # (as defined by the control frequency specified at the environment level)
         for i in range(int(self.control_timestep / self.model_timestep)):
 
             # 01. sim.forward()
-            self.sim.forward()
-
-            # Action Clipping
-            # Not necessary to clip actions within robosuite as we wrap with the NormalizedBoxEnv. 
-            # -->Set (clipped) action in mujoco
-            # action = np.clip(action, 
-            #                  self.action_spec[0],
-            #                  self.action_spec[1])
-            
+            self.sim.forward()            
         
-            # 03 Copy action to sim.data.ctrl (no mocaps used currently. differs from FetchEnv step approach)
+            # 02 Copy action to sim.data.ctrl (no mocaps used currently. differs from FetchEnv step approach)
             self._pre_action(action, policy_step)
 
-            # 04 sim.step
+            # 03 sim.step
             try:
                 self.sim.step()                             # Advance simulation
             
@@ -2013,22 +2005,21 @@ class Picking(SingleArmEnv, Serializable):
             
             policy_step = False
 
-        # 05 Update observables and get new observations
-        # self._update_observables()
-        # env_obs = self._get_obs()
-
+        # 04 Update observables and get new observations. Need force_update=True to get latest image update
         self._update_observables()
-        env_obs = self._get_obs()
+        env_obs = self._get_obs(force_update=True)
+        
         second_image = env_obs['image_'+self.camera_names[0]][:,:,0]
         env_obs['image_'+self.camera_names[0]] = cv2.merge([first_image, second_image])
 
+        # 05 Render
         if self.use_pygame_render:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     sys.exit()
 
             if self.visualize_camera_obs:
-                # read camera observation
+                # Display the camera observation
                 if not self.use_depth_obs:
                     im = env_obs['image_'+self.camera_names[0]]
                     im = np.uint8(im * 255.0)
@@ -2041,12 +2032,12 @@ class Picking(SingleArmEnv, Serializable):
 
                 im = cv2.merge([im,im,im])
             else:
-                # read agentview camera
+                # Display agentview camera
                 im = self.sim.render(camera_name="agentview", height=300, width=300)[::-1]
                 im = np.flip(im.transpose((1, 0, 2)), 0)[::-1]
 
                 if not self.use_depth_obs:
-                    inset1 = second_image #env_obs['image_'+self.camera_names[0]]
+                    inset1 = second_image # Display segmented eye-in-hand as an inset of the original image
                     inset1 = np.uint8(inset1 * 255.0)
                     inset1 = cv2.merge([inset1,inset1,inset1])
                     inset1 = np.flip(inset1.transpose((1, 0, 2)), 0)[::-1] #for obs image visualization in pygame
@@ -2069,10 +2060,7 @@ class Picking(SingleArmEnv, Serializable):
                     im[-np.shape(inset2)[0]:,-np.shape(inset2)[1]:,:] = inset2
 
             pygame.pixelcopy.array_to_surface(self.screen, im)
-            pygame.display.update()
-
-        # Note: this is done all at once to avoid floating point inaccuracies
-        self.cur_time += self.control_timestep        
+            pygame.display.update()  
 
         # 06 Process info
         info = { 'is_success': self._is_success(env_obs['achieved_goal'], env_obs['desired_goal']),
@@ -2095,8 +2083,12 @@ class Picking(SingleArmEnv, Serializable):
         done = (self.timestep >= self.horizon) and not self.ignore_done or info['is_success'] and self.object_names == [] \
                or self.fallen_objs_flag or not info['is_inside_workspace']
         
+        # 08 Rewards: for grasping and placing
         reward =  self.compute_reward(env_obs['achieved_goal'], env_obs['desired_goal'], self.is_grasping, info)
     
+        # Note: this is done all at once to avoid floating point inaccuracies
+        self.cur_time += self.control_timestep     
+
         return env_obs, reward, done, info       
 
     # -----Serialization------
