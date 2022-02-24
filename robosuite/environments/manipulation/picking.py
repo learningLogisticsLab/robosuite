@@ -1764,7 +1764,7 @@ class Picking(SingleArmEnv, Serializable):
 
             # grip_height_from_bin.ravel(),
             self.is_grasping.ravel(),
-            self.blob_ori.ravel(),      # 2 (minor-axis)
+            # self.blob_ori.ravel(),      # 2 (minor-axis)
 
             # gripper_state.ravel(),  # 2
             # gripper_vel.ravel(),    # 2
