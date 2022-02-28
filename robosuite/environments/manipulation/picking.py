@@ -1561,14 +1561,12 @@ class Picking(SingleArmEnv, Serializable):
         # input()
         # all_objects = [2,5,10,15,18]
         objs_to_consider = random.sample( all_objects, num_objs_to_load) # i.e.objs_to_consider = [69, 66, 64, 55, 65]
-        objs_to_consider = [32]
-
+        objs_to_consider = [33]
+        # 32 is half cylinder
+        # 33 is tennis shoe
+        
         # 01 Sample number of objects to load
         for idx, val in enumerate(objs_to_consider):
-            print(idx, val)
-            print(objs_to_consider[0])
-            print(objs_in_db[31])
-            # input()
             # Collect all objects whose file name starts with an 'o' and contain 'Object' as in OXXXXObject (substract idx by 1 since list obj1 is indexed at 0)
             if objs_in_db[ objs_to_consider[idx]-1 ][0] == 'o' and "Object" in objs_in_db[ objs_to_consider[idx]-1 ]:
                 digit = objs_in_db[ objs_to_consider[idx] -1 ]
