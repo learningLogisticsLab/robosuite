@@ -1561,7 +1561,7 @@ class Picking(SingleArmEnv, Serializable):
         # input()
         # all_objects = [2,5,10,15,18]
         objs_to_consider = random.sample( all_objects, num_objs_to_load) # i.e.objs_to_consider = [69, 66, 64, 55, 65]
-        objs_to_consider = [33]
+        objs_to_consider = [27]
         # 32 is half cylinder
         # 33 is tennis shoe
         
