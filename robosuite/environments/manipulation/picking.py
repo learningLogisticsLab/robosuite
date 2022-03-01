@@ -292,16 +292,25 @@ class Picking(SingleArmEnv, Serializable):
         camera_image_width      = 84,
         camera_depths           = False,
 
+        # Gray
+        use_gray_img            = True,
+
+        # Render 
         has_renderer            = False,
         has_offscreen_renderer  = True,
         # "camera" names = ('frontview', 'birdview', 'agentview', 'robot0_robotview', 'robot0_eye_in_hand').
         render_camera           = "agentview", #TODO: may need to adjust here for better angle for our work
+        use_pygame_render       = False,
+        render_gpu_device_id    = 0,            # was -1 
+
+        # Segmentations
         camera_segmentations     = "instance",
+
+        # Meshes
         render_collision_mesh   = False,
         render_visual_mesh      = False,
-        use_pygame_render       = False,
+
         visualize_camera_obs    = False,
-        render_gpu_device_id    = 0,            # was -1 
 
         # Noise
         initialization_noise    ="default",
@@ -406,9 +415,10 @@ class Picking(SingleArmEnv, Serializable):
         # Variant dictionary
         self.variant = variant
 
-        self.camera_image_height          = camera_image_height
-        self.camera_image_width           = camera_image_width
-        self.use_depth_obs                = camera_depths 
+        self.camera_image_height        = camera_image_height
+        self.camera_image_width         = camera_image_width
+        self.use_depth_obs              = camera_depths 
+        self.use_gray_img               = use_gray_img
         
         self.use_pygame_render           = use_pygame_render
         self.visualize_camera_obs        = visualize_camera_obs
@@ -1708,11 +1718,12 @@ class Picking(SingleArmEnv, Serializable):
         if self.use_camera_obs:            
             if not self.use_depth_obs:
 
-                # image_obs = obs[self.camera_names[0]+'_image']
+                rgb_image     = obs[self.camera_names[0]+'_image']
                 seg_image_obs = obs[self.camera_names[0]+'_segmentation_instance'] # robot0_eye_in_hand_segmentation_instance
 
                 # Process seg image to only retain instances for gripper and object
-                proc_image_obs = process_seg_image(seg_image_obs, output_size=(self.camera_image_height, self.camera_image_width))
+                proc_image_obs = process_gray_mask(rgb_image, seg_image_obs, output_size=(self.camera_image_height, self.camera_image_width))
+                #proc_image_obs = process_seg_image(seg_image_obs, output_size=(self.camera_image_height, self.camera_image_width))
 
                 # Keep two channels of the image
                 proc_image_obs = cv2.merge([proc_image_obs,proc_image_obs])
@@ -1722,7 +1733,7 @@ class Picking(SingleArmEnv, Serializable):
                 self.blob_ori = compute_blob_orientation(seg_obj_img)
            
             else:
-                # Process semented instance and depth
+                # Process segmented instance and depth
                 seg_image_obs  = obs[self.camera_names[0]+'_segmentation_instance']
                 proc_seg_image = process_seg_image(seg_image_obs, output_size=(self.camera_image_height, self.camera_image_width))
 
@@ -2012,7 +2023,7 @@ class Picking(SingleArmEnv, Serializable):
         second_image = env_obs['image_'+self.camera_names[0]][:,:,0]
         env_obs['image_'+self.camera_names[0]] = cv2.merge([first_image, second_image])
 
-        # 05 Render
+        # 05 Render: TODO move this to utils/img_processing.py
         if self.use_pygame_render:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -2031,12 +2042,14 @@ class Picking(SingleArmEnv, Serializable):
                     im = np.uint8(im * 255.0)
 
                 im = cv2.merge([im,im,im])
+            
             else:
                 # Display agentview camera
                 im = self.sim.render(camera_name="agentview", height=300, width=300)[::-1]
                 im = np.flip(im.transpose((1, 0, 2)), 0)[::-1]
 
-                if not self.use_depth_obs:
+                # Display a 2nd image as part of a smaller inslet on bottom left
+                if not self.use_depth_obs and not self.use_gray_img:
                     inset1 = second_image # Display segmented eye-in-hand as an inset of the original image
                     inset1 = np.uint8(inset1 * 255.0)
                     inset1 = cv2.merge([inset1,inset1,inset1])
@@ -2045,6 +2058,21 @@ class Picking(SingleArmEnv, Serializable):
 
                     im[:np.shape(inset1)[0],-np.shape(inset1)[1]:,:] = inset1
 
+                elif not self.use_depth_obs and self.use_gray_img:
+
+                    # Display on bottom left: segmented image
+                    inset1 = self._observables[self.camera_names[0]+'_segmentation_instance'].obs
+                    inset1 = np.uint8(inset1 * (255.0/np.max(inset1)) )
+                    inset1 = cv2.merge([inset1,inset1,inset1])
+                    inset1 = cv2.resize(inset1, (80,80))
+                    im[:np.shape(inset1)[0],-np.shape(inset1)[1]:,:] = inset1
+
+                    # Display on bottom right: gray masked image
+                    inset2 = second_image
+                    inset2 = cv2.merge([inset2,inset2,inset2])
+                    inset2 = np.flip(inset2.transpose((1, 0, 2)), 0)[::-1] #for obs image visualization in pygame
+                    inset2 = cv2.resize(inset2, (80,80))
+                    im[-np.shape(inset2)[0]:,-np.shape(inset2)[1]:,:] = inset2
 
                 else:
                     inset1 = env_obs['image_'+self.camera_names[0]][:,:,0]

@@ -34,6 +34,47 @@ import robosuite.utils.camera_utils as camera_utils
 import matplotlib.cm as cm
 import cv2
 
+def process_gray_mask(rgb_im,seg_im, output_size):
+    """
+    Helper function to produce a masked gray image
+    
+    rgb->gray->bitwise mult with mask
+    """
+
+    # 01 Convert rgb image to gray image
+
+    # Different possible ways to encode gray images. Want a scheme that is lighter to show the robot's black fingers
+    gray_img = cv2.cvtColor(rgb_im, cv2.COLOR_RGB2GRAY)   # 01 LUMA std in cv
+
+    # gray_img = np.empty_like(output_size) 
+    # gray_img = np.mean(rgb_im,axis=2)                   # 02 Intensity: average of rgb --> still dark
+    # 
+    
+    # 02 Mask
+    # Prepare Mask
+    seg_im = np.mod(seg_im.squeeze(-1), 256)
+
+
+    # deterministic shuffling of values to map each geom ID to a random int in [0, 255]
+    rstate = np.random.RandomState(seed=10)
+    inds = np.arange(256)
+    rstate.shuffle(inds)
+
+    # Set a 1 on anything that is gripper/object
+    seg_im[seg_im==0]=0
+    seg_im[seg_im==1]=0
+    seg_im[seg_im==2]=1 #object to be grasped
+    seg_im[seg_im==3]=0
+    seg_im[seg_im==4]=0
+    seg_im[seg_im==5]=1 #gripper
+
+    # 03 Do and element-wise multiplication between gray and seg_im
+    gray_mask_img = gray_img*seg_im
+
+    image_float = np.ascontiguousarray(gray_mask_img, dtype=np.float32)
+
+    return cv2.resize(image_float, output_size)
+
 def process_seg_image(seg_im, output_size):
     """
     Helper function to visualize segmentations as grayscale frames.
@@ -102,7 +143,7 @@ def process_depth_image(depth_im, output_size):
     """
     Process depth map. Unscale and flip.
     """
-    depth_im = camera_utils.get_real_depth_map(self.sim, depth_im)
+    depth_im = camera_utils.get_real_depth_map(depth_im) #(self.sim,depth_im)
     
     # depth_im = np.flip(depth_im.transpose((1, 0, 2)), 1).squeeze(-1).astype('float64')
     depth_im = depth_im.squeeze(-1).astype('float64')
