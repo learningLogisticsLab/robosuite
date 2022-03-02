@@ -55,7 +55,7 @@ from gym import spaces
 from rlkit.core.serializable import Serializable
 
 # 09 Image Processing: segmentation, depth, orientation of blob
-from robosuite.utils.img_processing import * 
+import robosuite.utils.img_processing as img
 
 # 10 Renderer
 import pygame
@@ -293,7 +293,7 @@ class Picking(SingleArmEnv, Serializable):
         camera_depths           = False,
 
         # Gray
-        use_gray_img            = True,
+        use_gray_img            = False,
 
         # Render 
         has_renderer            = False,
@@ -1722,23 +1722,23 @@ class Picking(SingleArmEnv, Serializable):
                 seg_image_obs = obs[self.camera_names[0]+'_segmentation_instance'] # robot0_eye_in_hand_segmentation_instance
 
                 # Process seg image to only retain instances for gripper and object
-                proc_image_obs = process_gray_mask(rgb_image, seg_image_obs, output_size=(self.camera_image_height, self.camera_image_width))
-                #proc_image_obs = process_seg_image(seg_image_obs, output_size=(self.camera_image_height, self.camera_image_width))
+                proc_image_obs = img.process_gray_mask(rgb_image, seg_image_obs, output_size=(self.camera_image_height, self.camera_image_width))
+                #proc_image_obs = img.process_seg_image(seg_image_obs, output_size=(self.camera_image_height, self.camera_image_width))
 
                 # Keep two channels of the image
                 proc_image_obs = cv2.merge([proc_image_obs,proc_image_obs])
 
                 # Need another slightly different copy only for major-axis and orientation extraction for the object
-                seg_obj_img = process_seg_obj_image(seg_image_obs, output_size=(self.camera_image_height, self.camera_image_width))
-                self.blob_ori = compute_blob_orientation(seg_obj_img)
+                seg_obj_img = img.process_seg_obj_image(seg_image_obs, output_size=(self.camera_image_height, self.camera_image_width))
+                self.blob_ori = img.compute_blob_orientation(seg_obj_img)
            
             else:
                 # Process segmented instance and depth
                 seg_image_obs  = obs[self.camera_names[0]+'_segmentation_instance']
-                proc_seg_image = process_seg_image(seg_image_obs, output_size=(self.camera_image_height, self.camera_image_width))
+                proc_seg_image = img.process_seg_image(seg_image_obs, output_size=(self.camera_image_height, self.camera_image_width))
 
                 depth_image_obs  = obs[self.camera_names[0]+'_depth']
-                proc_depth_image = process_depth_image(depth_image_obs, output_size=(self.camera_image_height, self.camera_image_width))
+                proc_depth_image = img.process_depth_image(depth_image_obs, output_size=(self.camera_image_height, self.camera_image_width))
 
                 proc_image_obs = cv2.merge([proc_seg_image, proc_depth_image])
 
@@ -2024,72 +2024,8 @@ class Picking(SingleArmEnv, Serializable):
         env_obs['image_'+self.camera_names[0]] = cv2.merge([first_image, second_image])
 
         # 05 Render: TODO move this to utils/img_processing.py
-        if self.use_pygame_render:
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    sys.exit()
-
-            if self.visualize_camera_obs:
-                # Display the camera observation
-                if not self.use_depth_obs:
-                    im = env_obs['image_'+self.camera_names[0]]
-                    im = np.uint8(im * 255.0)
-
-                else:
-                    im1 = env_obs['image_'+self.camera_names[0]][:,:,0]
-                    im2 = env_obs['image_'+self.camera_names[0]][:,:,1]
-                    im = np.hstack((im1,im2))
-                    im = np.uint8(im * 255.0)
-
-                im = cv2.merge([im,im,im])
-            
-            else:
-                # Display agentview camera
-                im = self.sim.render(camera_name="agentview", height=300, width=300)[::-1]
-                im = np.flip(im.transpose((1, 0, 2)), 0)[::-1]
-
-                # Display a 2nd image as part of a smaller inslet on bottom left
-                if not self.use_depth_obs and not self.use_gray_img:
-                    inset1 = second_image # Display segmented eye-in-hand as an inset of the original image
-                    inset1 = np.uint8(inset1 * 255.0)
-                    inset1 = cv2.merge([inset1,inset1,inset1])
-                    inset1 = np.flip(inset1.transpose((1, 0, 2)), 0)[::-1] #for obs image visualization in pygame
-                    inset1 = cv2.resize(inset1, (80,80))
-
-                    im[:np.shape(inset1)[0],-np.shape(inset1)[1]:,:] = inset1
-
-                elif not self.use_depth_obs and self.use_gray_img:
-
-                    # Display on bottom left: segmented image
-                    inset1 = self._observables[self.camera_names[0]+'_segmentation_instance'].obs
-                    inset1 = np.uint8(inset1 * (255.0/np.max(inset1)) )
-                    inset1 = cv2.merge([inset1,inset1,inset1])
-                    inset1 = cv2.resize(inset1, (80,80))
-                    im[:np.shape(inset1)[0],-np.shape(inset1)[1]:,:] = inset1
-
-                    # Display on bottom right: gray masked image
-                    inset2 = second_image
-                    inset2 = cv2.merge([inset2,inset2,inset2])
-                    inset2 = np.flip(inset2.transpose((1, 0, 2)), 0)[::-1] #for obs image visualization in pygame
-                    inset2 = cv2.resize(inset2, (80,80))
-                    im[-np.shape(inset2)[0]:,-np.shape(inset2)[1]:,:] = inset2
-
-                else:
-                    inset1 = env_obs['image_'+self.camera_names[0]][:,:,0]
-                    inset1 = np.uint8(inset1 * 255.0)
-                    inset1 = cv2.merge([inset1,inset1,inset1])
-                    inset1 = cv2.resize(inset1, (80,80))
-                    im[:np.shape(inset1)[0],-np.shape(inset1)[1]:,:] = inset1
-
-                    inset2 = env_obs['image_'+self.camera_names[0]][:,:,1]
-                    inset2 = np.uint8(inset2 * 255.0)
-                    inset2 = cv2.merge([inset2,inset2,inset2])
-                    inset2 = cv2.resize(inset2, (80,80))
-                    im[-np.shape(inset2)[0]:,-np.shape(inset2)[1]:,:] = inset2
-
-            pygame.pixelcopy.array_to_surface(self.screen, im)
-            pygame.display.update()  
-
+        img.render_images(self,env_obs,second_image)
+        
         # 06 Process info
         info = { 'is_success': self._is_success(env_obs['achieved_goal'], env_obs['desired_goal']),
                  'is_inside_workspace': self._is_inside_workspace(env_obs['robot0_proprio-state']) }
