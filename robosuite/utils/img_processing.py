@@ -28,6 +28,7 @@
 # Core
 import sys
 import numpy as np
+from ctypes import c_uint8
 
 # Plot
 import matplotlib.pyplot as plt
@@ -111,7 +112,7 @@ def render_images(object,env_obs,second_image):
 
 def process_gray_mask(rgb_im,seg_im, output_size):
     """
-    Helper function to produce a masked gray image
+    Helper function to produce a masked gray image, where the fingers remain segmented as white.
     
     rgb->gray->bitwise mult with mask
     """
@@ -164,23 +165,43 @@ def process_gray_mask(rgb_im,seg_im, output_size):
     
     # 02 Mask
     # Prepare Mask
-    seg_im = np.mod(seg_im.squeeze(-1), 256)
+    gripper_img = np.mod(seg_im.squeeze(-1), 256)
+    object_img = np.mod(seg_im.squeeze(-1), 256)
 
     # deterministic shuffling of values to map each geom ID to a random int in [0, 255]
     rstate = np.random.RandomState(seed=10)
     inds = np.arange(256)
     rstate.shuffle(inds)
 
-    # Set a 1 on anything that is gripper/object
-    seg_im[seg_im==0]=0
-    seg_im[seg_im==1]=0
-    seg_im[seg_im==2]=1 #object to be grasped
-    seg_im[seg_im==3]=0
-    seg_im[seg_im==4]=0
-    seg_im[seg_im==5]=1 #gripper
+    # 2 images: one for object only and one for gripper only TODO: could add morphological operators to improve segmentation
+    # Gripper
+    gripper_img = seg_im.squeeze().astype('uint8').copy()
+    gripper_img[gripper_img==0]=0
+    gripper_img[gripper_img==1]=0
+    gripper_img[gripper_img==2]=0
+    gripper_img[gripper_img==3]=0
+    gripper_img[gripper_img==4]=0
+    gripper_img[gripper_img==5]=1 
 
-    # 03 Do and element-wise multiplication between gray and seg_im
-    gray_mask_img = gray_img*seg_im
+    # Use morphological operators to remove noise
+    kernel = np.ones((2,2),np.uint8)
+    # gripper_img = cv2.erode(gripper_img,kernel,iterations = 1)
+    gripper_img = cv2.morphologyEx(gripper_img, cv2.MORPH_OPEN, kernel)
+    
+    # Object
+    object_img = seg_im.squeeze().astype('uint8').copy()
+    object_img[object_img==0]=0
+    object_img[object_img==1]=0
+    object_img[object_img==2]=1 
+    object_img[object_img==3]=0
+    object_img[object_img==4]=0
+    object_img[object_img==5]=0 
+
+    # 03 Do and element-wise multiplication between gray and object_image
+    gray_mask_img = gray_img*object_img
+
+    # 04 Set gray_mask_img coords that match those of gripper_img to 255
+    np.putmask(gray_mask_img, gripper_img,c_uint8(-1).value) #ie. 255
 
     image_float = np.ascontiguousarray(gray_mask_img, dtype=np.float32)
 
