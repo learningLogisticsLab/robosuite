@@ -319,6 +319,7 @@ class UniformRandomSampler(ObjectPositionSampler):
                     # We cannot find a good location, so raise it by 10cm the air and drop it.
                     object_z += 0.04
                     quat = self._sample_quat()
+                    quat = [0, 0, 0.7, 1]
                     pos = (object_x, object_y, object_z)
                     placed_objects[obj.name] = (pos, quat, obj)
                     # TODO: recheck validity of this position. Convert code segment starting with if self.ensure_valid_placement into a function and call here.
@@ -396,7 +397,7 @@ class UniformRandomSampler(ObjectPositionSampler):
             if location_valid:
                 # random rotation
                 quat = self._sample_quat()
-
+                quat = [0, 0, 0.7, 1]
                 # multiply this quat by the object's initial rotation if it has the attribute specified
                 if hasattr(obj, "init_quat"):
                     quat = quat_multiply(quat, obj.init_quat)
