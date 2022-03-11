@@ -4,20 +4,20 @@
     <asset>
         <texture type="2d" name="tex-i_cups" file="../textures/i_cups.png" />
         <material name="i_cups" texture="tex-i_cups" texuniform="true" texrepeat="15 15" reflectance="0.7" />
-        <mesh name="y22_mug_mesh_1" file="./meshes/Y22_mug_vhacd2_1st.stl" scale="0.8 0.8 0.8" />
-        <mesh name="y22_mug_mesh_2" file="./meshes/Y22_mug_vhacd2_2nd.stl" scale="0.8 0.8 0.8" />
-        <mesh name="y22_mug_mesh_3" file="./meshes/Y22_mug_vhacd2_3rd.stl" scale="0.8 0.8 0.8" />
-        <mesh name="y22_mug_mesh_4" file="./meshes/Y22_mug_vhacd2_4th.stl" scale="0.8 0.8 0.8" />
-        <mesh name="y22_mug_mesh_5" file="./meshes/Y22_mug_vhacd2_5th.stl" scale="0.8 0.8 0.8" />
-        <mesh name="y22_mug_mesh_6" file="./meshes/Y22_mug_vhacd2_6th.stl" scale="0.8 0.8 0.8" />
-        <mesh name="y22_mug_mesh_7" file="./meshes/Y22_mug_vhacd2_7th.stl" scale="0.8 0.8 0.8" />
-        <mesh name="y22_mug_mesh_8" file="./meshes/Y22_mug_vhacd2_8th.stl" scale="0.8 0.8 0.8" />
-        <mesh name="y22_mug_mesh_9" file="./meshes/Y22_mug_vhacd2_9th.stl" scale="0.8 0.8 0.8" />
-        <mesh name="y22_mug_mesh_10" file="./meshes/Y22_mug_vhacd2_10th.stl" scale="0.8 0.8 0.8" />
-        <mesh name="y22_mug_mesh_11" file="./meshes/Y22_mug_vhacd2_11th.stl" scale="0.8 0.8 0.8" />
-        <mesh name="y22_mug_mesh_12" file="./meshes/Y22_mug_vhacd2_12th.stl" scale="0.8 0.8 0.8" />
-        <mesh name="y22_mug_mesh_13" file="./meshes/Y22_mug_vhacd2_13th.stl" scale="0.8 0.8 0.8" />
-        <mesh name="y22_mug_mesh_14" file="./meshes/Y22_mug_vhacd2_14th.stl" scale="0.8 0.8 0.8" />
+        <mesh name="y22_mug_mesh_1" file="./meshes/Y22_mug_vhacd2_1st.stl" scale="0.7 0.7 0.7"/>
+        <mesh name="y22_mug_mesh_2" file="./meshes/Y22_mug_vhacd2_2nd.stl" scale="0.7 0.7 0.7"/>
+        <mesh name="y22_mug_mesh_3" file="./meshes/Y22_mug_vhacd2_3rd.stl" scale="0.7 0.7 0.7"/>
+        <mesh name="y22_mug_mesh_4" file="./meshes/Y22_mug_vhacd2_4th.stl" scale="0.7 0.7 0.7"/>
+        <mesh name="y22_mug_mesh_5" file="./meshes/Y22_mug_vhacd2_5th.stl" scale="0.7 0.7 0.7"/>
+        <mesh name="y22_mug_mesh_6" file="./meshes/Y22_mug_vhacd2_6th.stl" scale="0.7 0.7 0.7"/>
+        <mesh name="y22_mug_mesh_7" file="./meshes/Y22_mug_vhacd2_7th.stl" scale="0.7 0.7 0.7"/>
+        <mesh name="y22_mug_mesh_8" file="./meshes/Y22_mug_vhacd2_8th.stl" scale="0.7 0.7 0.7"/>
+        <mesh name="y22_mug_mesh_9" file="./meshes/Y22_mug_vhacd2_9th.stl" scale="0.7 0.7 0.7"/>
+        <mesh name="y22_mug_mesh_10" file="./meshes/Y22_mug_vhacd2_10th.stl" scale="0.7 0.7 0.7"/>
+        <mesh name="y22_mug_mesh_11" file="./meshes/Y22_mug_vhacd2_11th.stl" scale="0.7 0.7 0.7"/>
+        <mesh name="y22_mug_mesh_12" file="./meshes/Y22_mug_vhacd2_12th.stl" scale="0.7 0.7 0.7"/>
+        <mesh name="y22_mug_mesh_13" file="./meshes/Y22_mug_vhacd2_13th.stl" scale="0.7 0.7 0.7"/>
+        <mesh name="y22_mug_mesh_14" file="./meshes/Y22_mug_vhacd2_14th.stl" scale="0.7 0.7 0.7"/>
         <!-- <mesh name="y22_mug_mesh_15" file="./meshes/Y22_mug_vhacd2_15th.stl" scale="0.8 0.8 0.8" /> -->
     </asset>
     <worldbody>
