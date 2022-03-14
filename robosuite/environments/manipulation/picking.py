@@ -1574,8 +1574,16 @@ class Picking(SingleArmEnv, Serializable):
         not_yet_modelled_visual_object_names= []
 
         all_objects = list(range(num_objs_in_db))
-        objs_to_consider = random.sample( all_objects, num_objs_to_load) # i.e.objs_to_consider = [69, 66, 64, 55, 65]
-        objs_to_consider = [10 ]# boxed objects [3,4,8,9,10,69] 
+        # objs_to_consider = random.sample( all_objects, num_objs_to_load) # i.e.objs_to_consider = [69, 66, 64, 55, 65]
+        #---------------------------------------------
+        cyl     = [1,2,5,7]
+        box     = [3,4,8,9,10,68]
+        oblong  = [6,11,12,20,21,]
+        round   = [13,14,15,16,17,18,47,48,49,50,51]
+        spec_objs = cyl + box + oblong + round
+        #---------------------------------------------
+        objs_to_consider = random.sample(spec_objs, num_objs_to_load)
+        # objs_to_consider = [10]# boxed objects [3,4,8,9,10,69] 
 
         # 01 Sample number of objects to load
         for idx, val in enumerate(objs_to_consider):
