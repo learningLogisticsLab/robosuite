@@ -574,12 +574,16 @@ class Picking(SingleArmEnv, Serializable):
         # reward_goal = (dist < self.distance_threshold).astype(np.float32)
         # reward_grasping = 0.05*is_grasping
 
-        if achieved_goal[2]>0.90 and is_grasping==1:
-            reward = 50
-        elif is_grasping:
+        if is_grasping:
             reward = 0.5
+
+            if achieved_goal[2] > 0.85:
+                reward = 10*(achieved_goal[2]-0.85)
+             
+        # elif is_grasping:
+        #     reward = 0.5
         else:
-            reward = 0
+            reward = -0.05
 
         reward = np.asarray(reward)
         return reward          
