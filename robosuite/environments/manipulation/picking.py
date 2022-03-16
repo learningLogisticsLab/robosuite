@@ -770,8 +770,8 @@ class Picking(SingleArmEnv, Serializable):
                 sampler = UniformRandomSampler(
                     name                            = "pickObjectSampler",
                     mujoco_objects                  = self.objects+self.not_yet_considered_objects,
-                    x_range                         = [0, bin_x_half],#[-bin_x_half, bin_x_half],    # This (+ve,-ve) range goes from center to the walls on each side of the bin
-                    y_range                         = [0, 0.75*bin_y_half],#[-bin_y_half, bin_y_half],
+                    x_range                         = [-0.75*bin_x_half, 0.75*bin_x_half], # [0, bin_x_half],    # This (+ve,-ve) range goes from center to the walls on each side of the bin
+                    y_range                         = [-0.75*bin_y_half, 0.75*bin_y_half], # [0, 0.75*bin_y_half],
                     # x_range                         = [-self.curr_learn_dist, self.curr_learn_dist],                # 5 cm from ref
                     # y_range                         = [-self.curr_learn_dist, self.curr_learn_dist],
                     rotation                        = None,                         # Add uniform random rotation
@@ -1500,17 +1500,30 @@ class Picking(SingleArmEnv, Serializable):
             bool: True if robot end-effector is inside the workspace.
 
         """
-
         robot0_gripper_position = robot0_proprio_obs[21:24] # extract end-effector position for robot propoprioception observation vector
 
         # bin size
         bin_x_half = self.model.mujoco_arena.table_full_size[0] / 2 - 0.05  # half of bin - edges (2*0.025 half of each side of each wall so that we don't hit the wall)
         bin_y_half = self.model.mujoco_arena.table_full_size[1] / 2 - 0.05
 
-        workspace_min = np.array([self.bin1_pos[0]-bin_x_half, self.bin1_pos[1]-bin_y_half, self.bin1_pos[2]+self.bin1_surface[2]+0.01])
-        workspace_max = np.array([self.bin1_pos[0]+bin_x_half, self.bin1_pos[1]+bin_y_half, self.bin1_pos[2]+self.bin1_surface[2]+0.3])
+        workspace_min = np.array([self.bin1_pos[0]-bin_x_half, 
+                                  self.bin1_pos[1]-bin_y_half, 
+                                  self.bin1_pos[2]+self.bin1_surface[2]+0.01])
 
-        return np.all(np.greater(robot0_gripper_position, workspace_min)) and np.all(np.less(robot0_gripper_position, workspace_max))
+        workspace_max = np.array([self.bin1_pos[0]+bin_x_half, 
+                                  self.bin1_pos[1]+bin_y_half, 
+                                  self.bin1_pos[2]+self.bin1_surface[2]+0.3])
+        
+        # True if inside
+        x_inside = np.greater(robot0_gripper_position[0], workspace_min[0]) and np.less(robot0_gripper_position[0], workspace_max[0])
+        y_inside = np.greater(robot0_gripper_position[1], workspace_min[1]) and np.less(robot0_gripper_position[1], workspace_max[1])
+        z_inside = np.greater(robot0_gripper_position[2], workspace_min[2]) and np.less(robot0_gripper_position[2], workspace_max[2])
+
+        if not x_inside: print(f'Robot Gripper with x pos: ({robot0_gripper_position[0]:.2f}) has surpassed workspace with max limits {workspace_max[0]:.2f} and min limits {workspace_min[0]:.2f}')
+        if not y_inside: print(f'Robot Gripper with y pos: ({robot0_gripper_position[1]:.2f}) has surpassed workspace with max limits {workspace_max[1]:.2f} and min limits {workspace_min[1]:.2f}')
+        if not z_inside: print(f'Robot Gripper with z pos: ({robot0_gripper_position[2]:.2f}) has surpassed workspace with max limits {workspace_max[2]:.2f} and min limits {workspace_min[2]:.2f}')
+        
+        return x_inside and y_inside and z_inside
 
     def visualize(self, vis_settings):
         """
