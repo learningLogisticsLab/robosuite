@@ -27,6 +27,7 @@
 #-------------------------------------------------------------------------------
 # Core
 import sys
+import math
 import numpy as np
 from ctypes import c_uint8
 
@@ -109,8 +110,7 @@ def render_images(object,env_obs,second_image):
         pygame.pixelcopy.array_to_surface(object.screen, im)
         pygame.display.update()  
 
-
-def process_gray_mask(rgb_im,seg_im, output_size):
+def process_gray_mask(rgb_im, seg_im, output_size):
     """
     Helper function to produce a masked gray image, where the fingers remain segmented as white.
     
@@ -165,16 +165,15 @@ def process_gray_mask(rgb_im,seg_im, output_size):
     
     # 02 Mask
     # Prepare Mask
-    gripper_img = np.mod(seg_im.squeeze(-1), 256)
-    object_img = np.mod(seg_im.squeeze(-1), 256)
 
-    # deterministic shuffling of values to map each geom ID to a random int in [0, 255]
+    # Deterministic shuffling of values to map each geom ID to a random int in [0, 255]
     rstate = np.random.RandomState(seed=10)
     inds = np.arange(256)
     rstate.shuffle(inds)
 
-    # 2 images: one for object only and one for gripper only TODO: could add morphological operators to improve segmentation
-    # Gripper
+    # 2 images: one for object only and one for gripper only 
+
+    # Gripper: only retain 1s for the gripper
     gripper_img = seg_im.squeeze().astype('uint8').copy()
     gripper_img[gripper_img==0]=0
     gripper_img[gripper_img==1]=0
@@ -188,7 +187,7 @@ def process_gray_mask(rgb_im,seg_im, output_size):
     # gripper_img = cv2.erode(gripper_img,kernel,iterations = 1)
     gripper_img = cv2.morphologyEx(gripper_img, cv2.MORPH_OPEN, kernel)
     
-    # Object
+    # Object: only retain 1's for the object
     object_img = seg_im.squeeze().astype('uint8').copy()
     object_img[object_img==0]=0
     object_img[object_img==1]=0
@@ -200,9 +199,10 @@ def process_gray_mask(rgb_im,seg_im, output_size):
     # 03 Do and element-wise multiplication between gray and object_image
     gray_mask_img = gray_img*object_img
 
-    # 04 Set gray_mask_img coords that match those of gripper_img to 255
+    # 04 Overlay gripper values as 255 in the gray object image (fingers appear as white)
     np.putmask(gray_mask_img, gripper_img,c_uint8(-1).value) #ie. 255
 
+    # Switch type to float 32
     image_float = np.ascontiguousarray(gray_mask_img, dtype=np.float32)
 
     return cv2.resize(image_float, output_size)
@@ -307,7 +307,7 @@ def compute_blob_orientation(img=None, plot_flag=0):
         img (ndarray): a gray image (1-channel) of segmented object (x,y) starting on top left
     
     returns:
-        object_orientation (ndarray): 2D vector for major axes
+        object_orientation (ndarray): 2D vector for minor axes. Vector always adjusted to be in quadrants 1/4: [-pi/2,pi/2]
     
     raises:
         NotImplementedError for no ndarray
@@ -376,3 +376,54 @@ def compute_blob_orientation(img=None, plot_flag=0):
     
     return object_orientation
 
+def rotation(image, angle,mode='cutCorner',displayImg=None):
+    '''
+    This method rotates images about the plane given angleInDegrees, where positive is counterclockwise.
+    The cv2 method is significantly faster than the equivalent process with ndimage.rotate.
+
+    Two modes for this method: 
+    1) lossy: no resizing of the image, loss of information
+    2) lossless: img sz is increased, but not loss of information. 
+
+    params:
+        image (ndarray or list of ndarray): 1 or n-channel image. operation only on first channel
+        angle (float): rotation angle in degrees. 
+        mode (str): 'lossly' or 'lossless'
+        displayImg (bool): if want to see single img set to True
+
+    returns:
+        rotated (ndarray or list of ndarray)
+
+    raises:
+
+    '''
+
+    h, w = image.shape[:2]
+    img_c = (w / 2, h / 2)
+    rot_mat     = cv2.getRotationMatrix2D(img_c,angle,1.0)
+
+    if mode == 'lossy':    
+        new_image   = cv2.warpAffine(image, M=rot_mat, dsize=(w,h))
+
+    else: # mode == 'lossless':
+        rad = math.radians(angle)
+        sin = math.sin(rad)
+        cos = math.cos(rad)
+
+        # sin cos --> new width & height of rotated image, can be used so that the image is not cut off.
+        # use new data to adjust for translation
+        b_w = int((h * abs(sin)) + (w * abs(cos)))
+        b_h = int((h * abs(cos)) + (w * abs(sin)))
+
+        rot_mat[0, 2] += ((b_w / 2) - img_c[0])
+        rot_mat[1, 2] += ((b_h / 2) - img_c[1])
+
+        # outImg = cv2.warpAffine(image, rot, (b_w, b_h), flags=cv2.INTER_LINEAR)
+        new_image = cv2.warpAffine(image, M=rot_mat, dsize=(b_w, b_h))
+
+    if displayImg:
+        cv2.imshow('Original image', image)
+        cv2.imshow('Rotated image', new_image)
+        cv2.waitKey(0) # wait indefinitely, press any key on keyboard to exit
+
+    return new_image

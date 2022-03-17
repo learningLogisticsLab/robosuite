@@ -306,13 +306,13 @@ class UniformRandomSampler(ObjectPositionSampler):
                 # Once an xyz is computed for the object, make sure it does not collide with other objects. 
                 # TODO: does this assume objects are always facing up vs tripped over?
                 #  It's possible the computations here will fall apart if the objects have a different orientaiton
-                location_valid, success, placed_objects = self.recheck_validity_pos(location_valid=location_valid,
-                                                                                    success=success,
-                                                                                    placed_objects=placed_objects,
-                                                                                    object_x=object_x,
-                                                                                    object_y=object_y,
-                                                                                    object_z=object_z,
-                                                                                    obj=obj)
+                location_valid, success, placed_objects = self.recheck_validity_pos(location_valid  = location_valid,
+                                                                                    success         = success,
+                                                                                    placed_objects  = placed_objects,
+                                                                                    object_x        = object_x,
+                                                                                    object_y        = object_y,
+                                                                                    object_z        = object_z,
+                                                                                    obj             = obj)
                 if location_valid:
                     break
                 else:
