@@ -1600,11 +1600,11 @@ class Picking(SingleArmEnv, Serializable):
         spec_objs = box # cyl + box + oblong + round
         #---------------------------------------------
         objs_to_consider = random.sample(spec_objs, num_objs_to_load)
-        # objs_to_consider = [10]# boxed objects [3,4,8,9,10,69] 
-
+        # objs_to_consider = [10]# boxed objects [3,4,8,9,10,69]         
+                                 # 32 is half cylinder # 33 is tennis shoe # 34 is bar clamp        
+        
         # 01 Sample number of objects to load
         for idx, val in enumerate(objs_to_consider):
-
             # Collect all objects whose file name starts with an 'o' and contain 'Object' as in OXXXXObject (substract idx by 1 since list obj1 is indexed at 0)
             if objs_in_db[ objs_to_consider[idx]-1 ][0] == 'o' and "Object" in objs_in_db[ objs_to_consider[idx]-1 ]:
                 digit = objs_in_db[ objs_to_consider[idx] -1 ]
@@ -1942,7 +1942,6 @@ class Picking(SingleArmEnv, Serializable):
 
     def step(self, action):
         '''
-
         Takes a step in simulation with control command @action:
 
         01 Call sim.forward() 
