@@ -1748,14 +1748,16 @@ class Picking(SingleArmEnv, Serializable):
                 seg_image_obs = obs[self.camera_names[0]+'_segmentation_instance'] # robot0_eye_in_hand_segmentation_instance
 
                 # Process seg image to only retain instances for gripper and object
-                proc_image_obs = img.process_gray_mask(rgb_image, seg_image_obs, output_size=(self.camera_image_height, self.camera_image_width))
-                #proc_image_obs = img.process_seg_image(seg_image_obs, output_size=(self.camera_image_height, self.camera_image_width))
+                if self.use_gray_img:
+                    proc_image_obs = img.process_gray_mask(rgb_image, seg_image_obs, output_size=(self.camera_image_height, self.camera_image_width))
+                else:
+                    proc_image_obs = img.process_seg_image(seg_image_obs, output_size=(self.camera_image_height, self.camera_image_width))
 
                 # Keep two channels of the image
                 proc_image_obs = cv2.merge([proc_image_obs,proc_image_obs])
 
                 # Need another slightly different copy only for major-axis and orientation extraction for the object
-                seg_obj_img = img.process_seg_obj_image(seg_image_obs, output_size=(self.camera_image_height, self.camera_image_width))
+                seg_obj_img   = img.process_seg_obj_image( seg_image_obs, output_size=(self.camera_image_height, self.camera_image_width) )
                 self.blob_ori = img.compute_blob_orientation(seg_obj_img)
            
             else:
