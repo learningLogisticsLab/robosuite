@@ -574,16 +574,17 @@ class Picking(SingleArmEnv, Serializable):
         # reward_goal = (dist < self.distance_threshold).astype(np.float32)
         # reward_grasping = 0.05*is_grasping
 
-        if is_grasping:
-            reward = 0.5
+        if is_grasping and achieved_goal[2] > 0.90:
+            reward = 50
+            # reward = 0.5
 
-            if achieved_goal[2] > 0.85:
-                reward = 10*(achieved_goal[2]-0.85)
+            # if achieved_goal[2] > 0.85:
+            #     reward = 10*(achieved_goal[2]-0.85)
              
-        # elif is_grasping:
-        #     reward = 0.5
+        elif is_grasping:
+            reward = 0.5
         else:
-            reward = -0.05
+            reward = 0
 
         reward = np.asarray(reward)
         return reward          
@@ -1594,13 +1595,13 @@ class Picking(SingleArmEnv, Serializable):
         # objs_to_consider = random.sample( all_objects, num_objs_to_load) # i.e.objs_to_consider = [69, 66, 64, 55, 65]
         #---------------------------------------------
         # cyl     = [1,2,5,7]
-        box     = [3,4,8,9,10,68]
+        # box     = [3,4,8,9,10,68]
         # oblong  = [6,11,12,20,21,]
         # round   = [13,14,15,16,17,18,47,48,49,50,51]
-        spec_objs = box # cyl + box + oblong + round
+        # spec_objs = box # cyl + box + oblong + round
         #---------------------------------------------
-        objs_to_consider = random.sample(spec_objs, num_objs_to_load)
-        # objs_to_consider = [10]# boxed objects [3,4,8,9,10,69] 
+        #objs_to_consider = random.sample(spec_objs, num_objs_to_load)
+        objs_to_consider = [13]# boxed objects [3,4,8,9,10,69] 
 
         # 01 Sample number of objects to load
         for idx, val in enumerate(objs_to_consider):
