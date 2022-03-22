@@ -1863,3 +1863,23 @@ class o0072VisualObject(MujocoXMLObject):
                          name=name, joints=[dict(type="free", damping="0.0005")],
                          obj_type="all", duplicate_collision_geoms=True)
 
+class o0192Object(MujocoXMLObject):
+    """
+    o0192Object
+    """
+
+    def __init__(self, name):
+        super().__init__(xml_path_completion("./objects/o0192.xml"),
+                         name=name, joints=[dict(type="free", damping="0.0005")],
+                         obj_type="all", duplicate_collision_geoms=True)
+
+class o0192VisualObject(MujocoXMLObject):
+    """
+    o0192ObjectVisual
+    """
+
+    def __init__(self, name):
+        super().__init__(xml_path_completion("./objects/o0192v.xml"),
+                         name=name, joints=[dict(type="free", damping="0.0005")],
+                         obj_type="all", duplicate_collision_geoms=True)
+

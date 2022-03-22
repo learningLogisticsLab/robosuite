@@ -163,6 +163,8 @@ from .xml_objects import(
     o0071VisualObject,
     o0072Object,
     o0072VisualObject,
+    o0192Object,
+    o0192VisualObject,
 )
 from .primitive import *
 from .composite import *
