@@ -1601,7 +1601,7 @@ class Picking(SingleArmEnv, Serializable):
         # spec_objs = box # cyl + box + oblong + round
         #---------------------------------------------
         #objs_to_consider = random.sample(spec_objs, num_objs_to_load)
-        objs_to_consider = [13] # boxed objects [3,4,8,9,10,69]         
+        objs_to_consider = [72] # boxed objects [3,4,8,9,10,69]         
                                  # 32 is half cylinder # 33 is tennis shoe # 34 is bar clamp        
         
         # 01 Sample number of objects to load
