@@ -1796,4 +1796,26 @@ class o0069VisualObject(MujocoXMLObject):
         super().__init__(xml_path_completion("./objects/o0069v.xml"),
                          name=name, joints=None,
                          obj_type="visual", duplicate_collision_geoms=True)
+                    
+
+class o0072Object(MujocoXMLObject):
+    """
+    o0072Object
+    """
+
+    def __init__(self, name):
+        super().__init__(xml_path_completion("./objects/o0072.xml"),
+                         name=name, joints=[dict(type="free", damping="0.0005")],
+                         obj_type="all", duplicate_collision_geoms=True)
+
+
+class o0072VisualObject(MujocoXMLObject):
+    """
+    o0072ObjectVisual
+    """
+
+    def __init__(self, name):
+        super().__init__(xml_path_completion("./objects/o0072v.xml"),
+                         name=name, joints=[dict(type="free", damping="0.0005")],
+                         obj_type="all", duplicate_collision_geoms=True)
 

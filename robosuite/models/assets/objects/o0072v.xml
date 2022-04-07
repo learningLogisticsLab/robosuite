@@ -1,0 +1,55 @@
+<mujoco model="bar_clamp">
+    <compiler angle="radian" />
+    <size njmax="500" nconmax="100" />
+    <asset>
+        <mesh name="bar_clamp_mesh_1" file="./meshes/1_bar_clamp.stl" scale="1. 1. 1." />
+        <mesh name="bar_clamp_mesh_2" file="./meshes/2_bar_clamp.stl" scale="1. 1. 1." />
+        <mesh name="bar_clamp_mesh_3" file="./meshes/3_bar_clamp.stl" scale="1. 1. 1." />
+        <mesh name="bar_clamp_mesh_4" file="./meshes/4_bar_clamp.stl" scale="1. 1. 1." />
+        <mesh name="bar_clamp_mesh_5" file="./meshes/5_bar_clamp.stl" scale="1. 1. 1." />
+        <mesh name="bar_clamp_mesh_6" file="./meshes/6_bar_clamp.stl" scale="1. 1. 1." />
+        <mesh name="bar_clamp_mesh_7" file="./meshes/7_bar_clamp.stl" scale="1. 1. 1." />
+        <mesh name="bar_clamp_mesh_8" file="./meshes/8_bar_clamp.stl" scale="1. 1. 1." />
+        <mesh name="bar_clamp_mesh_9" file="./meshes/9_bar_clamp.stl" scale="1. 1. 1." />
+        <mesh name="bar_clamp_mesh_10" file="./meshes/10_bar_clamp.stl" scale="1. 1. 1." />
+        <mesh name="bar_clamp_mesh_11" file="./meshes/11_bar_clamp.stl" scale="1. 1. 1." />
+        <mesh name="bar_clamp_mesh_12" file="./meshes/12_bar_clamp.stl" scale="1. 1. 1." />
+        <mesh name="bar_clamp_mesh_13" file="./meshes/13_bar_clamp.stl" scale="1. 1. 1." />
+        <mesh name="bar_clamp_mesh_14" file="./meshes/14_bar_clamp.stl" scale="1. 1. 1." />
+        <mesh name="bar_clamp_mesh_15" file="./meshes/15_bar_clamp.stl" scale="1. 1. 1." />
+        <mesh name="bar_clamp_mesh_16" file="./meshes/16_bar_clamp.stl" scale="1. 1. 1." />
+        <mesh name="bar_clamp_mesh_17" file="./meshes/17_bar_clamp.stl" scale="1. 1. 1." />
+        <mesh name="bar_clamp_mesh_18" file="./meshes/18_bar_clamp.stl" scale="1. 1. 1." />
+    </asset>
+    <worldbody>
+        <body name="bar_clamp" pos="0 0 0" quat="0 0 0 1">
+            <inertial pos="0 0 0" mass="0" diaginertia="0 0 0" />
+            <site name="bottom_site" pos="0 0 -0.0219484" rgba="1 0 0 1" />
+            <site name="top_site" pos="0 0 0.0219484" rgba="0 1 0 1" />
+            <site name="horizontal_radius_site" pos="0.0274355 0.0274355 0" rgba="0 0 1 1" />
+            <site name="vertical_radius_site" pos="0 0 0.0438969" rgba="0 0 0 1" />
+            <body name="object" pos="0 0 0" quat="0 0 0 1">
+                <inertial pos="0.00028402 0.00576109 -0.0031155" quat="0.901439 0.41072 0.0960687 -0.0974081" mass="0.525" diaginertia="0.000750585 0.000729682 0.000489769" />
+                <geom name="1_bar_clamp" group="1" type="mesh" condim="4" friction="0.95 0.3 0.1" solref="0.001 1" solimp="0.998 0.998 0.001 0.5 2" mesh="bar_clamp_mesh_1" />
+                <geom name="2_bar_clamp" group="1" type="mesh" condim="4" friction="0.95 0.3 0.1" solref="0.001 1" solimp="0.998 0.998 0.001 0.5 2" mesh="bar_clamp_mesh_2" />
+                <geom name="3_bar_clamp" group="1" type="mesh" condim="4" friction="0.95 0.3 0.1" solref="0.001 1" solimp="0.998 0.998 0.001 0.5 2" mesh="bar_clamp_mesh_3" />
+                <geom name="4_bar_clamp" group="1" type="mesh" condim="4" friction="0.95 0.3 0.1" solref="0.001 1" solimp="0.998 0.998 0.001 0.5 2" mesh="bar_clamp_mesh_4" />
+                <geom name="5_bar_clamp" group="1" type="mesh" condim="4" friction="0.95 0.3 0.1" solref="0.001 1" solimp="0.998 0.998 0.001 0.5 2" mesh="bar_clamp_mesh_5" />
+                <geom name="6_bar_clamp" group="1" type="mesh" condim="4" friction="0.95 0.3 0.1" solref="0.001 1" solimp="0.998 0.998 0.001 0.5 2" mesh="bar_clamp_mesh_6" />
+                <geom name="7_bar_clamp" group="1" type="mesh" condim="4" friction="0.95 0.3 0.1" solref="0.001 1" solimp="0.998 0.998 0.001 0.5 2" mesh="bar_clamp_mesh_7" />
+                <geom name="8_bar_clamp" group="1" type="mesh" condim="4" friction="0.95 0.3 0.1" solref="0.001 1" solimp="0.998 0.998 0.001 0.5 2" mesh="bar_clamp_mesh_8" />
+                <geom name="9_bar_clamp" group="1" type="mesh" condim="4" friction="0.95 0.3 0.1" solref="0.001 1" solimp="0.998 0.998 0.001 0.5 2" mesh="bar_clamp_mesh_9" />
+                <geom name="10_bar_clamp" group="1" type="mesh" condim="4" friction="0.95 0.3 0.1" solref="0.001 1" solimp="0.998 0.998 0.001 0.5 2" mesh="bar_clamp_mesh_10" />
+                <geom name="11_bar_clamp" group="1" type="mesh" condim="4" friction="0.95 0.3 0.1" solref="0.001 1" solimp="0.998 0.998 0.001 0.5 2" mesh="bar_clamp_mesh_11" />
+                <geom name="12_bar_clamp" group="1" type="mesh" condim="4" friction="0.95 0.3 0.1" solref="0.001 1" solimp="0.998 0.998 0.001 0.5 2" mesh="bar_clamp_mesh_12" />
+                <geom name="13_bar_clamp" group="1" type="mesh" condim="4" friction="0.95 0.3 0.1" solref="0.001 1" solimp="0.998 0.998 0.001 0.5 2" mesh="bar_clamp_mesh_13" />
+                <geom name="14_bar_clamp" group="1" type="mesh" condim="4" friction="0.95 0.3 0.1" solref="0.001 1" solimp="0.998 0.998 0.001 0.5 2" mesh="bar_clamp_mesh_14" />
+                <geom name="15_bar_clamp" group="1" type="mesh" condim="4" friction="0.95 0.3 0.1" solref="0.001 1" solimp="0.998 0.998 0.001 0.5 2" mesh="bar_clamp_mesh_15" />
+                <geom name="16_bar_clamp" group="1" type="mesh" condim="4" friction="0.95 0.3 0.1" solref="0.001 1" solimp="0.998 0.998 0.001 0.5 2" mesh="bar_clamp_mesh_16" />
+                <geom name="17_bar_clamp" group="1" type="mesh" condim="4" friction="0.95 0.3 0.1" solref="0.001 1" solimp="0.998 0.998 0.001 0.5 2" mesh="bar_clamp_mesh_17" />
+                <geom name="18_bar_clamp" group="1" type="mesh" condim="4" friction="0.95 0.3 0.1" solref="0.001 1" solimp="0.998 0.998 0.001 0.5 2" mesh="bar_clamp_mesh_18" />
+            </body>
+        </body>
+    </worldbody>
+</mujoco>
+

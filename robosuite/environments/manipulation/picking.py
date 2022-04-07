@@ -418,7 +418,7 @@ class Picking(SingleArmEnv, Serializable):
                 else:
                     self.screen = pygame.display.set_mode((self.camera_image_width, 2*self.camera_image_height))
             else:
-                self.screen = pygame.display.set_mode((300, 300))
+                self.screen = pygame.display.set_mode((500, 500))
 
         # Initialize Parent Classes: SingleArmEnv->ManipEnv->RobotEnv->MujocoEnv
         super().__init__(
@@ -748,11 +748,11 @@ class Picking(SingleArmEnv, Serializable):
                 sampler = UniformRandomSampler(
                     name                            = "pickObjectSampler",
                     mujoco_objects                  = self.objects+self.not_yet_considered_objects,
-                    x_range                         = [-bin_x_half/2, bin_x_half/2],    # This (+ve,-ve) range goes from center to the walls on each side of the bin
-                    y_range                         = [-bin_y_half/2, bin_y_half/2],
+                    x_range                         = [-bin_x_half/3, bin_x_half/3],    # This (+ve,-ve) range goes from center to the walls on each side of the bin
+                    y_range                         = [-bin_y_half/3, bin_y_half/3],
                     # x_range                         = [-self.curr_learn_dist, self.curr_learn_dist],                # 5 cm from ref
                     # y_range                         = [-self.curr_learn_dist, self.curr_learn_dist],
-                    rotation                        = [np.pi/2,np.pi/2,-np.pi/2,np.pi/2,np.pi/2, np.pi/2],                         # Add uniform random rotation
+                    rotation                        = [0,0,-np.pi/2,np.pi/2,np.pi/2,np.pi/2],                         # Add uniform random rotation
                     rotation_axis                   = 'x',                          # Currently only accepts one axis. TODO: extend to multiple axes.
                     ensure_object_boundary_in_range = True,
                     ensure_valid_placement          = True,
@@ -1559,13 +1559,13 @@ class Picking(SingleArmEnv, Serializable):
         all_objects = list(range(num_objs_in_db))
         # all_objects = [2,5,10,15,18]
         objs_to_consider = random.sample( all_objects, num_objs_to_load) # i.e.objs_to_consider = [69, 66, 64, 55, 65]
-        objs_to_consider = [2]
+        objs_to_consider = [32]
 
         # 01 Sample number of objects to load
         for idx, val in enumerate(objs_to_consider):
 
             # Collect all objects whose file name starts with an 'o' and contain 'Object' as in OXXXXObject (substract idx by 1 since list obj1 is indexed at 0)
-            if objs_in_db[ objs_to_consider[idx]-1 ][0] == 'o' and "Object" in objs_in_db[ objs_to_consider[idx] ]:
+            if objs_in_db[ objs_to_consider[idx]-1 ][0] == 'o' and "Object" in objs_in_db[ objs_to_consider[idx]-1 ]:
                 digit = objs_in_db[ objs_to_consider[idx] -1 ]
                 digits.append(digit)                            # Keep list of existing objects
                 
@@ -1702,9 +1702,10 @@ class Picking(SingleArmEnv, Serializable):
 
         if self.use_camera_obs:
             if not self.use_depth_obs:
-                # image_obs = obs[self.camera_names[0]+'_image']
+                raw_image_obs = obs[self.camera_names[0]+'_image']
+                gray_image_obs = np.mean(raw_image_obs, axis=2)/255.
                 seg_image_obs = obs[self.camera_names[0]+'_segmentation_instance']
-                proc_image_obs = self.process_seg_image(seg_image_obs, output_size=(self.camera_image_height, self.camera_image_width))
+                proc_image_obs = self.process_seg_image(gray_image_obs, seg_image_obs, output_size=(self.camera_image_height, self.camera_image_width))
                 proc_image_obs = cv2.merge([proc_image_obs,proc_image_obs])
             else:
                 seg_image_obs = obs[self.camera_names[0]+'_segmentation_instance']
@@ -1884,7 +1885,7 @@ class Picking(SingleArmEnv, Serializable):
         #if obs[]
         return return_dict
 
-    def process_seg_image(self, seg_im, output_size):
+    def process_seg_image(self, gray_image_obs, seg_im, output_size):
         """
         Helper function to visualize segmentations as grayscale frames.
         NOTE: assumes that geom IDs go up to 255 at most - if not,
@@ -1908,14 +1909,16 @@ class Picking(SingleArmEnv, Serializable):
             else:
                 object_mask[object_mask==idx]=0
 
+        composite_mask = np.multiply(object_mask, gray_image_obs)
+
         gripper_mask = seg_im.copy()
         for idx in range(6):
             if idx==5:
-                gripper_mask[gripper_mask==idx]=1
-            else:
-                gripper_mask[gripper_mask==idx]=0
+                composite_mask[gripper_mask==idx]=0.3
+            # else:
+                # gripper_mask[gripper_mask==idx]=0
 
-        composite_mask = cv2.bitwise_or(object_mask, gripper_mask)
+        # composite_mask = cv2.bitwise_or(object_mask, gripper_mask)
 
         # use @inds to map each geom ID to a color
         # gray_image = (cm.gray(inds[seg_im], 3))[..., :1].squeeze(-1).astype('float64')
@@ -2075,7 +2078,7 @@ class Picking(SingleArmEnv, Serializable):
                 im = cv2.merge([im,im,im])
             else:
                 # read agentview camera
-                im = self.sim.render(camera_name="agentview", height=300, width=300)[::-1]
+                im = self.sim.render(camera_name="agentview", height=500, width=500)[::-1]
                 im = np.flip(im.transpose((1, 0, 2)), 0)[::-1]
 
                 if not self.use_depth_obs:
@@ -2083,7 +2086,7 @@ class Picking(SingleArmEnv, Serializable):
                     inset1 = np.uint8(inset1 * 255.0)
                     inset1 = cv2.merge([inset1,inset1,inset1])
                     inset1 = np.flip(inset1.transpose((1, 0, 2)), 0)[::-1] #for obs image visualization in pygame
-                    inset1 = cv2.resize(inset1, (80,80))
+                    inset1 = cv2.resize(inset1, (150,150))
 
                     im[:np.shape(inset1)[0],-np.shape(inset1)[1]:,:] = inset1
 
