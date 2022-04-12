@@ -246,6 +246,8 @@ class SingleArm(Manipulator):
 
         # Update the controller goal if this is a new policy step
         if policy_step:
+
+            # Scale arm action (xyz rpy) to compute delta, check for limits, and add.
             self.controller.set_goal(arm_action)
 
         # Now run the controller for a step
@@ -255,12 +257,14 @@ class SingleArm(Manipulator):
         low, high = self.torque_limits
         self.torques = np.clip(torques, low, high)
 
-        # Get gripper action, if applicable
+        # Apply joint torques and gripper positions. Will be updated when sim.step called outside this method.
+        # Apply joint torque control
+        self.sim.data.ctrl[self._ref_joint_actuator_indexes] = self.torques
+
+        # Apply action to fingers 
         if self.has_gripper:
             self.grip_action(gripper=self.gripper, gripper_action=gripper_action) # sets self.sim.data.ctrl[actuator_idxs] 
 
-        # Apply joint torque control
-        self.sim.data.ctrl[self._ref_joint_actuator_indexes] = self.torques
 
         # If this is a policy step, also update buffers holding recent values of interest
         if policy_step:

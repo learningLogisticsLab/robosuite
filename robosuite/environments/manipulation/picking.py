@@ -56,72 +56,52 @@ from rlkit.envs.wrappers import NormalizedBoxEnv
 
 # Globals
 object_reset_strategy_cases = ['jumbled', 'wall', 'random']# ['organized', 'jumbled', 'wall', 'random']
-_reset_internal_after_picking_all_objs = True
+_reset_internal_after_picking_all_objs = True 
 
 
 class Picking(SingleArmEnv, Serializable):
     """
     This class corresponds to a pick and place task for a single PANDA robot arm as defined in robosuite assets and trained via Richard Li's RelationalRL. 
     Currently, the task is modelled as a bin-picking task, but maybe extended to include putwalls. 
-
     The class allows the user to set:
-
     Args:
         #--- Robots --------------------------------------------------------------------------------------------
         robots (str or list of str): Specification for specific robot arm(s) to be instantiated within this env
             (e.g: "Sawyer" would generate one arm; ["Panda", "Panda", "Sawyer"] would generate three robot arms)
             Note: Must be a single single-arm robot!
             TODO: find a way to integrate Baxter into a single-arm robot.
-
         gripper_types (str or list of str): type of gripper, used to instantiate
             gripper models from gripper factory. Default is "default", which is the default grippers(s) associated
             with the robot(s) the 'robots' specification. None removes the gripper, and any other (valid) model
             overrides the default gripper. Should either be single str if same gripper type is to be used for all
             robots or else it should be a list of the same length as "robots" param
-
         env_configuration (str): Specifies how to position the robots within the environment (default is "default").
             For most single arm environments, this argument has no impact on the robot setup.
-
         #--- Control --------------------------------------------------------------------------------------------
         control_freq (float): how many control signals to receive in every second. This sets the amount of
             simulation time that passes between every action input.
-
         controller_configs (str or list of dict): If set, contains relevant controller parameters for creating a
             custom controller. Else, uses the default controller for this specific task. Should either be single
             dict if same controller is to be used for all robots or else it should be a list of the same length as
             "robots" param
-
         #--- Arena --------------------------------------------------------------------------------------------
         table_full_size (3-tuple): x, y, and z dimensions of the table.
-
         table_friction (3-tuple): the three mujoco friction parameters for
             the table.
-
         bin1_pos (3-tuple): Absolute cartesian coordinates of the bin initially holding the objects
-
         bin2_pos (3-tuple): Absolute cartesian coordinates of the goal bin
-
         #--- MDP --------------------------------------------------------------------------------------------
         use_camera_obs (bool): if True, every observation includes rendered image(s)
-
         use_object_obs (bool): if True, include object (cube) information in
             the observation.
-
         reward_scale (None or float): Scales the normalized reward function by the amount specified.
             If None, environment reward remains unnormalized
-
         reward_shaping (bool): if True, use dense rewards.
-
         horizon (int): Every episode lasts for exactly @horizon timesteps.
-
         ignore_done (bool): True if never terminating the environment (ignore @horizon).
-
-
         #--- Reset & Objects --------------------------------------------------------------------------------------------
-
         hard_reset (bool): If True, re-loads model, sim, and render object upon a reset call, else,
             only calls sim.reset and resets all robosuite-internal variables
-
         # Objects: (i) how many in hard drive, (ii) how many to load (randomly from file), and (iii) how many to model in graph
         num_objs_in_db:     number of objects available in database/folder
         num_obs_to_load:    number of objects to insert to bin
@@ -135,92 +115,65 @@ class Picking(SingleArmEnv, Serializable):
         object_randomization (bool): specifies whether new random objects are selected with every reset or not. I.e. 
                                      Ie. if 100 objs available in db, but you only place 20 in bin, you can continue to choose 
                                      20 new ones with each new reset. 
-
         # Init structs for object names, visual object names, object_to_ids, sorted_objects, objs _in_target_bing...        
         self.object_names                                   # list of names (string) currently modeled objects
         self.visual_object_names                            # same for visual
-
         self.not_yet_considered_object_names                # list of names of loaded objs that are not currently being modeled
         self.not_yet_considered_visual_object_names         # same for visual
-
         self.objects                                        # list of modeled instantiated objects
         self.visual_objects                                
-
         self.not_yet_considered_objects                     # list of unmodeled instantiated objects
         self.not_yet_considered_visual_objects              # same for visual        
-
         self.object_to_id                                   # dict with mappings between object and id
         self.object_id_to_sensors                           # Maps object id to sensor names for that object         
-
         self.sorted_objects_to_model                        # closest objects to the self.goal_object based on norm2 dist
         self.object_placements                              # placements for all objects upon reset    
-
         self.other_objs_than_goals   
         self.objects_in_target_bin                          # list of object names (str) in target bin        
-
         # Goal pose for HER setting
         self.goal_object                                    # holds name, pos, quat
         self.goal_pos_error_thresh                          # set threshold to determine if current pos of object is at goal.
-
-
         #--- Cameras --------------------------------------------------------------------------------------------
         camera_names (str or list of str): name of camera to be rendered. Should either be single str if
             same name is to be used for all cameras' rendering or else it should be a list of cameras to render.
-
             :Note: At least one camera must be specified if @use_camera_obs is True.
-
             :Note: To render all robots' cameras of a certain type (e.g.: "robotview" or "eye_in_hand"), use the
                 convention "all-{name}" (e.g.: "all-robotview") to automatically render all camera images from each
                 robot's camera list).
-
         camera_heights (int or list of int): height of camera frame. Should either be single int if
             same height is to be used for all cameras' frames or else it should be a list of the same length as
             "camera names" param.
-
         camera_widths (int or list of int): width of camera frame. Should either be single int if
             same width is to be used for all cameras' frames or else it should be a list of the same length as
             "camera names" param.
-
         camera_depths (bool or list of bool): True if rendering RGB-D, and RGB otherwise. Should either be single
             bool if same depth setting is to be used for all cameras or else it should be a list of the same length as
             "camera names" param.
             
         has_renderer (bool): If true, render the simulation state in
             a viewer instead of headless mode.
-
         has_offscreen_renderer (bool): True if using off-screen rendering
-
-
         render_camera (str): Name of camera to render if `has_renderer` is True. Setting this value to 'None'
             will result in the default angle being applied, which is useful as it can be dragged / panned by
             the user using the mouse
-
         render_collision_mesh (bool): True if rendering collision meshes in camera. False otherwise.
-
         render_visual_mesh (bool): True if rendering visual meshes in camera. False otherwise.
-
         render_gpu_device_id (int): corresponds to the GPU device id to use for offscreen rendering.
             Defaults to -1, in which case the device will be inferred from environment variables
             (GPUS or CUDA_VISIBLE_DEVICES).
-
         #--- 
         initialization_noise (dict or list of dict): Dict containing the initialization noise parameters.
             The expected keys and corresponding value types are specified below:
-
             :`'magnitude'`: The scale factor of uni-variate random noise applied to each of a robot's given initial
                 joint positions. Setting this value to `None` or 0.0 results in no noise being applied.
                 If "gaussian" type of noise is applied then this magnitude scales the standard deviation applied,
                 If "uniform" type of noise is applied then this magnitude sets the bounds of the sampling range
             :`'type'`: Type of noise to apply. Can either specify "gaussian" or "uniform"
-
             Should either be single dict if same noise value is to be used for all robots or else it should be a
             list of the same length as "robots" param
-
             :Note: Specifying "default" will automatically use the default noise settings.
                 Specifying None will automatically create the required dict with "magnitude" set to 0.0.
-
         # TODO: update args
-
         simple_objects: only loads circular fruits.
     Raises:
         AssertionError: [Invalid object type specified]
@@ -240,45 +193,45 @@ class Picking(SingleArmEnv, Serializable):
         controller_configs = None,
 
         # Arena
-        table_full_size = (0.39, 0.49, 0.82), # these dims are table*2 -0.01 in (x,y). z would have been 0.02*2 -1 = 0.03 but it is 0.82 ??
-        table_friction  = (1, 0.005, 0.0001), # (sliding, torsional, rolling) rations across surfaces. 
+        table_full_size = (0.39, 0.49, 0.82),   # these dims are table*2 -0.01 in (x,y). z would have been 0.02*2 -1 = 0.03 but it is 0.82 ??
+        table_friction  = (1, 0.005, 0.0001),   # (sliding, torsional, rolling) rations across surfaces. 
 
-        # bin1_pos = (0.1, -0.25, 0.8),           # Follows xml
+        # bin1_pos = (0.1, -0.25, 0.8),         # Follows xml
         # bin2_pos = (0.1, 0.28, 0.8),
 
         # # move bins
-        # bin1_pos=(-0.1, -0.25, 0.8),  # Follows xml
+        # bin1_pos=(-0.1, -0.25, 0.8),          # Follows xml
         # bin2_pos=(-0.1, 0.28, 0.8),
         # bin_thickness=(0, 0, 0.02),
         
         # Observations
-        use_camera_obs = True,                  # TODO: Currently these two options are setup to work in oposition it seems. Can we have both to True?
+        use_camera_obs = True,                  
         use_object_obs = False,
 
         # Rewards
         reward_scale    = 1.0,
         reward_shaping  = False,
       
-        horizon     = 1000,
-        ignore_done = False,
+        horizon         = 1000,                 # Equivalent to max_path_len
+        ignore_done     = False,
 
         # Objects & Resets & Goals
-        num_blocks              = 1,        # blocks to consider in graph. affects rewards. 
-        num_objs_to_load        = 1,        # from db       
+        num_blocks              = 1,            # blocks to consider in graph. affects rewards. 
+        num_objs_to_load        = 1,            # from db       
 
-        object_reset_strategy = "jumbled",   # [organized, jumbled, wall, random]. random will randomly choose between first three options. 
-        object_randomization  = True,        # Randomly select new objects from database after reset or not
+        object_reset_strategy = "jumbled",      # [organized, jumbled, wall, random]. random will randomly choose between first three options. 
+        object_randomization  = True,           # Randomly select new objects from database after reset or not
 
-        simple_objects          = False,     # load circular objects flag
+        simple_objects          = False,        # load circular objects flag
 
         # Reset
-        hard_reset            = False,       # If True, re-loads model|sim|render object w reset call. Else, only call sim.reset and reset all robosuite-internal variables        
+        hard_reset            = False,          # If True, re-loads model|sim|render object w reset call. Else, only call sim.reset and reset all robosuite-internal variables        
 
         # Goals
         goal                    = 0,
         objects_in_target_bin   = [],
 
-        goal_pos_error_thresh   = 0.05,     # Used to determine if the current position of the object is within a threshold of goal position
+        goal_pos_error_thresh   = 0.05,         # Used to determine if the current position of the object is within a threshold of goal position
 
         # Camera: RGB
         camera_names            = "agentview",
@@ -307,9 +260,13 @@ class Picking(SingleArmEnv, Serializable):
 
         # Reset
         first_reset             = True,
+        terminal                = False,        # Flag to keep track of terminal conditions. Useful in reset
+        success_strategy        = 'one',        # success can be defined as picking one object or all
 
         # Check Grasp
         check_grasp_flag        = False,        # Flag enables checking whether gripper fingers touching object. Useful to confirm success turns computation on/off and used in _is_success
+
+        debug                   = True          # used to print print statements
     ):
         print('Generating Picking class.\n')
         # Task settings
@@ -387,18 +344,24 @@ class Picking(SingleArmEnv, Serializable):
         # (b) Strategies
         self.object_reset_strategy  = object_reset_strategy     # organized|jumbled|wall|random
         self.object_randomization   = object_randomization      # randomize with new objects after reset (bool)
+        if self.object_randomization:
+            self.hard_reset = True
         print(f"A total of {self.num_objs_to_load} objects are being loaded. A total of {self.num_objects} will be modeled as nodes.")
         print(f"The object reset strategy is: {self.object_reset_strategy} and new objects will be randomly picked after reset\n")
         #-----------        
 
-        # (C) reward/reset configuration
+        # (C) Reward
         self.reward_scale   = reward_scale                      # Sets a scale for final reward
         self.reward_shaping = reward_shaping
 
         # (D) Resets
-        self.first_reset = first_reset
-        self.do_reset_internal = True
-        self.check_grasp_flag = check_grasp_flag                # Flag enables checking whether gripper fingers touching object. Useful to confirm success turns computation on/off and used in _is_success
+        self.first_reset        = first_reset
+        self.do_reset_internal  = True
+        self.check_grasp_flag   = check_grasp_flag              # Flag enables checking whether gripper fingers touching object. Useful to confirm success turns computation on/off and used in _is_success
+        self.terminal           = terminal                      # Flag to keep track of terminal conditions. Useful in reset
+        self.success            = False                         # Indicates success. Definition can be adjusted (pick 1 obj, pick all objs)
+        self.workspace          = False                         # Indicates if EEF has exited imposed constraints
+        self.success_strategy   = success_strategy              # Define success strategy
 
         # (E) Curriculum Learning
         self.curr_learn_dist = 0.05                             # curriculum learning threshold
@@ -407,7 +370,9 @@ class Picking(SingleArmEnv, Serializable):
         self.open_gripper_flag = False
 
         # Variant dictionary
-        self.variant = variant
+        self.variant = variant                                  # leveraged in train_sequentialTransfer.py
+
+        self.debug = debug                                      # Used to print print statements
 
         # Initialize Parent Classes: SingleArmEnv->ManipEnv->RobotEnv->MujocoEnv
         super().__init__(
@@ -478,10 +443,8 @@ class Picking(SingleArmEnv, Serializable):
         '''
         Plays the role of selecting a desired object for order fulfillment (name,pose). Selected when: (i) starting, or (ii) a previous goal has been picked successfully.
         Currently, randomly choose an object from the list of self.object_names which has num_objs_to_load.
-
         Assumes that (visual) object placements from reset_sim() are available: 
         self.object_placements = self.placement_initializer.sample()
-
         Returns:
             goal dict copy with name, pos, quat keys and string and np.arrays as values.             If objects are unavailable, return emptry name zero pos and identity quat.                
             other_objects list of object names
@@ -521,7 +484,6 @@ class Picking(SingleArmEnv, Serializable):
         
         - Use achieved goal and desired goal positions to determine the reward. 
         - TODO: test if a normalized incremental reward would be better as done in reward()
-
         :param achieved_goal: (numpy array) goal_object's pos(3) and quat(4)
         :param desired_goal:  (numpy array) target pos(3) and quat(4)
         :param info:          (bool)        indicating success or failure
@@ -540,7 +502,7 @@ class Picking(SingleArmEnv, Serializable):
         # reward = np.min([-(dist > self.distance_threshold).astype(np.float32) for d in dist], axis=0)
 
         # Sparse reward calculation: positive format
-        # - If we do not reach target, a 0 will be assigned as the reard, otherwise 1.
+        # - If we do not reach target, a 0 will be assigned as the reward, otherwise 1.
         # - a perfect policy would get returns equivalent to 1
         reward = (dist < self.goal_pos_error_thresh).astype(np.float32)
 
@@ -555,17 +517,12 @@ class Picking(SingleArmEnv, Serializable):
         1. Give a discrete reward of 1.0 per object if it is placed in its correct bin
         *Note that a successfully completed task (object in bin) will return 1.0 per object irregardless of whether the
         environment is using sparse or shaped rewards
-
         2. Check the length of objects in the target bin
-
         3. Scale and normalize        
-
         Args:
             action (np.array): [NOT USED]
-
         Returns:
             float: reward value
-
         TODO: given that there is a built-in scaled-reward assumption throughout the algorithms (though right now it is set to 1.0), it may be best to use positive rewards for success and 0 for failure.
         """
         # compute sparse rewards
@@ -587,10 +544,8 @@ class Picking(SingleArmEnv, Serializable):
         """
         robotsuite staged rewards based on current physical states.
         Stages consist of reaching, grasping, lifting, and hovering.
-
         Returns:
             4-tuple:
-
                 - (float) reaching reward
                 - (float) grasping reward
                 - (float) lifting reward
@@ -697,10 +652,8 @@ class Picking(SingleArmEnv, Serializable):
     def _get_placement_initializer(self):
         """
         Helper function to define placement initializers that sample object poses within bounds.
-
         Create 3 samplers: 
         - picking, placing (i.e. goals) and for setting the robot(s) eef upon a reset according to a strategy. 
-
         Strategies:
         1. Jumbled: randomly place n objects and visual objects in appropriate bins.
         2. Wall: place objects neara the wall. 
@@ -709,7 +662,6 @@ class Picking(SingleArmEnv, Serializable):
         Note: 
         - Each (visual) object/robot will get a instantiated sampler. 
         - Samplers can be accessed via the samplers object. Each sub-sampler obj is accessed as a dict key self.placement_initializer.samplers[sampler_obj_name]
-
         %---------------------------------------------------------------------------------------------------------
         TODO: 1) extend this function to place objects according to strategy: organized.
         %---------------------------------------------------------------------------------------------------------
@@ -793,7 +745,8 @@ class Picking(SingleArmEnv, Serializable):
                     z_offset                        = 0.,
                 )
             )
-        # placeObjectSamplers: each visual object receives a sampler that places it in the TARGET bin
+        
+        # placeObjectSamplersBin1: each visual object receives a sampler that places it in the ORIG bin. Simpler problem.
         self.placement_initializer.append_sampler(
             sampler=UniformRandomSampler(
                 name                            = "placeObjectSampler",             # name for object sampler for each object
@@ -808,7 +761,7 @@ class Picking(SingleArmEnv, Serializable):
                 z_offset                        = 0.10,                             # Set a vertical offset of XXcm above the bin
                 z_offset_prob                   = 0.50,                             # probability with which to set the z_offset
             )
-        )
+        )           
 
         # robot_eefSampler:
         # TODO: this eefSampler probably best placed in robosuite/environments/robot_env.py.reset() where init_qpos + noise is computed.
@@ -890,7 +843,6 @@ class Picking(SingleArmEnv, Serializable):
         Locally
         01 Object body and geom ids 
         02 Set target_bin_placements
-
         Parent: (robot_env) sets up robot-specific references 
         """
         super()._setup_references()
@@ -920,8 +872,7 @@ class Picking(SingleArmEnv, Serializable):
 
     def _setup_observables(self):
         """
-        Sets up observables to be used for this environment. Creates object-based observables if enabled (i.e. for 1 object: _pos, _quat, _velp, _velr, eef_pos, eef_quat)
-
+        Sets up observables to be used for objects in this environment. Oject-based observables consitute of: _pos, _quat, _velp, _velr, eef_pos, eef_quat)
         Returns:
             OrderedDict: Dictionary mapping observable names to its corresponding Observable object
         """
@@ -960,7 +911,7 @@ class Picking(SingleArmEnv, Serializable):
                 actives     += [using_obj] * num_obj_sensors
                 self.object_id_to_sensors[i] = obj_sensor_names
 
-            # Create observables
+            # Create observables: world_pose_in_gripper | objX_pos | objX_quat | objx_velp | objx_velr | objx_to_robot0_eef_pos | objx_to_robot0_eef_quat
             for name, s, enabled, active in zip(names, sensors, enableds, actives):
                 observables[name] = Observable(
                     name=name,
@@ -976,13 +927,10 @@ class Picking(SingleArmEnv, Serializable):
         """
         Helper function to create sensors for a given object. This is abstracted in a separate function call so that we
         don't have local function naming collisions during the _setup_observables() call.
-
         We create: obj_pos
-
         Args:
             obj_name (str): Name of object to create sensors for
             modality (str): Modality to assign to all sensors
-
         Returns:
             2-tuple:
                 sensors (list): Array of sensors for the given obj
@@ -1055,27 +1003,35 @@ class Picking(SingleArmEnv, Serializable):
         offset = 0.03
         # maximum gripping space
         longitude_max = 0.07
+        
         # HER flag for activating HER 100% all the time
         # HER = True
         if HER:
+            
             # Rename goal object pos as eef pos, goal object quat
             HER_pos = self._eef_xpos
             HER_quat = obj_quat
             min_longitude = min(obj.x_radius * 2, obj.y_radius * 2, obj.vertical_radius)
+           
             # Gripping strategy if horizontal radius is the shorter side
             if min_longitude == (obj.x_radius * 2) or min_longitude == (obj.y_radius * 2):
+                
                 # Check for offset
                 if (obj.vertical_radius > offset):
                     HER_pos[2] -= (obj.vertical_radius / 2 - offset)
+                
                 # Rotate if current orientation is too long
                 if (obj.x_radius * 2 >= longitude_max):
+                    
                     # y_radius gripping strategy
                     # quat = (x,y,z,w)
                     # rx 90 degrees
                     HER_quat = [0.98, 0, 0, 0]
+                    
                     # Set left & right fingers to reach the goal obj
                     self.sim.data.set_joint_qpos('gripper0_finger_joint1', obj.y_radius)
                     self.sim.data.set_joint_qpos('gripper0_finger_joint2', -obj.y_radius)
+                
                 # Otherwise revert back to obj default orientation
                 else:
                     # x_radius gripping strategy
@@ -1083,12 +1039,15 @@ class Picking(SingleArmEnv, Serializable):
                     # Set left & right fingers to reach the goal obj
                     self.sim.data.set_joint_qpos('gripper0_finger_joint1', obj.x_radius)
                     self.sim.data.set_joint_qpos('gripper0_finger_joint2', -obj.x_radius)
+            
             # Gripping strategy if the vertical radius is the shorter side
             else:  # rz 90 degreez
                 HER_quat = [0, 0, 0.7, -0.7]
+                
                 # Check for offset
                 if obj.y_radius > offset:
                     HER_pos[2] -= (obj.y_radius - offset)
+                
                 # Set left & right fingers to reach the goal obj
                 self.sim.data.set_joint_qpos('gripper0_finger_joint1', obj.vertical_radius / 2)
                 self.sim.data.set_joint_qpos('gripper0_finger_joint2', -obj.vertical_radius / 2)
@@ -1098,103 +1057,71 @@ class Picking(SingleArmEnv, Serializable):
             self.goal_object['pos'] = HER_pos
             self.goal_object['quat'] = HER_quat
             self.sim.data.set_joint_qpos(obj.joints[0], np.concatenate([np.array(HER_pos), np.array(HER_quat)]))
+        
         else:
             self.sim.data.set_joint_qpos(obj.joints[0], np.concatenate([np.array(obj_pos), np.array(obj_quat)]))
 
-    def _reset_internal(self):
-        """
-        Resets the simulation's internal configuration and object positions and robot eef according to object_reset_strategy. 
-        [organized, jumbled, wall, random].  Recall that we have a multi-object environment. 
+    def printObjectInfo(self):
+        '''
+        Print list of: 
+        -  modeled objects
+        -  unmodeled objects
+        -  target bin objects
+        -  fallen objects
+        '''
+
+        # Print object info after the reset
+        assert len(self.object_names)==self.num_objects, print(f'self.object_names less than orig amount. error. modeled: {self.object_names}, unmodeled {self.not_yet_considered_object_names}, fallen: {self.fallen_objs}, goals: {self.goal_object}')
+        print('\nAfter the reset...')
+        print('\n(i) The modeled object names are: ') 
+        for obj in self.object_names:
+            print(f'{obj} ') 
         
-        Note that objects are not reset until all objects have been successfully picked. What objects are loaded after reset
-        depend on the object_randomization flag. If set to True, a new set of objects are loaded, otherwise, the same objects 
-        are used.The number of objects to load is controlled by num_obs_to_load. 
+        print('\n(ii) The unmodeled objects are: ')
+        if len(self.not_yet_considered_object_names) != 0:
+            for obj in self.not_yet_considered_object_names:
+                print(f'{obj} ')
+        else:
+            print('0')
 
-        Since we are using a GNN model for DRL, we use num_objs to denote which objs to consider for graph modeling as nodes. 
-        This results in two sets of lists (of objects, visual objects, and their corresponding names). i.e. self.objects vs 
-        self.not_yet_considered_bojects. 
-
-        Everytime an object is picked, a new goal object is picked from within the modelled objects while at the same time a 
-        not_yet_considered_object is moved into the modeled group. 
-        Note: at the beginning of the program reset() may be called upto 3 times before actually starting rollouts: by Picking.__init__,  GymWrapper.__init__, and by RLAlgorithm._start_new_rollout()
+        print('\n(iii) The target bin objects list is ')
+        if len(self.objects_in_target_bin) != 0:
+            for obj in self.objects_in_target_bin:
+                print(f'{obj} ')
+        else:
+            print('empty')
         
-        Object Placement Strategies (activated in self.placement_initializer)
-        - 'organized': nicely stacked side-by-side, if no more fit, on-top of each other. left-to-right.
-        - 'jumbled':   just dropped in from top at center, let them fall freely.
-        - 'wall':      align objects with wall. start on far wall on the left and move clock-wise.
-        - 'random':    select above strategy randomly with each new reset.        
+        if len(self.fallen_objs)>0:
+            print('\nThere are also fallen objects: ')
+            for obj in self.fallen_objs:
+                print(f'{obj} ')
+        else:
+            print('\nAnd no fallen objects.')        
+    
+    def update_object_goal_her_poses(self):
+        '''
+        Update object placements. object_placements contains [pos|quat|object instance] 
+        Used during reset. 
+        
+        If starting a fresh setup, use object_placments to place objects. If not all objects have yet been picked
+        up, use observables to re-set the positions of the objects where they are. 
+        Note that currently the code assumes goals are found in bin1. Once goals are reached, objects are transported to bin2 using the shifted original placements of bin1 
+        TODO: could use scripted motions to carry object from goal in bin1 to 2. 
+        '''
 
-        """
-        global _reset_internal_after_picking_all_objs
+        # This global indicates if all objects picked up. Set in add_remove_objects()s
+        global _reset_internal_after_picking_all_objs        
 
-        # if we have not finished picking_all_objs, calling _reset_internal will do nothing
-        if not _reset_internal_after_picking_all_objs:
-            return
-
-        # Reset all object positions using initializer sampler if we're not directly loading from an xml
-        if not self.deterministic_reset: # i.e. stochastic (flag set in base.py)
-
-            if self.first_reset:
-                super()._reset_internal() # action_dim|controllers|cameras|model|render
-                self.first_reset = False # reset() is called during base.py:MujocoEnv.__init__(), then by robosuite/wrappers/gym_wrappery.py:GymWrapper.__init__, and then when starting to train (batch/online) rlkit/core/rl_algorithm.py:RLAlgorithm._start_new_rollout 
-
-                # After first reset, if object_randomization is true, turn on the self.hard_reset flag to be used in the next reset
-                if self.object_randomization:
-                    self.hard_reset = True
-
-            # if not first reset but on obj rand, clear fallen_objs, and turn off flag
-            elif not self.first_reset and self.object_randomization:
-                super()._reset_internal()
-                self.objects_in_target_bin.clear()
-                self.fallen_objs.clear()    
-                self.fallen_objs_flag = False
-
-
-            # II. Not Object Randomizations. 
-            # Continuing Reset. 
-            # Copy objects in target bin back to object names and then clear the former. 
-            # After that, both (i) and (ii) require us to collect the object's positions and orientation. And for collision objects, set the HER strategy.
-            else:
-                super()._reset_internal()
-                if self.objects_in_target_bin != []:
-
-                    # Print object info before reset
-                    print('Current objects in target bin are: ')
-                    for obj in self.objects_in_target_bin:
-                        print(f'{obj}    ')
-                    # Bring back objects from target bin to object_names and not_yet_consiered_object_names
-                    # Use slicing so that you create new objects (no need to copy)
-                    if self.object_names == []:
-                        self.object_names += self.objects_in_target_bin[:self.num_objects]
-                        self.not_yet_considered_object_names += self.objects_in_target_bin[self.num_objects:]
-                        self.objects_in_target_bin.clear()
-
-                    # Print object info after the reset
-                    print('After the reset, the modeled object names are: ')
-                    for obj in self.object_names:
-                        print(f'{obj} ')
-                    
-                    if len(self.not_yet_considered_object_names) != 0:
-                        print('And thet unmodeled or not yet considered objects are: ')
-                        for obj in self.not_yet_considered_object_names:
-                            print(f'{obj} ')
-
-                    # Proceed to place objects at the self.object_placements location.
-                
-            if not self.object_randomization and self.fallen_objs_flag:
-                self.object_names = [name[:5]+'Object' for name in self.visual_object_names]
-                self.not_yet_considered_object_names = [name[:5]+'Object' for name in self.not_yet_considered_visual_object_names]
-                self.fallen_objs.clear()
-                # C> Turn off flag
-                self.fallen_objs_flag = False
-
-            # Sample from the "placement initializer" for all objects (regular and visual objects)
-            self.object_placements = self.placement_initializer.sample()
+        # (A) Sample new poses from the "placement initializer" for collision and visual objects and place them in the world for all terminal conditions or finishing all objects. 
+        if  _reset_internal_after_picking_all_objs or self.terminal or self.fallen_objs_flag or self.workspace: # if we can't pick and terminate, reset locations.
+            self.object_placements = self.placement_initializer.sample()  
+            # Extract target object (from object_placements) and sort closest objects to model
+            # Update the goal even if one exists, helps to randomize when we can't pick up objects
+            self.goal_object, self.other_objs_than_goals = self.get_goal_object() 
+            if self.debug: 
+                print( '\nThe goal object is: {} \n'.format( self.goal_object['name'] ) )              
             
-            # Set goal object to pick up and sort closest objects to model
-            self.goal_object, self.other_objs_than_goals = self.get_goal_object()               
-            
-            # Position the objects
+            # Position the objects in the world 
             for obj_pos, obj_quat, obj in self.object_placements.values():
                 if obj.name == [] or self.goal_object['name'] == []:
                     break
@@ -1203,11 +1130,7 @@ class Picking(SingleArmEnv, Serializable):
                     self.sim.model.body_pos[self.obj_body_id[obj.name]]  = obj_pos
                     self.sim.model.body_quat[self.obj_body_id[obj.name]] = obj_quat
 
-                    ## Addition ---
-                    # self.object_placements is a place holder for all objects. However:
-                    # Under HER paradigm, we have a self.goal variable for the desired goal +
-                    # Under our current architecture we set self.goal_object as a single goal until that object is placed. 
-                    # Use this to fill self.goal which will be used in _get_obs to set the desired_goal.
+                    # HER: uses self.goal object to select and place target object in robot hand                   
                     if obj.name.lower() == self.goal_object['name'][:5] + 'visualobject':
                             self.goal_object['pos'] = obj_pos
                             self.goal_object['quat'] = obj_quat
@@ -1220,8 +1143,157 @@ class Picking(SingleArmEnv, Serializable):
 
             # Set the bins to the desired position
             self.sim.model.body_pos[self.sim.model.body_name2id("bin1")] = self.bin1_pos
-            self.sim.model.body_pos[self.sim.model.body_name2id("bin2")] = self.bin2_pos
+            self.sim.model.body_pos[self.sim.model.body_name2id("bin2")] = self.bin2_pos               
+    
+        # Picked up one object, more remaining
+        else:  
 
+            # (A) Set picked object in bin2 and update object placements. Use original pickSampler but add a y-displacement equivalent to the width of the bin
+            bin_length = self.model.mujoco_arena.table_full_size[1]
+            
+            if self.objects_in_target_bin != []:
+                obj_pos  = np.array(self.object_placements[ self.objects_in_target_bin[-1]][0])  + [0, bin_length, 0]           
+                obj_quat = np.array(self.object_placements[ self.objects_in_target_bin[-1]][1])                        # s vx vy vz          
+                obj      = self.object_placements[ self.objects_in_target_bin[-1]][2]
+
+                # TOOD: Update observables?? Cannot set them directly. 
+                # self._observables[ self.objects_in_target_bin[-1] + '_pos'  ].obs = obj_pos
+                # self._observables[ self.objects_in_target_bin[-1] + '_quat' ].obs = obj_quat
+
+                # Update tuple entry in object_placements. TODO: this value might be reset elsewhere. 
+                tmp = np.zeros(4)
+                tmp[1:4] = obj_quat[0:3] # set vec
+                tmp[0]   = obj_quat[3]   # set mag            
+                self.object_placements[ self.objects_in_target_bin[-1] ] = (tuple(obj_pos), tuple(tmp), obj)
+
+                # Move objects to bin 2 (also visual object)
+                self.sim.data.set_joint_qpos( obj.joints[0], np.concatenate( [obj_pos,obj_quat] ))                    
+                self.sim.model.body_pos[self.obj_body_id[ self.objects_in_target_bin[-1][0:5] + 'VisualObject' ]]  = obj_pos + [0,0,0.1]
+
+            # Get new goal
+            if not self.goal_object: # Goal also called in add_remove_objects(). if called there skip here.
+                self.goal_object, self.other_objs_than_goals = self.get_goal_object() # Extract target object (from object_placements) and sort closest objects to model
+                if self.debug: 
+                    print( '\nThe goal object is: {} \n'.format( self.goal_object['name'] ) )  
+
+            # Set current object positions and goal object moved to bin2        
+            obs = self._get_observations(force_update=False) # Do not false update or object data will be reset to zero
+            for obj in self.sorted_objects_to_model:
+
+                obj_instance = self.object_placements[obj][2]
+                obj_pos  = obs[obj+'_pos']
+                obj_quat = obs[obj+'_quat']
+
+                # Place target object
+                if obj.lower() == self.goal_object['name'].lower():
+                    self._activate_her(obj_pos=obj_pos, obj_quat=obj_quat, obj=obj_instance)
+                
+                # Place other objects
+                else:
+                    self.sim.data.set_joint_qpos( obj_instance.joints[0], 
+                                                  np.concatenate( [ np.array(obj_pos), 
+                                                                    np.array(obj_quat)] ))
+        
+                # Update object_placement: if objects moved from original placement, can update this location. 
+                # Note: quaternion representation is not consistent. get_obs returns an ([vx vy vz], w), but object_placement is (w, [vx,vy,vz])                
+                tmp = np.zeros(4)
+                tmp[1:4] = obj_quat[0:3] # set vec
+                tmp[0]   = obj_quat[3]   # set mag
+                self.object_placements[obj] = (obj_pos, tmp, obj_instance)
+                           
+    def _reset_internal(self):
+        """
+        Resets the simulation's internal configuration upon termination conditions like:
+        - success:   definition can be set in environment: pick one object or pick all objects)
+        - terminal:  number of timesteps exceeds horizon
+        - fallen:    a modeled object falls
+        - workspace: EEF moves outside constrained workspace limits if set
+        
+        How does reset work?
+        We have opted for a unified reset operation. 
+        Full reset of the environment occurs when: (i) all objects picked up, or ill conditions (terminal, fallen, eef) 
+         - Such resets, update all internals, all object positions and lists.
+        In multiobjet scenarios, when object picked, env remains the same, internals reset, but object names/positions/lists remain. 
+         - Only, when all objects are picked is object selection randomized. 
+         
+        Note: 
+        - at the beginning of the program reset() may be called upto 3 times before actually starting rollouts: by Picking.__init__,  GymWrapper.__init__, and by RLAlgorithm._start_new_rollout()       
+        """
+        # Use this global to know if all objects are picked up. Set in add_remove_objects()
+        global _reset_internal_after_picking_all_objs
+
+        # Reset all object positions using initializer sampler if we're not directly loading from an xml
+        if not self.deterministic_reset: # i.e. stochastic (flag set in base.py)
+
+            if self.first_reset:
+                super()._reset_internal() # observables | action_dim | controllers | robots | cameras | model | render
+
+                # Switch off in base.py:Mujoco_env.reset() after calling setup_observables. If turn off here, setup_observables skipped.
+                #self.first_reset = False # reset() is called during base.py:MujocoEnv.__init__(), then by robosuite/wrappers/gym_wrappery.py:GymWrapper.__init__, and then when starting to train (batch/online) rlkit/core/rl_algorithm.py:RLAlgorithm._start_new_rollout 
+
+                # After first reset, if object_randomization is true, turn on the self.hard_reset flag to be used in the next reset
+                if self.object_randomization:
+                    self.hard_reset = True
+
+                # Update object placements. object_placements contains [pos|quat|object instance]            
+                self.update_object_goal_her_poses()                    
+
+            else:
+                # Continue Reset.                     
+                    
+                # Not all object picked up and no ill conditions: update placements before reset
+                if not _reset_internal_after_picking_all_objs and not self.terminal and not self.fallen_objs_flag and not self.workspace:                                        
+
+                    # Update object placements. object_placements contains [pos|quat|object instance]            
+                    self.update_object_goal_her_poses()   
+
+                    # Reset parent internals
+                    super()._reset_internal() # observables | references | action_dim | controllers | robots | cameras | model | render                                                              
+                                     
+                    
+                    # Reset local internals
+                    self.terminal           = False
+                    self.success            = False
+                    self.fallen_objs_flag   = False                         
+
+                # All objects picked up: update placement after reset
+                else: 
+
+                    # # Print info 
+                    # print('\nAll objs picked up: reset objects/placement.')
+
+                    # (A) Reset object lists
+                    # Refill modelled collision objects directly from the modelled goals
+                    self.object_names = [name[:5] + 'Object' for name in self.visual_object_names]
+                    assert len(self.object_names) == self.num_objects, print('The number of modelled objects is less than num_blocks')
+                    
+                    # Refilled unmodelled collision objects directly from the unmodelled goals
+                    self.not_yet_considered_object_names = [name[:5]+'Object' for name in self.not_yet_considered_visual_object_names]
+
+                    # Clear objects in target bin
+                    self.objects_in_target_bin.clear()
+                    assert len(self.objects_in_target_bin) == 0, print('target bin is not empty after a reset upon termination')
+
+                    # Clear fallen objects and flag
+                    self.fallen_objs.clear()                        
+                    self.fallen_objs_flag = False  
+
+                    # (B) Reset parent internals before object placement                    
+                    super()._reset_internal()   # observables | references | action_dim | controllers | robots | cameras | model | render                    
+
+                    # (C) After resetting object lists, update object placements. object_placements contains [pos|quat|object instance]            
+                    # Should we call in reset after observables set?
+                    self.update_object_goal_her_poses()     
+
+                    if self.debug: 
+                        self.printObjectInfo()   
+
+                    # Reset local internals
+                    self.terminal           = False
+                    self.success            = False
+                    self.fallen_objs_flag   = False   
+                    _reset_internal_after_picking_all_objs = False                                                                     
+    
         return True
 
     def return_sorted_objs_to_model(self, goal, others):
@@ -1232,22 +1304,17 @@ class Picking(SingleArmEnv, Serializable):
         3) Sort them
         4) Only keep the first num_object-1 entries (includes the goal)
         5) Place the goal at the front
-
         Example:
         : objs_to_load = [goal_obj, obj2, obj3, obj4, obj5] (assumed already sorted)
         : num_objects (to model) = 3
-
         : sorted_obj_dist = [obj2, obj3] # keep num_objects -1
         : sorted_obj_dist = [goal_obj, obj2, obj3] # place goal in the front
-
         Args:   
             obs:        dict of observables with name/pos/quat                    
             goal:       goal dict with name/pos/quat keys
             others:     list of object_names to be sorted
-
         Returns:
             sorted_obj_dist:    dictionary with name as key and distance as value.
-
         '''
 
         # Check for an empty goal
@@ -1312,7 +1379,8 @@ class Picking(SingleArmEnv, Serializable):
             
             # bring goal obj to front
             self.sorted_objects_to_model = self.return_sorted_objs_to_model(self.goal_object, self.other_objs_than_goals)
-            print("fallen is {}, pos is {}, goal is {}, other obj is {}".format(fallen_objs, self._observables[fallen_objs[0]+'_pos'].obs, self.goal_object,
+            if self.debug: 
+                print("fallen is {}, pos is {}, goal is {}, other obj is {}".format(fallen_objs, self._observables[fallen_objs[0]+'_pos'].obs, self.goal_object,
                                                                      self.other_objs_than_goals))
             # Turn on flag if we detect 1 fallen obj
             self.fallen_objs_flag = True
@@ -1330,10 +1398,8 @@ class Picking(SingleArmEnv, Serializable):
         02 Reactivity
         TODO: consider modifing the definition of is_success according to QT-OPTs criteria to increase reactivity
         requires reaching a certain height... see paper for more. also connected with one parameter in observations.
-
         03 End-effector
         TODO: after succeeding, in any occurrence, move the end-effector to a starting position
-
         Args:
             param: goal (dict with name, pos, quat keys)
             other: dict with entries of other objects to be sorted.
@@ -1371,15 +1437,14 @@ class Picking(SingleArmEnv, Serializable):
             return False
 
     def add_remove_objects(self):
-        """        
+        """    
+        Called upon success.
         01 Object handling 
             Assuming that there are n objects in a bin and m modelled objects where m<=n then if success, do:
             - remove goal_object from self.object_names
             - choose a new goal from the remaining modeled objects
             - add a new object from the remaining non-modelled objects (if available)
-
             - If no more objects anywhere set done to true.
-
         other: dict with entries of other objects to be sorted.
         
         Returns:
@@ -1389,15 +1454,17 @@ class Picking(SingleArmEnv, Serializable):
 
         global _reset_internal_after_picking_all_objs
 
-        print("Successfully picked {}". format(self.goal_object['name']))
-        # 02 Object Handling
+        if self.debug: print("\nSuccessfully picked {}". format(self.goal_object['name']))
+
+        # 01 Object Handling
         # Add the current goal object to the list of target bin objects
-        assert self.goal_object != {}, 'checking Picking._is_successful(). Your goal_object is empty.'
+        assert self.goal_object != {}, 'checking Picking.add_remove_objects(). Your goal_object is empty.'
 
         self.objects_in_target_bin.append(self.goal_object['name'])
-        print("The current objects in the target bin are:")
-        for object in self.objects_in_target_bin:
-            print(f"{object} ")    
+        if self.debug: 
+            print("\nThe current objects in the target bin are:")
+            for object in self.objects_in_target_bin:
+                print(f"{object} ")    
                                 
         # Remove goal from the list of modeled names for the next round            
         self.object_names.remove(self.goal_object['name'])
@@ -1417,19 +1484,30 @@ class Picking(SingleArmEnv, Serializable):
         if self.object_names != []:
             self.goal_object, self.other_objs_than_goals = self.get_goal_object()
             #self.sorted_objects_to_model.update(self.goal_object['name'])
+
+            # Add one new unmodeled object to self.object_names, the closest one to the goal, if available from the self.not_yet_considered_object_names
+            if self.not_yet_considered_object_names:
+                sorted_non_modeled_elems = self.return_sorted_objs_to_model(self.goal_object, self.not_yet_considered_object_names) # returns dict of sorted objects
+                closest_obj_to_goal = list(sorted_non_modeled_elems.items())[1]        # Extract first dict item
+                self.object_names.append( closest_obj_to_goal[0] )                          # Only pass the name
+                self.sorted_objects_to_model[closest_obj_to_goal[0]] = closest_obj_to_goal[1]
+                self.not_yet_considered_object_names.remove(closest_obj_to_goal[0])
             
-            print(f"Computing new object goal. New goal obj is {self.goal_object['name']} with location {self.goal_object['pos']}.")
+            if self.debug: 
+                print(f"\nComputing new object goal. \nNew goal obj is {self.goal_object['name']} with location: (", end='')
+                for val in self.goal_object['pos']:
+                    print(f'{val:2.2f},', end='')
+                print(')\n')
 
         elif (self.object_names + self.not_yet_considered_object_names) == []: # len(self.object_names) == 0 and len(self.objects_in_target_bin) == self.num_objs_to_load:
-            _reset_internal_after_picking_all_objs = True                                
-            print("Finished picking and placing all objects, can call reset internal again")            
+            _reset_internal_after_picking_all_objs = True          
+            if self.debug:                      
+                print("\nFinished picking and placing all objects, can call reset internal again")            
 
     def check_success(self):
         """
         **Standard robosuite method. Not used with HER. **
-
         General check success method based on where the goal object is placed. 
-
         Check if self.goal_object is placed at target position. 
         To decide: check if a single object has been placed successfully, or if all objects have been placed successfully, or both. 
         
@@ -1437,10 +1515,8 @@ class Picking(SingleArmEnv, Serializable):
             1. check for success test
             2. remove current goal_object form list at next iteration
             3. select new next object_goal 
-
         Returns:
             bool: True if object placed correctly
-
         TODO: consider modifing the definition of is_success according to QT-OPTs criteria to increase reactivity
         requires reaching a certain height... see paper for more. also connected with one parameter in observations.
         """
@@ -1459,7 +1535,8 @@ class Picking(SingleArmEnv, Serializable):
 
             # Get a new object_goal if objs still available
             self.goal_object,_ = self.get_goal_object() 
-            print(f"Successful placement. New object goal is {self.goal_object['name']}") 
+            if self.debug: 
+                print(f"Successful placement. New object goal is {self.goal_object['name']}") 
 
             # Add the current goal object to the list ob objects in target bins
             self.objects_in_target_bin.append(self.goal_object['name'])            
@@ -1467,33 +1544,35 @@ class Picking(SingleArmEnv, Serializable):
 
         return True
 
-    def _is_inside_workspace(self, robot0_proprio_obs):
+    def _is_inside_workspace(self):
         """
         Check if the robot end-effector is inside a box-like workspace.
-
         For x- and y-axes, the limits of the workspace match those of the bin.
         For z-axes, the lower limit coincides with the bin's bottom surface and the upper limit is located 50cm above that.
-
         Returns:
             bool: True if robot end-effector is inside the workspace.
-
         """
 
-        robot0_gripper_position = robot0_proprio_obs[21:24] # extract end-effector position for robot propoprioception observation vector
-
+        #robot0_gripper_position = robot0_proprio_obs[21:24] # extract end-effector position for robot propoprioception observation vector
+        robot0_gripper_position = self._observables['robot0_eef_pos'].obs # eef pos
         # bin size
-        bin_x_half = self.model.mujoco_arena.table_full_size[0] / 2 - 0.05  # half of bin - edges (2*0.025 half of each side of each wall so that we don't hit the wall)
-        bin_y_half = self.model.mujoco_arena.table_full_size[1] / 2 - 0.05
+        bin_x_half = self.model.mujoco_arena.table_full_size[0] / 2 #- 0.05  # half of bin - edges (2*0.025 half of each side of each wall so that we don't hit the wall)
+        bin_y_half = self.model.mujoco_arena.table_full_size[1] / 2 #- 0.05
 
         workspace_min = np.array([self.bin1_pos[0]-bin_x_half, self.bin1_pos[1]-bin_y_half, self.bin1_pos[2]+self.bin1_surface[2]])
         workspace_max = np.array([self.bin1_pos[0]+bin_x_half, self.bin1_pos[1]+bin_y_half, self.bin1_pos[2]+self.bin1_surface[2]+0.3])
 
-        return np.all(np.greater(robot0_gripper_position, workspace_min)) and np.all(np.less(robot0_gripper_position, workspace_max))
+        inside_workspace = np.all(np.greater(robot0_gripper_position, workspace_min)) and np.all(np.less(robot0_gripper_position, workspace_max))
+        
+        if not inside_workspace:
+            if self.debug: 
+                print("\nRobot EEF has moved outside established workspace boundaries!!\n")
+        
+        return inside_workspace
 
     def visualize(self, vis_settings):
         """
-        In addition to super call, visualize gripper site proportional to the distance to the closest object.
-
+        In addition to super call, visualize "gripper site" proportional to the distance to the closest object.
         Args:
             vis_settings (dict): Visualization keywords mapped to T/F, determining whether that specific
                 component should be visualized. Should have "grippers" keyword as well as any other relevant
@@ -1525,7 +1604,6 @@ class Picking(SingleArmEnv, Serializable):
         '''
         Assumes preamble has loaded objets (ObjectXXXX) and visual objects (VisualObjectXXXX) (could also be oXXXX and oXXXXv). 
         Although check for other possible names as well.
-
             01. Given the global set of objs_in_db and the num_objs_to_load, we sample num_objs_to_load from objs_in_db and place them in object_names. 
             
             02. Further, we use the self.num_objects (which indicates how many objects we will model in the graph) and keep the first num_objects in object_names. 
@@ -1539,7 +1617,6 @@ class Picking(SingleArmEnv, Serializable):
         Args:
             num_objs_in_db (int) number of objects loaded as python modules
             num_objs_to_load (int)  how many objects to insert inthe simulation
-
         Returns:
         '''
 
@@ -1657,21 +1734,17 @@ class Picking(SingleArmEnv, Serializable):
     def _get_obs(self, force_update=False):
         '''
         This declaration comes from the Fetch Block Construction environment in rlkit_relational. In our top class: MujocoEnv
-        we have the _get_observations declaration. It returns an Ordered dictionary of observables. 
-        This method will get such dict of observations and manipulate them to return a formate amenable to rlkit_relational+HER,
+        we have the _get_observations declaration. It returns an Ordered dictionary of Observables. 
+        This method will get such dict of observations and manipulate them to return a format amenable to rlkit_relational+HER,
         namely return a dictionay with keys: 'obsevations', 'achieved_goals', and 'desired_goals' composed of numpy arrays.
-
         We keep this declaration as is for two reasons:
         (1) Facilitate the migration of the rlkit_relational code by keeping the same method name
         (2) Keeping the same contents of the original method: not limited to creating achieved_goals and desired_goal.
-
         Method executes the following:
         1. Compute observations as np arrays [grip_xyz, f1x, f2x, grip_vxyz, f1v, f2v, obj1_pos, rel_pos_wrt_gripp_obj, obj1_theta, obj1_vxyz, obj1_dtheta obj2... ]
         2. Achieved goal: [goal_obj.pos]                        # First iteration, testing placing only with pos and w/out orientation.
-        3. Desired goal: goal pos obtained in ._sample_goal()   # same as achieved_goal 
-
+        3. Desired goal: goal pos obtained in ._sample_goal()   # i.e. the robosuite visual object 
         Notes: 
-
         Observable Modalities:
         Currently we do not consider the observable's modalities in this function. 
         The GymWrapper uses them in its constructor... So far I don't think it will be a problem but need to check. 
@@ -1698,7 +1771,7 @@ class Picking(SingleArmEnv, Serializable):
         achieved_goal = []
 
         # Get robosuite observations as an Ordered dict. keep a local obs reference for convencience (vs. self_observables)
-        obs = self._get_observations(force_update) # if called by reset() [see base class] this will be set to True.
+        obs = self._get_observations(force_update) # if called by reset() [see base class] this will be set to True.        
 
         # Get prefix for robot to extract observation keys
         pf = self.robots[0].robot_model.naming_prefix
@@ -1737,10 +1810,12 @@ class Picking(SingleArmEnv, Serializable):
         # *Note: there are three quantities of interest: (i) (total) num_objs_to_load, (ii) num_objs (to_model), and (iii) goal object. 
         # We report data for num_objs that are closest to goal_object and ignore the rest. This list is updated when is_success is True.
         # We only consider the relative position between the goal object and end-effector, all the rest are set to 0.
-        # Check, remove & update fallen objs list/dicts
-        self.fallen_objs = self.return_fallen_objs() # remove obj from self.obj_names
         
-        # # Place goal object at the front
+        # Check, remove & update fallen objs list/dicts. Only check if flag is False. If True, no need to check again under control loop. 
+        # if not self.fallen_objs:
+        #     self.fallen_objs = self.return_fallen_objs() # remove obj from self.obj_names
+        
+        # Place goal object at the front
         if self.fallen_objs == []:
             self.sorted_objects_to_model = self.return_sorted_objs_to_model(self.goal_object, self.other_objs_than_goals)
         
@@ -1766,7 +1841,7 @@ class Picking(SingleArmEnv, Serializable):
             # if not empty fill from obs, else leave entries as zeros
             if i <= len(name_list)-1:
                 # Pose: pos and orientation
-                object_i_pos[3*i:3*(i+1)]  = obs[name_list[i] + '_pos']
+                object_i_pos[3*i:3*(i+1)]  = obs[name_list[i] + '_pos']     # Fills them in contiguously [1 | 2 | 3 | ... | n]
                 object_i_quat[4*i:4*(i+1)] = obs[name_list[i] + '_quat']
 
                 # Vel: linear and angular
@@ -1775,7 +1850,7 @@ class Picking(SingleArmEnv, Serializable):
 
                 object_velr[3*i:3*(i+1)] = obs[name_list[i] +'_velr'] * dt
 
-                # Relative position wrt to gripper:
+                # Relative position between the goal object and the gripper:
                 # *Note: we will only do this for the goal object and set the rest to 0.
                 # By setting to 0 all calculations in the network will be cancelled. Robot should reach only to the goal object.
                 # Goal object to be modified if successful (without repeat)
@@ -1785,12 +1860,12 @@ class Picking(SingleArmEnv, Serializable):
 
                     # 02) Achieved Goal: the achieved state will be the goal object's position (ie. the object you are trying to grasp)
                     #--------------------------------------------------------------------------
-                    # TODO: double check if this works effectively for our context + HER. Otherwise can add objects and grip pose.
+                    # TODO: double check if this works effectively for our context + HER. Otherwise we can also add the grip pose and other objects
                     #--------------------------------------------------------------------------
-                     achieved_goal = np.concatenate([    # 3          # 7
-                        object_i_pos[:3].copy(),    # 3      # Try pos only first.
-                        # object_i_quat.copy(), # 4
-                    ])
+                     achieved_goal = np.concatenate([                # 3          # 7
+                                    object_i_pos[:3].copy(),         # 3          # Try pos only first.
+                                    # object_i_quat.copy(),          # 4
+                                    ])
 
                 else:
                     # Fill these rel data with fixed nondata
@@ -1809,16 +1884,16 @@ class Picking(SingleArmEnv, Serializable):
             #     object_rel_pos.ravel(), # 3
             #     object_rel_rot.ravel()  # 4
             # ])
-            env_obs = np.concatenate([  # 17 + (20 * num_objects)
+            env_obs = np.concatenate([                  # 17 + (20 * num_objects)
                 env_obs,
-                object_i_pos[3*i:3*(i+1)].ravel(),  # 3
-                object_i_quat[4*i:4*(i+1)].ravel(),  # 4
+                object_i_pos[3*i:3*(i+1)].ravel(),      # 3
+                object_i_quat[4*i:4*(i+1)].ravel(),     # 4
 
-                object_velp[3*i:3*(i+1)].ravel(),  # 3
-                object_velr[3*i:3*(i+1)].ravel(),  # 3
+                object_velp[3*i:3*(i+1)].ravel(),       # 3
+                object_velr[3*i:3*(i+1)].ravel(),       # 3
 
-                object_rel_pos[3*i:3*(i+1)].ravel(),  # 3
-                object_rel_rot[4*i:4*(i+1)].ravel()  # 4
+                object_rel_pos[3*i:3*(i+1)].ravel(),    # 3
+                object_rel_rot[4*i:4*(i+1)].ravel()     # 4
             ])
 
             ## TODO: Additional observations
@@ -1864,9 +1939,7 @@ class Picking(SingleArmEnv, Serializable):
 
     def step(self, action):
         '''
-
         Takes a step in simulation with control command @action:
-
         01 Call sim.forward() 
             sim.forwrad() performs steps 2-21 (http://mujoco.org/book/computation.html#piForward) of a regular sim.step() call. Step 2-21 summarized below.
             fk->poses bodies/geoms/sites/cams
@@ -1889,9 +1962,7 @@ class Picking(SingleArmEnv, Serializable):
             
         02 Clip action 
             Note: not necessary when we wrap the env with the NormalizedBoxEnv class). TODO NormalizedBoxEnv currently clips at [-1,+1] and all the same for eef and fingers. Need to fix.
-
         03 Set data to mujoco sim.data.ctrl
-
         04 Step (steps 1-24)
             
             check pos/vels for unacceptably large vals indicating divergence.
@@ -1901,25 +1972,19 @@ class Picking(SingleArmEnv, Serializable):
             check for unacceptably lare values, if so reset
             compare FwdDyn | InvDyn to diagnose poor solver conv
             advance sim state by one time step with selected integrator
-
         05 Update observables and get new observations
         06 Update 'Done'
         07 Process info 
         08 Process reward
-
         return obs, reward, done, info 
-
         Args:
             action (np.array): Action to execute within the environment
-
         Returns:
             4-tuple:
-
                 - (dict) with 'observations', 'achieved_goal', and 'desired_goal' 
                 - (float) reward from the environment
                 - (bool) whether the current episode is completed or not
                 - (dict) misc information
-
         Raises:
             ValueError: [Steps past episode termination]        
         '''
@@ -1962,8 +2027,9 @@ class Picking(SingleArmEnv, Serializable):
                 print(F"action {action}") 
 
             # 05 Update observables and get new observations
-            self._update_observables()
-            env_obs = self._get_obs()
+            
+            env_obs = self._get_obs(force_update=True)
+            assert np.any(env_obs['robot0_proprio-state'][21:24]), print(env_obs)
             
             policy_step = False
 
@@ -1971,22 +2037,11 @@ class Picking(SingleArmEnv, Serializable):
         self.cur_time += self.control_timestep        
 
         # 06 Process info
-        info = { 'is_success': self._is_success(env_obs['achieved_goal'], env_obs['desired_goal']),
-                 'is_inside_workspace': self._is_inside_workspace(env_obs['robot0_proprio-state']) }
+        info = { 'is_success':          self._is_success( env_obs['achieved_goal'], env_obs['desired_goal'] ),
+                 'is_inside_workspace': self._is_inside_workspace() 
+                 }
 
-        if info['is_success']:
-
-            # # If deployed a scripted policy-based learning and want to open fingers after place, turn on open_gripper_flag
-            # self.open_gripper_flag = True          
-            
-            # ## Experimental code to open fingers after place (no scripted polidy)
-            # for _ in range(25):
-            #     action=np.array([0,0,0,0,0,0,-1]) # -1 action should open fingers
-            #     self._pre_action(action, policy_step=True)
-            #     self._update_observables()
-            #     #env_obs = self._get_obs()     # want to update goals but this will throw an error after all objects successfully placed with an empty self.goal_object and before a reset.
-            #     self.sim.step()
-            #     #self.render()                 # needs us to add a flag. 
+        if info['is_success']: 
             self.add_remove_objects()
 
         # 06b Process Reward * Info
@@ -2001,13 +2056,29 @@ class Picking(SingleArmEnv, Serializable):
             # else:
             #     raise ("Obs_type not recognized")
 
-        # 07 Process Done: 
-        # If ( OR (ii) we have succeeded, set to true OR (iii) end-effector moves outside the workspace
-        done = ((self.timestep >= self.horizon)and not self.ignore_done                                 or  # 1. time_step is past horizon               
-               info['is_success'] or #(info['is_success'] and (self.object_names+self.not_yet_considered_object_names) == [])  or  # 2. Succeeded AND no more objects. important for multiple object settings when we are done after all objects picked up.
-               self.fallen_objs_flag                                                                    or  # 3. If there is a fallen object, reset and start again. 
-               not info['is_inside_workspace'])                                                             # 4. If robot end effector exits workspace, reset. 
+        # 07 Process Done (keep self.terminal to use in _reset_internal)
+        self.terminal   = (self.timestep >= self.horizon)               # Needed in _reset_internal(). When all objs are picked up before mzx_path_len is reached, reset is called. But it is important to keep the current number of timesteps (not reset them), such that we can compute an accurate termination condition in succeeding paths. 
+
+        # Define success strategy:
+        if self.success_strategy == 'one': 
+            self.success    = info['is_success'] 
+        else: # all
+            self.success    = info['is_success'] and (self.object_names+self.not_yet_considered_object_names) == []
+        self.workspace      = not info['is_inside_workspace']
         
+        done = (self.terminal and not self.ignore_done      or          # 1. time_step is past horizon               
+                self.success                                or          # 2. Succeeded AND no more objects. important for multiple object settings when we are done after all objects picked up.
+                self.fallen_objs_flag                       or          # 3. If there is a fallen object, reset and start again. 
+                self.workspace)                                         # 4. If robot end effector exits workspace, reset.                                                           
+                       
+        if done:
+            if self.debug: 
+                print(f"done called. timesteps: {self.timestep}")
+                if self.terminal:           print('terminal')
+                if self.success:            print('success')
+                if self.workspace:          print('workspace')
+                if self.fallen_objs_flag:   print('flag')
+
         # 08 Process Reward
         reward = self.compute_reward(env_obs['achieved_goal'], env_obs['desired_goal'], info)
     
@@ -2028,32 +2099,32 @@ class Picking(SingleArmEnv, Serializable):
         '''
         # Extract all kwargs        
         d = dict()        
-        d['robots'] = self.robot_names                       
-        d['reward_scale'] = self.reward_scale
-        d['hard_reset'] = self.hard_reset
-        d['ignore_done'] = self.ignore_done
-        d['object_reset_strategy'] = self.object_reset_strategy
-        d['num_blocks'] = self.num_blocks
-        d['num_objs_to_load'] = self.num_objs_to_load
-        d['object_randomization'] = self.object_randomization
-        d['use_object_obs'] = self.use_object_obs
-        d['use_camera_obs'] = self.use_camera_obs
-        d['reward_shaping'] = self.reward_shaping
+        d['robots']                 = self.robot_names                       
+        d['reward_scale']           = self.reward_scale
+        d['hard_reset']             = self.hard_reset
+        d['ignore_done']            = self.ignore_done
+        d['object_reset_strategy']  = self.object_reset_strategy
+        d['num_blocks']             = self.num_blocks
+        d['num_objs_to_load']       = self.num_objs_to_load
+        d['object_randomization']   = self.object_randomization
+        d['use_object_obs']         = self.use_object_obs
+        d['use_camera_obs']         = self.use_camera_obs
+        d['reward_shaping']         = self.reward_shaping
         
         # Controller configuration
-        d['controller_config'] = self.robot_configs[0]['controller_config']
+        d['controller_config']      = self.robot_configs[0]['controller_config']
 
-        d['variant'] = self.variant
+        d['variant']                = self.variant
         # d['control_freq'] = self.robot_configs[0]['control_freq'] # not needed. inside robot_configs[0]
 
         # May not need these as you will select custom values to display policy
-        d['horizon'] = self.horizon
-        d['has_renderer'] = self.has_renderer
+        d['horizon']                = self.horizon
+        d['has_renderer']           = self.has_renderer
 
         # d = self.__dict__.copy()
         # Keep the last portion of the module string name as the name of the environment
         #d['env_name'] = type(self).__name__
-        d['env_name'] = self.variant['expl_environment_kwargs']['env_name']
+        d['env_name']               = self.variant['expl_environment_kwargs']['env_name']
 
         # Note:
         # This pickling fails if we save self.robots, i.e.:

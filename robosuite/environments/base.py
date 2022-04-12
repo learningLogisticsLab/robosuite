@@ -7,6 +7,7 @@ import robosuite.utils.macros as macros
 from robosuite.models.base import MujocoModel
 
 import numpy as np
+import ipdb
 
 REGISTERED_ENVS = {}
 picking_dict = {}
@@ -180,17 +181,21 @@ class MujocoEnv(metaclass=EnvMeta):
         self.run_speed              = run_speed
 
         # Simulation-specific attributes
-        self._observables   = {}                        # Maps observable names to observable objects
-        self._obs_cache     = {}                        # Maps observable names to pre-/partially-computed observable values
-        self.control_freq   = control_freq
-        self.horizon        = horizon
-        self.ignore_done    = ignore_done
-        self.hard_reset     = hard_reset
+        self._observables           = {}                # Maps observable names to observable objects
+        self._obs_cache             = {}                # Maps observable names to pre-/partially-computed observable values
+        
+        self.control_freq           = control_freq
+        self.control_timestep       = None
+
+        self.horizon                = horizon
+        self.ignore_done            = ignore_done
+        self.hard_reset             = hard_reset
+
         self._model_postprocessor   = None              # Function to post-process model after load_model() call
         self.model                  = None
+        
         self.cur_time               = None
         self.model_timestep         = None
-        self.control_timestep       = None
         self.deterministic_reset    = False             # Whether to add randomized resetting of objects / robot joints
 
         # Load the model. Yields self.model for task.
@@ -303,9 +308,13 @@ class MujocoEnv(metaclass=EnvMeta):
         """
         set_site_visualization = True
 
-        # TODO(yukez): investigate black screen of death
-        # Use hard reset if requested
-        if self.hard_reset and not self.deterministic_reset:
+        # Use hard reset if requested (set by object_randomization) when all objects are picked up        
+        if (self.hard_reset                                         and 
+           len(self.objects_in_target_bin) == self.num_objs_to_load and 
+           not self.deterministic_reset                             or 
+           self.first_reset                                         or
+           self.fallen_objs_flag): 
+           
             self._destroy_viewer()
             self._load_model()              #  Create a manipulation task objec (arena/robot/object/placement of objects/goal objects)
             self._postprocess_model()
@@ -315,24 +324,33 @@ class MujocoEnv(metaclass=EnvMeta):
         else:
             self.sim.reset()
         
-        # Reset necessary robosuite-centric variables
-        #if self.do_reset_internal: # done to avoid a circular loop when needing to change objects after a reset
-        self._reset_internal()
-        #self.do_reset_internal = True
+        # Reset necessary robosuite-centric variables        
+        self._reset_internal() # observables | references | robots | cameras
         self.sim.forward()
         
         # Setup observables, reloading if hard reset
         self._obs_cache = {}
         
+        # Re-set upservables when new mujoco objects are created. This happens in hard_resets. 
+        #   ** Note at at beginning gym_wrapper, if present, calls reset with first_reset flag as True. 
+        #   ** Since new mujoco_objects are created, we need to reset observables and then turn off that flag.
         if self.hard_reset:
+        # if (self.hard_reset                                           and 
+        #    len(self.objects_in_target_bin) == sself.num_objs_to_load  and 
+        #    not self.deterministic_reset                               or 
+        #    self.first_reset                                           or
+        #    self.fallen_objs_flag): 
+
             # If we're using hard reset, must re-update sensor object references
             self._observables = self._setup_observables() ## TODO: original this code was _observables = self._setup_observables(). New changes only kept in local variable. I modified it to use the self._observables as the modifier uses that list to make its calculations.
             for obs_name, obs in self._observables.items():
                 self.modify_observable(observable_name=obs_name, attribute="sensor", modifier=obs._sensor)
+
+            self.first_reset = False
         
         # Make sure that all sites are toggled OFF by default
-        self.visualize(vis_settings={vis: set_site_visualization for vis in self._visualizations})
-        
+        self.visualize(vis_settings={vis: set_site_visualization for vis in self._visualizations})        
+        # TODO: should i get_obs first and then update_poses?
         return self._get_obs(force_update=True) # Update observables and return their values
 
     def _reset_internal(self):
