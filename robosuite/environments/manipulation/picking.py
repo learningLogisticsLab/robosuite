@@ -54,6 +54,10 @@ from gym import spaces
 
 # 08 Serializable to resolve pickle
 from rlkit.core.serializable import Serializable
+
+# 09 blob_ori
+import robosuite.utils.img_processing as img
+
 # Used in Reconstructing the original object
 import robosuite as suite                                                           # will call all __init__ inside suite loading all relevant classes
 from robosuite.wrappers import GymWrapper  
@@ -1384,6 +1388,7 @@ class Picking(SingleArmEnv, Serializable):
                     object_geoms=[g for g in self.object_placements[self.goal_object['name']][2].contact_geoms])
 
         self.is_grasping = np.asarray(check_grasp).astype(np.float32)
+        self.blob_ori = np.zeros([2,])
 
         # If successfully placed
         if achieved_goal[2]>0.90 and self.is_grasping==1: #target_dist_error <= self.goal_pos_error_thresh:
@@ -1710,6 +1715,10 @@ class Picking(SingleArmEnv, Serializable):
                 seg_image_obs = obs[self.camera_names[0]+'_segmentation_instance']
                 proc_image_obs = self.process_seg_image(seg_image_obs, output_size=(self.camera_image_height, self.camera_image_width))
                 proc_image_obs = cv2.merge([proc_image_obs,proc_image_obs])
+
+                # blob_ori
+                seg_obj_img = img.process_seg_obj_image(seg_image_obs, output_size=(self.camera_image_height, self.camera_image_width))
+                self.blob_ori = img.compute_blob_orientation(seg_obj_img)
             else:
                 seg_image_obs = obs[self.camera_names[0]+'_segmentation_instance']
                 proc_seg_image = self.process_seg_image(seg_image_obs, output_size=(self.camera_image_height, self.camera_image_width))
@@ -1749,6 +1758,9 @@ class Picking(SingleArmEnv, Serializable):
 
             # grip_height_from_bin.ravel(),
             self.is_grasping.ravel(),
+            
+            #blob_ori
+            self.blob_ori.ravel(),
 
             # gripper_state.ravel(),  # 2
             # gripper_vel.ravel(),    # 2
@@ -1841,6 +1853,13 @@ class Picking(SingleArmEnv, Serializable):
             #     object_rel_pos[3*i:3*(i+1)].ravel(),  # 3
             #     object_rel_rot[4*i:4*(i+1)].ravel()  # 4
             # ])
+
+            # depth state
+            depth = self.goal_object['pos'][2]
+            env_obs = np.concatenate([
+                env_obs,
+                depth.ravel()
+            ])
 
             ## TODO: Additional observations
             # (1) End-effector type: use robosuites list to provide an appropriate number to these
