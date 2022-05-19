@@ -269,10 +269,10 @@ class RobotEnv(MujocoEnv):
             if self.top_down_grasp:
                 low[3] = 0
                 low[4] = 0
-                low[5] = 0
+                low[5] = -np.pi
                 high[3] = 0
                 high[4] = 0
-                high[5] = 0
+                high[5] = np.pi
         return low, high
 
     @property
