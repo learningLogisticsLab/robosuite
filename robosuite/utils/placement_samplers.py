@@ -400,12 +400,8 @@ class UniformRandomSampler(ObjectPositionSampler):
                         break
 
             if location_valid:
-                # random rotation
                 quat = self._sample_quat()
-                if np.random.uniform() < 0.50:
-                    quat = [0, 0, 0.7, 1]
-                else:
-                    quat = [1, 1, 1, 1]
+                
                 # multiply this quat by the object's initial rotation if it has the attribute specified
                 if hasattr(obj, "init_quat"):
                     quat = quat_multiply(quat, obj.init_quat)
