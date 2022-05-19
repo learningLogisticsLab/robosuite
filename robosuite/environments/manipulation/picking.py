@@ -310,7 +310,7 @@ class Picking(SingleArmEnv, Serializable):
 
         # Reset
         first_reset             = True,
-        top_down_grasp          = False,
+        top_down_grasp          = True,
     ):
         print('Generating Picking class.\n')
         # Task settings
