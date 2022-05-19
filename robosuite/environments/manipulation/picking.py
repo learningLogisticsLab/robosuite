@@ -1760,7 +1760,7 @@ class Picking(SingleArmEnv, Serializable):
             self.is_grasping.ravel(),
             
             #blob_ori
-            self.blob_ori.ravel(),
+            # self.blob_ori.ravel(),
 
             # gripper_state.ravel(),  # 2
             # gripper_vel.ravel(),    # 2
