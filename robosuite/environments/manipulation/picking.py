@@ -1565,11 +1565,14 @@ class Picking(SingleArmEnv, Serializable):
         # print(all_objects)
         # input()
         # all_objects = [2,5,10,15,18]
+        all_objects = [14, 16]
         objs_to_consider = random.sample( all_objects, num_objs_to_load) # i.e.objs_to_consider = [69, 66, 64, 55, 65]
-        objs_to_consider = [26]
+        # objs_to_consider = [26]
         # 32 is half cylinder
         # 33 is tennis shoe
         # 34 is bar clamp
+        # 15 is cup
+        # 14 is small ball 16 is big ball
         
         # 01 Sample number of objects to load
         for idx, val in enumerate(objs_to_consider):
