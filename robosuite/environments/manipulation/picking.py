@@ -1568,6 +1568,7 @@ class Picking(SingleArmEnv, Serializable):
         all_objects = [14, 16]
         objs_to_consider = random.sample( all_objects, num_objs_to_load) # i.e.objs_to_consider = [69, 66, 64, 55, 65]
         # objs_to_consider = [26]
+        objs_to_consider = [15]
         # 32 is half cylinder
         # 33 is tennis shoe
         # 34 is bar clamp
@@ -1816,17 +1817,27 @@ class Picking(SingleArmEnv, Serializable):
                 # By setting to 0 all calculations in the network will be cancelled. Robot should reach only to the goal object.
                 # Goal object to be modified if successful (without repeat)
                 if i == 0:
-                     object_rel_pos[3*i:3*(i+1)] = object_i_pos[:3] - grip_pos
-                     object_rel_rot[4*i:4*(i+1)] = T.quat_distance(object_i_quat[:4] ,grip_quat) # quat_dist returns the difference
+                    object_rel_pos[3*i:3*(i+1)] = object_i_pos[:3] - grip_pos
+                    object_rel_rot[4*i:4*(i+1)] = T.quat_distance(object_i_quat[:4] ,grip_quat) # quat_dist returns the difference
 
                     # 02) Achieved Goal: the achieved state will be the object(s) pose(s) of the goal (1st) object
                     #--------------------------------------------------------------------------
                     # TODO: double check if this works effectively for our context + HER. Otherwise can add objects and grip pose.
                     #--------------------------------------------------------------------------
-                     achieved_goal = np.concatenate([    # 3          # 7
+                    achieved_goal = np.concatenate([    # 3          # 7
                         object_i_pos[:3].copy(),    # 3      # Try pos only first.
                         # object_i_quat.copy(), # 4
                     ])
+
+                    # depth 
+                    depth = object_i_pos[2]
+                    grip_height = grip_pos[2]
+                    rel_depth = grip_height - depth
+                    env_obs = np.concatenate ([
+                        env_obs,
+                        rel_depth.ravel()
+                    ])
+
 
                 else:
                     # Fill these rel data with fixed nondata
