@@ -1867,14 +1867,7 @@ class Picking(SingleArmEnv, Serializable):
             #     object_rel_pos[3*i:3*(i+1)].ravel(),  # 3
             #     object_rel_rot[4*i:4*(i+1)].ravel()  # 4
             # ])
-
-            # depth state
-            depth = self.goal_object['pos'][2]
-            env_obs = np.concatenate([
-                env_obs,
-                depth.ravel()
-            ])
-
+            
             ## TODO: Additional observations
             # (1) End-effector type: use robosuites list to provide an appropriate number to these
             # (2) QT-OPTs DONE parameter for reactivity.
